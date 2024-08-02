@@ -73,7 +73,7 @@ public class MainWindow : ExtendedWindow, IDisposable
             MinimumSize = new Vector2(375, 330),
             MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
         };
-        this.Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse;
+        this.Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.MenuBar;
         this.SaleTrackerService.SnapshotCreated += this.SnapshotCreated;
     }
 
@@ -105,6 +105,52 @@ public class MainWindow : ExtendedWindow, IDisposable
 
     public override void Draw()
     {
+        if (ImGui.BeginMenuBar())
+        {
+            if (ImGui.BeginMenu("File"))
+            {
+                if (ImGui.MenuItem("Configuration"))
+                {
+                }
+
+                if (ImGui.MenuItem("Help"))
+                {
+                }
+
+                if (ImGui.MenuItem("Report a Issue"))
+                {
+                }
+
+                if (ImGui.MenuItem("Ko-Fi"))
+                {
+                }
+
+
+                if (ImGui.MenuItem("Close"))
+                {
+                }
+
+                ImGui.EndMenu();
+            }
+            
+            if (ImGui.BeginMenu("Export"))
+            {
+                if (ImGui.MenuItem("Export Current Sales (CSV)"))
+                {
+                    
+                }
+
+                if (ImGui.MenuItem("Export History (CSV)"))
+                {
+                    
+                }
+                
+                
+
+                ImGui.EndMenu();
+            }
+            ImGui.EndMenuBar();
+        }
         this.DrawCharacterSideBar();
         ImGui.SameLine();
         this.DrawSalesPane();
@@ -178,6 +224,10 @@ public class MainWindow : ExtendedWindow, IDisposable
                         }
 
                         var worlds = this.CharacterMonitorService.GetWorldIds(CharacterType.Character);
+                        if (worlds.Count == 0)
+                        {
+                            ImGui.TextWrapped("No worlds found. Please login.");
+                        }
                         foreach (var worldId in worlds)
                         {
                             var world = this.worldSheet.GetRow(worldId)!;
@@ -292,39 +342,6 @@ public class MainWindow : ExtendedWindow, IDisposable
                     if (bottomBar)
                     {
                         ImGui.Separator();
-                        ImGui.SameLine();
-                        ImGui.SetCursorPosX(ImGui.GetWindowSize().X - 24 - ImGui.GetStyle().CellPadding.X);
-                        using (var font = ImRaii.PushFont(ImGui.GetIO().FontDefault /*this.font.IconFont*/))
-                        {
-                            using (ImRaii.PushStyle(ImGuiStyleVar.FrameRounding, 4f))
-                            {
-                                this.ImGuiService.VerticalCenter();
-                                if (ImGui.Button(FontAwesomeIcon.Bars.ToIconString(), new Vector2(22, 22)))
-                                {
-                                    ImGui.OpenPopup("mainMenu");
-                                }
-
-                                font.Pop();
-                                this.ImGuiService.HoverTooltip("Main Menu");
-                            }
-                        }
-
-                        using (var popup = ImRaii.Popup("mainMenu"))
-                        {
-                            if (popup)
-                            {
-                                if (ImGui.Selectable("Configuration"))
-                                {
-                                    this.MediatorService.Publish(new ToggleWindow(typeof(ConfigWindow)));
-                                }
-
-                                ImGui.Separator();
-                                ImGui.Selectable("Export Current Sales (CSV)");
-                                ImGui.Selectable("Export History (CSV)");
-                                ImGui.Separator();
-                                ImGui.Selectable("Report a bug");
-                            }
-                        }
                     }
                 }
             }
@@ -390,13 +407,13 @@ public class MainWindow : ExtendedWindow, IDisposable
 
                         if (this.SelectedTab == MainWindowTab.CurrentlySelling)
                         {
-                            this.ImGuiService.VerticalCenter();
+                            ImGui.AlignTextToFramePadding();
                             ImGui.Text(
                                 $"{this.saleFilter.GetSaleItems().Count} items for sale on {this.GetSelectedName()} worth {this.saleFilter.AggregateSalesTotalGil.ToString("C", this.gilNumberFormat)}");
                         }
                         else if (this.SelectedTab == MainWindowTab.SalesHistory)
                         {
-                            this.ImGuiService.VerticalCenter();
+                            ImGui.AlignTextToFramePadding();
                             ImGui.Text(
                                 $"{this.saleFilter.GetSoldItems().Count} items sold on {this.GetSelectedName()} worth {this.saleFilter.AggregateSoldTotalGil.ToString("C", this.gilNumberFormat)}");
                         }
@@ -852,7 +869,8 @@ public class MainWindow : ExtendedWindow, IDisposable
                             ImGui.Text(
                                 $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
                             ImGui.Text($"Listed: {saleItem.ListedAt.Humanize()}");
-                            using (var textColor = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, true))
+
+                            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, DateTime.Now > saleItem.UpdatedAt + this.Configuration.ItemCheckPeriod))
                             {
                                 ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize()}");
                             }
@@ -886,7 +904,7 @@ public class MainWindow : ExtendedWindow, IDisposable
     {
         using (var buttonBar = ImRaii.Child(
                    "buttonBar",
-                   new Vector2(0, 20 + (ImGui.GetStyle().CellPadding.Y * 2)),
+                   new Vector2(0, 22 + (ImGui.GetStyle().CellPadding.Y * 2)),
                    false,
                    ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
         {
@@ -915,7 +933,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                 {
                     using (ImRaii.PushStyle(ImGuiStyleVar.FrameRounding, 4f))
                     {
-                        if (ImGui.Button(FontAwesomeIcon.Times.ToIconString(), new Vector2(20, 20)))
+                        if (ImGui.Button(FontAwesomeIcon.Times.ToIconString(), new Vector2(22, 22)))
                         {
                             this.saleFilter.Clear();
                         }

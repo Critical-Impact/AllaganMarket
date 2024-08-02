@@ -9,7 +9,7 @@ using Microsoft.Extensions.Hosting;
 
 public class CommandService : IHostedService
 {
-    private const string CommandName = "/pmycommand";
+    private const string CommandName = "/allaganmarket";
 
     public CommandService(ICommandManager commandManager, MainWindow mainWindow)
     {

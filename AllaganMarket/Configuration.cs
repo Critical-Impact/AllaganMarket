@@ -15,6 +15,9 @@ public class Configuration : IPluginConfiguration
     public bool IsConfigWindowMovable { get; set; } = true;
 
     public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
+    
+    public TimeSpan ItemCheckPeriod { get; set; } = TimeSpan.FromHours(6);
+    
     public Dictionary<ulong, Character> Characters { get; set; } = new();
 
     //Move these to CSVs

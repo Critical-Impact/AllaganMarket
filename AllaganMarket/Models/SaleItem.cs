@@ -55,6 +55,17 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>
         this.UpdatedAt = DateTime.Now;
     }
 
+    public SaleItem(ulong retainerId)
+    {
+        this.RetainerId = retainerId;
+        this.ListedAt = DateTime.Now;
+        this.UpdatedAt = DateTime.Now;
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SaleItem"/> class.
+    /// Do not remove, used for JSON construction.
+    /// </summary>
     public SaleItem()
     {
         this.ListedAt = DateTime.Now;
@@ -92,7 +103,7 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>
             $"Retainer ID: {this.RetainerId}, World ID: {this.WorldId}, Item ID: {this.ItemId}, Is HQ: {this.IsHq}, Quantity: {this.Quantity}, Unit Price: {this.UnitPrice}";
     }
 
-    public bool Equals(SaleItem? other)
+    public bool Equals(SaleItem other)
     {
         if (ReferenceEquals(null, other))
         {

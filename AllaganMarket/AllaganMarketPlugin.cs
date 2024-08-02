@@ -101,6 +101,7 @@ public class AllaganMarketPlugin : HostedPlugin
             s =>
             {
                 var dalamudPluginInterface = s.Resolve<IDalamudPluginInterface>();
+                var pluginLog = s.Resolve<IPluginLog>();
                 Configuration configuration;
                 try
                 {
@@ -109,7 +110,7 @@ public class AllaganMarketPlugin : HostedPlugin
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine(e);
+                    pluginLog.Error(e, "Failed to load configuration");
                     configuration = new Configuration();
                 }
 

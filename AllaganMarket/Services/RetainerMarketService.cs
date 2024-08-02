@@ -74,7 +74,7 @@ public class RetainerMarketService : IHostedService, IDisposable
 
     private HashSet<short> ActiveSlots { get; } = [];
 
-    public SaleItem[] SaleItems { get; private set; } = new SaleItem[20];
+    public SaleItem?[] SaleItems { get; private set; } = new SaleItem[20];
 
     public bool InBadState { get; private set; }
 
@@ -159,7 +159,6 @@ public class RetainerMarketService : IHostedService, IDisposable
              this.InBadState = true;
              return this.RetainerItemCommandHook!.Original(agentRetainerItemCommandModule, result, a3, a4, command);
          }
-        
          try
          {
              var selectedItemContainer = this.InventoryService.GetInventoryContainer(InventoryType.DamagedGear);
@@ -358,7 +357,7 @@ public class RetainerMarketService : IHostedService, IDisposable
         {
             this.InBadState = false;
             this.retainerId = 0;
-            this.SaleItems = new SaleItem[20];
+            this.SaleItems = new SaleItem?[20];
             this.OnClosed?.Invoke();
             this.OnUpdated?.Invoke(RetainerMarketListEventType.Initial);
         }

@@ -1,4 +1,6 @@
-﻿namespace AllaganMarket.Services;
+﻿using AllaganMarket.Extensions;
+
+namespace AllaganMarket.Services;
 
 using System;
 using System.Collections.Generic;
@@ -174,7 +176,7 @@ public class SaleTrackerService : IHostedService
             return items;
         }
 
-        this.allSales = this.SaleItems.SelectMany(c => c.Value).Select(c => c!).ToList();
+        this.allSales = this.SaleItems.SelectMany(c => c.Value).Select(c => c).ToList();
         return this.allSales;
     }
 
@@ -256,141 +258,133 @@ public class SaleTrackerService : IHostedService
         var newRetainerGil = this.RetainerService.RetainerGil;
         var newSaleItems = this.RetainerMarketService.SaleItems;
 
-        var previousItems = this.SaleItems.GetValueOrDefault(retainerId);
+        if (!this.SaleItems.ContainsKey(retainerId))
+        {
+            this.SaleItems.TryAdd(retainerId, new SaleItem[20].FillList(retainerId));
+        }
+
+        var previousItems = this.SaleItems[retainerId];
         uint? oldGil = this.GetRetainerGil(retainerId);
 
-        this.CreateSnapshot(retainerId, previousItems, newSaleItems, oldGil, newRetainerGil);
+        this.CreateSnapshot(retainerId, previousItems, newSaleItems.FillList(retainerId), oldGil, newRetainerGil);
     }
 
     public void CreateSnapshot(
         ulong retainerId,
-        SaleItem[]? previousItems,
+        SaleItem[] previousItems,
         SaleItem[] newItems,
         uint? oldGil,
         uint newGil)
     {
-        if (previousItems == null)
+        for (var i = 0; i < 20; i++)
         {
-            this.SaleItems[retainerId] = newItems;
-            for (var i = 0; i < 20; i++)
-            {
-                this.SaleItems[retainerId][i] = new SaleItem();
-                this.SaleItems[retainerId][i].RetainerId = retainerId;
-            }
+            var previousItem = previousItems[i];
+            var newItem = newItems[i];
+            var potentialSales = oldGil == null ? 0 : newGil - oldGil;
 
-            this.Gil[retainerId] = newGil;
-        }
-        else
-        {
-            for (var i = 0; i < 20; i++)
+            if (!previousItem.IsEmpty() && newItem.IsEmpty())
             {
-                var previousItem = previousItems[i];
-                var newItem = newItems[i];
-                var potentialSales = oldGil == null ? 0 : newGil - oldGil;
-
-                if (!previousItem.IsEmpty() && newItem.IsEmpty())
+                //TODO: Use real percents later
+                var retainer = this.CharacterMonitorService.GetCharacterById(retainerId);
+                var taxRate = 0.05d;
+                if (retainer != null)
                 {
-                    //TODO: Use real percents later
-                    var retainer = this.CharacterMonitorService.GetCharacterById(retainerId);
-                    var taxRate = 0.05d;
-                    if (retainer != null)
+                    switch (retainer.RetainerTown)
                     {
-                        switch (retainer.RetainerTown)
-                        {
-                            case RetainerManager.RetainerTown.Kugane:
-                            case RetainerManager.RetainerTown.Crystarium:
-                            case RetainerManager.RetainerTown.OldSharlayan:
-                                taxRate = 0.03d;
-                                break;
-                            case null:
-                                break;
-                        }
+                        case RetainerManager.RetainerTown.Kugane:
+                        case RetainerManager.RetainerTown.Crystarium:
+                        case RetainerManager.RetainerTown.OldSharlayan:
+                            taxRate = 0.03d;
+                            break;
+                        case null:
+                            break;
                     }
+                }
 
-                    if (oldGil == newGil)
+                if (oldGil == newGil)
+                {
+                    this.PluginLog.Verbose("Item removed from market.");
+                    //The assumption is that they took the item off the market
+                }
+                else
+                {
+                    var actualSalesAmount = previousItem.Total - this.CalculateTax(
+                        taxRate,
+                        (int)previousItem.UnitPrice,
+                        (int)previousItem.Quantity);
+                    if (potentialSales - actualSalesAmount >= 0)
                     {
-                        this.PluginLog.Verbose("Item removed from market.");
-                        //The assumption is that they took the item off the market
+                        var newSale = new SoldItem(previousItem);
+                        if (!this.Sales.TryGetValue(retainerId, out var value))
+                        {
+                            value = new List<SoldItem>();
+                            this.Sales[retainerId] = value;
+                        }
+
+                        value.Add(newSale);
+
+                        //TODO: make message optional
+                        var item = this.itemSheet.GetRow(newSale.ItemId);
+                        if (item != null)
+                        {
+                            this.chatGui.Print(
+                                $"You sold {newSale.Quantity} {item.Name.AsReadOnly().ExtractText()} for {newSale.TotalIncTax.ToString("C", this.gilNumberFormat)}");
+                        }
+
+                        this.PluginLog.Verbose("Sale created!");
+                    }
+                }
+
+                // Item has been removed and we don't know about it. Try to account for the gil, if we have enough gil, mark it as sold and create a sold entry
+            }
+            else if (!previousItem.IsEmpty() && !newItem.IsEmpty())
+            {
+                if (!previousItem.Equals(newItem))
+                {
+                    if (previousItem.ItemId != newItem.ItemId)
+                    {
+                        this.PluginLog.Error("Item has been switched, AM does not know about this.");
+
+                        //The item has changed entirely, they could have had the plugin off?
+                    }
+                    else if (previousItem.UnitPrice != newItem.UnitPrice)
+                    {
+                        this.PluginLog.Verbose("Item price mismatch, item was probably updated.");
                     }
                     else
                     {
-                        var actualSalesAmount = previousItem.Total - this.CalculateTax(
-                            taxRate,
-                            (int)previousItem.UnitPrice,
-                            (int)previousItem.Quantity);
-                        if (potentialSales - actualSalesAmount >= 0)
-                        {
-                            var newSale = new SoldItem(previousItem);
-                            if (!this.Sales.TryGetValue(retainerId, out var value))
-                            {
-                                value = new List<SoldItem>();
-                                this.Sales[retainerId] = value;
-                            }
-
-                            value.Add(newSale);
-
-                            //TODO: make message optional
-                            var item = this.itemSheet.GetRow(newSale.ItemId);
-                            if (item != null)
-                            {
-                                this.chatGui.Print(
-                                    $"You sold {newSale.Quantity} {item.Name.AsReadOnly().ExtractText()} for {newSale.TotalIncTax.ToString("C", this.gilNumberFormat)}");
-                            }
-
-                            this.PluginLog.Verbose("Sale created!");
-                        }
+                        this.PluginLog.Error("Could not reconcile item.");
                     }
 
-                    // Item has been removed and we don't know about it. Try to account for the gil, if we have enough gil, mark it as sold and create a sold entry
-                }
-                else if (!previousItem.IsEmpty() && !newItem.IsEmpty())
-                {
-                    if (!previousItem.Equals(newItem))
-                    {
-                        if (previousItem.ItemId != newItem.ItemId)
-                        {
-                            this.PluginLog.Error("Item has been switched, AM does not know about this.");
+                    //not really an error
+                    
 
-                            //The item has changed entirely, they could have had the plugin off?
-                        }
-                        else if (previousItem.UnitPrice != newItem.UnitPrice)
-                        {
-                            this.PluginLog.Error("Item price mismatch.");
-                        }
-                        else
-                        {
-                            this.PluginLog.Error("Could not reconcile item.");
-                        }
-
-                        //not really an error
-                        
-
-                        //Item has changed in some way, we can't reconcile it, create a confirm entry
-                    }
+                    //Item has changed in some way, we can't reconcile it, create a confirm entry
                 }
             }
-
-            this.Gil[retainerId] = newGil;
-
-            for (var index = 0; index < newItems.Length; index++)
-            {
-                var item = newItems[index];
-                var oldItem = this.SaleItems[retainerId][index];
-
-                if (item.IsEmpty() || oldItem.IsEmpty() || !item.Equals(oldItem))
-                {
-                    if (!oldItem.IsEmpty() && !item.IsEmpty())
-                    {
-                        item.ListedAt = oldItem.ListedAt;
-                    }
-
-                    this.SaleItems[retainerId][index] = item;
-                    this.ClearSalesCache();
-                }
-            }
-
-            SnapshotCreated?.Invoke();
         }
+
+        this.Gil[retainerId] = newGil;
+
+        for (var index = 0; index < newItems.Length; index++)
+        {
+            var item = newItems[index];
+            var oldItem = this.SaleItems[retainerId][index];
+
+            if (item.IsEmpty() || oldItem.IsEmpty() || !item.Equals(oldItem))
+            {
+                if (!oldItem.IsEmpty() && !item.IsEmpty())
+                {
+                    item.ListedAt = oldItem.ListedAt;
+                }
+
+                this.SaleItems[retainerId][index] = item;
+                this.ClearSalesCache();
+            }
+        }
+
+        this.PluginLog.Verbose("A snapshot was created.");
+        this.SnapshotCreated?.Invoke();
     }
 
     private void UpdateSalesDictionary()
@@ -416,23 +410,10 @@ public class SaleTrackerService : IHostedService
         Dictionary<ulong, uint> gil,
         Dictionary<ulong, List<SoldItem>> sales)
     {
-        foreach (var retainer in saleItems)
-        {
-            for (var index = 0; index < retainer.Value.Length; index++)
-            {
-                var saleItem = retainer.Value[index];
-                if (saleItem == null!)
-                {
-                    saleItem = new();
-                    saleItem.RetainerId = retainer.Key;
-                    retainer.Value[index] = saleItem;
-                }
-            }
-        }
         this.SaleItems = saleItems;
         this.Gil = gil;
         this.Sales = sales;
-        this.UpdateSalesDictionary();
+        this.ClearSalesCache();
     }
 
     public void Stop()

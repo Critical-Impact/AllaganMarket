@@ -121,6 +121,7 @@ public class CharacterMonitorService : ICharacterMonitorService
         this.clientState.Login += this.ClientStateOnLogin;
         this.addonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
         this.framework.Update += this.FrameworkOnUpdate;
+        this.framework.RunOnFrameworkThread(this.UpdatePlayerCharacter);
         return Task.CompletedTask;
     }
 

@@ -12,7 +12,7 @@ public class SoldItem : IDebuggable
         this.ItemId = saleItem.ItemId;
         this.IsHq = saleItem.IsHq;
         this.Quantity = saleItem.Quantity;
-        this.UnitPrice = saleItem?.UnitPrice ?? 0;
+        this.UnitPrice = saleItem.UnitPrice;
         this.SoldAt = DateTime.Now;
     }
 
