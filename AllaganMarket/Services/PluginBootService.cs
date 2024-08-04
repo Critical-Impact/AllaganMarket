@@ -1,5 +1,7 @@
 ﻿using AllaganMarket.Models;
 
+using DalaMock.Host.Mediator;
+
 namespace AllaganMarket.Services;
 
 using System.Threading;

@@ -1,4 +1,6 @@
-﻿namespace AllaganMarket.Services;
+﻿using DalaMock.Host.Mediator;
+
+namespace AllaganMarket.Services;
 
 using System;
 using System.Collections.Generic;

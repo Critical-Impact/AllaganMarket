@@ -5,6 +5,7 @@ using AllaganLib.Universalis.Services;
 
 using AllaganMarket.Settings;
 
+using DalaMock.Host.Mediator;
 using DalaMock.Shared.Classes;
 using DalaMock.Shared.Interfaces;
 
@@ -103,6 +104,7 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<CharacterMonitorService>().As<ICharacterMonitorService>()
             .SingleInstance();
         containerBuilder.RegisterType<PluginBootService>().SingleInstance();
+        containerBuilder.RegisterType<ConfigurationService>().SingleInstance();
         containerBuilder.RegisterType<RetainerService>().As<IRetainerService>().SingleInstance();
         containerBuilder.RegisterType<SaleFilter>();
         containerBuilder.RegisterType<Font>().As<IFont>().SingleInstance();
@@ -150,6 +152,7 @@ public class AllaganMarketPlugin : HostedPlugin
         serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisWebsocketService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisApiService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UndercutService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<MediatorService>()); 
+        serviceCollection.AddHostedService(p => p.GetRequiredService<MediatorService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<ConfigurationService>());
     }
 }

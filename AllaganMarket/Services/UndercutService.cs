@@ -8,6 +8,8 @@ using AllaganMarket.Models;
 using AllaganMarket.Services.Interfaces;
 using AllaganMarket.Settings;
 
+using DalaMock.Host.Mediator;
+
 using Dalamud.Game.Network.Structures;
 
 namespace AllaganMarket.Services;
@@ -132,6 +134,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 {
                     var undercutAmount = (uint?)(saleItem.UnitPrice - lowestPrice);
                     saleItem.UndercutBy = undercutAmount;
+                    this.configuration.IsDirty = true;
 
                     if (this.clientState.IsLoggedIn)
                     {
@@ -214,6 +217,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                     {
                         var undercutAmount = (uint?)(saleItem.UnitPrice - lowestOffering);
                         saleItem.UndercutBy = undercutAmount;
+                        this.configuration.IsDirty = true;
 
                         if (item != null)
                         {
@@ -271,6 +275,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                     foreach (var saleItem in value)
                     {
                         saleItem.UndercutBy = undercutAmount;
+                        this.configuration.IsDirty = true;
                     }
 
                     if (item != null)

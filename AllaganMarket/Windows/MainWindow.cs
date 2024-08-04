@@ -2,6 +2,8 @@
 
 using AllaganMarket.Settings;
 
+using DalaMock.Host.Mediator;
+
 namespace AllaganMarket.Windows;
 
 using System;

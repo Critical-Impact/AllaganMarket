@@ -1,4 +1,6 @@
-﻿namespace AllaganMarket.Windows;
+﻿using DalaMock.Host.Mediator;
+
+namespace AllaganMarket.Windows;
 
 using System;
 using Dalamud.Interface.Windowing;

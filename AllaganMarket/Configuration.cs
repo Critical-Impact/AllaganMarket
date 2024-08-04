@@ -29,6 +29,8 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
     public Dictionary<string, bool> BooleanSettings { get; set; } = new();
     public Dictionary<string, Enum> EnumSettings { get; set; } = new();
 
+    public bool IsDirty { get; set; } = false;
+
     public int Version { get; set; } = 0;
 
     public void Initialize(IDalamudPluginInterface pluginInterface)
@@ -38,6 +40,7 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
 
     public void Save()
     {
+        this.IsDirty = false;
         this.pluginInterface!.SavePluginConfig(this);
     }
 

@@ -1,4 +1,6 @@
-﻿namespace AllaganMarket.Models;
+﻿using DalaMock.Host.Mediator;
+
+namespace AllaganMarket.Models;
 
 using System;
 
