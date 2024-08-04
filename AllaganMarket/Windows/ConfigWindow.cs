@@ -1,4 +1,9 @@
-﻿namespace AllaganMarket.Windows;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using AllaganMarket.Settings;
+
+namespace AllaganMarket.Windows;
 
 using System;
 using System.Numerics;
@@ -9,17 +14,16 @@ using Services;
 public class ConfigWindow : ExtendedWindow, IDisposable
 {
     private Configuration configuration;
+    private readonly List<IGrouping<SettingType, ISetting>> settings;
 
-    public ConfigWindow(MediatorService mediatorService, ImGuiService imGuiService, Configuration configuration)
-        : base(mediatorService, imGuiService, "A Wonderful Configuration Window###With a constant ID")
+    public ConfigWindow(MediatorService mediatorService, ImGuiService imGuiService, Configuration configuration, IEnumerable<ISetting> settings)
+        : base(mediatorService, imGuiService, "Allagan Market - Configuration")
     {
-        this.Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
-                     ImGuiWindowFlags.NoScrollWithMouse;
-
-        this.Size = new Vector2(232, 75);
-        this.SizeCondition = ImGuiCond.Always;
+        this.Size = new Vector2(232, 200);
+        this.SizeCondition = ImGuiCond.FirstUseEver;
 
         this.configuration = configuration;
+        this.settings = settings.GroupBy(c => c.Type).ToList();
     }
 
     public void Dispose()
@@ -41,21 +45,14 @@ public class ConfigWindow : ExtendedWindow, IDisposable
 
     public override void Draw()
     {
-        // can't ref a property, so use a local copy
-        var configValue = this.configuration.SomePropertyToBeSavedAndWithADefault;
-        if (ImGui.Checkbox("Random Config Bool", ref configValue))
+        foreach (var group in this.settings)
         {
-            this.configuration.SomePropertyToBeSavedAndWithADefault = configValue;
-
-            // can save immediately on change, if you don't want to provide a "Save and Close" button
-            this.configuration.Save();
-        }
-
-        var movable = this.configuration.IsConfigWindowMovable;
-        if (ImGui.Checkbox("Movable Config Window", ref movable))
-        {
-            this.configuration.IsConfigWindowMovable = movable;
-            this.configuration.Save();
+            ImGui.Text(group.Key.ToString());
+            foreach (var setting in group)
+            {
+                setting.Draw(this.configuration);
+            }
+            ImGui.NewLine();
         }
     }
 }

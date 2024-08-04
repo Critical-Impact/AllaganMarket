@@ -1,5 +1,7 @@
 ﻿
 
+using AllaganMarket.Settings;
+
 namespace AllaganMarket.Windows;
 
 using System;
@@ -35,6 +37,7 @@ public class MainWindow : ExtendedWindow, IDisposable
     private readonly IPluginLog pluginLog;
     private readonly SaleFilter saleFilter;
     private readonly NumberFormatInfo gilNumberFormat;
+    private readonly ItemUpdatePeriodSetting itemUpdatePeriodSetting;
     private readonly IFont font;
     private readonly ExcelSheet<World> worldSheet;
     private bool filterMenuOpen;
@@ -52,12 +55,14 @@ public class MainWindow : ExtendedWindow, IDisposable
         IDataManager dataManager,
         SaleFilter saleFilter,
         NumberFormatInfo gilNumberFormat,
+        ItemUpdatePeriodSetting itemUpdatePeriodSetting,
         IFont font)
         : base(mediatorService, imGuiService, "Allagan Market##AllaganMarkets")
     {
         this.pluginLog = pluginLog;
         this.saleFilter = saleFilter;
         this.gilNumberFormat = gilNumberFormat;
+        this.itemUpdatePeriodSetting = itemUpdatePeriodSetting;
         this.font = font;
         this.Configuration = configuration;
         this.TextureProvider = textureProvider;
@@ -870,7 +875,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                                 $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
                             ImGui.Text($"Listed: {saleItem.ListedAt.Humanize()}");
 
-                            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, DateTime.Now > saleItem.UpdatedAt + this.Configuration.ItemCheckPeriod))
+                            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, DateTime.Now > saleItem.UpdatedAt + TimeSpan.FromMinutes(this.itemUpdatePeriodSetting.CurrentValue(this.Configuration))))
                             {
                                 ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize()}");
                             }

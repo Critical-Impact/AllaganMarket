@@ -2,6 +2,37 @@
   "version": 1,
   "dependencies": {
     "net8.0-windows7.0": {
+      "AllaganLib.Interface": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "f3Oh1vmGRoYLDNgZoT9iNl9FYHyO5bki8XplAwV5tFzn15iRMQFm8DHe2CguzNWuiEr8tpewXSC0Ywc+6GIj1g==",
+        "dependencies": {
+          "AllaganLib.Shared": "1.0.0"
+        }
+      },
+      "AllaganLib.Shared": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "9M7iG9fWQP0CxH1aYFE0vzSSDF242jrmI+vlYOWx2u/y6ShOBRXdoTTJCzOYdwP3l+kf8B2eaFKxstondW6sFA==",
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "8.0.0",
+          "Microsoft.Extensions.Hosting.Abstractions": "8.0.0"
+        }
+      },
+      "AllaganLib.Universalis": {
+        "type": "Direct",
+        "requested": "[1.0.0, )",
+        "resolved": "1.0.0",
+        "contentHash": "eQ6wl6IFnXYznsCgiBF34aDQIFEVF3lalQwskVo7XCnqAI4xqwgMhkW3h9/bZGmBU4+jo3BeWSa20fZDsQ3Q4w==",
+        "dependencies": {
+          "AllaganLib.Shared": "1.0.0",
+          "Microsoft.Extensions.Hosting": "8.0.0",
+          "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
+          "MongoDB.Bson": "2.25.0"
+        }
+      },
       "Autofac": {
         "type": "Direct",
         "requested": "[8.0.0, )",

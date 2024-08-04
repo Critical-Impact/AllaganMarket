@@ -124,4 +124,8 @@
     <ItemGroup>
         <Folder Include="Properties" />
     </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="stylecop.json" />
+    </ItemGroup>
 </Project>

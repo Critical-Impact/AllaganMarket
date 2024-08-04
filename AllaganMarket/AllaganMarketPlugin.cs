@@ -1,4 +1,11 @@
-﻿using DalaMock.Shared.Classes;
+﻿using System.Net.Http;
+using System.Reflection;
+
+using AllaganLib.Universalis.Services;
+
+using AllaganMarket.Settings;
+
+using DalaMock.Shared.Classes;
 using DalaMock.Shared.Interfaces;
 
 namespace AllaganMarket;
@@ -58,6 +65,8 @@ public class AllaganMarketPlugin : HostedPlugin
 
     public override void ConfigureContainer(ContainerBuilder containerBuilder)
     {
+        var dataAccess = Assembly.GetExecutingAssembly();
+
         containerBuilder.Register(
             s =>
             {
@@ -68,16 +77,24 @@ public class AllaganMarketPlugin : HostedPlugin
                 gilNumberFormat.CurrencyDecimalDigits = 0;
                 return gilNumberFormat;
             });
+
+        containerBuilder.RegisterAssemblyTypes(dataAccess)
+               .Where(t => t.Name.EndsWith("Setting"))
+               .AsSelf()
+               .AsImplementedInterfaces();
+
         containerBuilder.RegisterType<WindowService>().SingleInstance();
         containerBuilder.RegisterType<FileDialogManager>().SingleInstance();
         containerBuilder.RegisterType<InstallerWindowService>().SingleInstance();
         containerBuilder.RegisterType<MarketPriceUpdaterService>().SingleInstance();
         containerBuilder.RegisterType<RetainerMarketService>().SingleInstance();
-        containerBuilder.RegisterType<ImGuiService>().SingleInstance();
+        containerBuilder.RegisterType<ImGuiService>().AsSelf().As<AllaganLib.Interface.Services.ImGuiService>().SingleInstance();
         containerBuilder.RegisterType<MediatorService>().SingleInstance();
         containerBuilder.RegisterType<ClientWebSocket>();
         containerBuilder.RegisterType<CommandService>().SingleInstance();
+        containerBuilder.Register(c => new HttpClient()).As<HttpClient>();
         containerBuilder.RegisterType<UniversalisWebsocketService>().SingleInstance();
+        containerBuilder.RegisterType<UniversalisApiService>().SingleInstance();
         containerBuilder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<ConfigWindow>().As<Window>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<InventoryService>().As<IInventoryService>().SingleInstance();
@@ -131,6 +148,7 @@ public class AllaganMarketPlugin : HostedPlugin
         serviceCollection.AddHostedService(p => p.GetRequiredService<ICharacterMonitorService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<PluginBootService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisWebsocketService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisApiService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UndercutService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<MediatorService>()); 
     }

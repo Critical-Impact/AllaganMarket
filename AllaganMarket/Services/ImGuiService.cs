@@ -1,11 +1,18 @@
-﻿namespace AllaganMarket.Services;
+﻿using Dalamud.Plugin;
+using Dalamud.Plugin.Services;
+
+namespace AllaganMarket.Services;
 
 using System.Runtime.CompilerServices;
 using Dalamud.Interface.Utility.Raii;
 using ImGuiNET;
 
-public class ImGuiService
+public class ImGuiService : AllaganLib.Interface.Services.ImGuiService
 {
+    public ImGuiService(IDalamudPluginInterface pluginInterface, ITextureProvider textureProvider) : base(pluginInterface, textureProvider)
+    {
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
     public void VerticalCenter()
     {

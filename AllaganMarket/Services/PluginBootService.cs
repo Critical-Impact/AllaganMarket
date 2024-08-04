@@ -1,4 +1,6 @@
-﻿namespace AllaganMarket.Services;
+﻿using AllaganMarket.Models;
+
+namespace AllaganMarket.Services;
 
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,15 +15,18 @@ public class PluginBootService : IHostedService
     private readonly ICharacterMonitorService characterMonitorService;
     private readonly Configuration configuration;
     private readonly SaleTrackerService saleTrackerService;
+    private readonly MediatorService mediatorService;
 
     public PluginBootService(
         Configuration configuration,
         ICharacterMonitorService characterMonitorService,
-        SaleTrackerService saleTrackerService)
+        SaleTrackerService saleTrackerService,
+        MediatorService mediatorService)
     {
         this.configuration = configuration;
         this.characterMonitorService = characterMonitorService;
         this.saleTrackerService = saleTrackerService;
+        this.mediatorService = mediatorService;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -31,7 +36,7 @@ public class PluginBootService : IHostedService
             this.configuration.SaleItems,
             this.configuration.Gil,
             this.configuration.Sales);
-
+        this.mediatorService.Publish(new PluginLoaded());
         return Task.CompletedTask;
     }
 
