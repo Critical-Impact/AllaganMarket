@@ -63,6 +63,7 @@ public class ConfigurationLoaderService : IHostedService
 
     public void Save()
     {
+        this.GetConfiguration().IsDirty = false;
         this.pluginInterface.SavePluginConfig(this.GetConfiguration());
         this.SaveCsvs();
     }

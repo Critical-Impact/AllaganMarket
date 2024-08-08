@@ -1,5 +1,7 @@
 ﻿
 
+using System.Collections.Generic;
+
 using AllaganLib.Data.Service;
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Shared.Extensions;
@@ -86,6 +88,7 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.SaleTrackerService = saleTrackerService;
         this.CharacterMonitorService = characterMonitorService;
         this.DataManager = dataManager;
+        this.WorldExpanded = new Dictionary<uint, bool>();
         this.itemSheet = this.DataManager.GetExcelSheet<Item>()!;
         this.worldSheet = this.DataManager.GetExcelSheet<World>()!;
         this.SizeConstraints = new WindowSizeConstraints
@@ -119,6 +122,23 @@ public class MainWindow : ExtendedWindow, IDisposable
     public IDataManager DataManager { get; }
 
     private MainWindowTab SelectedTab { get; set; }
+    
+    private Dictionary<uint, bool> WorldExpanded { get; set; }
+
+    private bool IsWorldExpanded(uint worldId)
+    {
+        if (!this.WorldExpanded.TryGetValue(worldId, out var value))
+        {
+            return true;
+        }
+
+        return this.WorldExpanded.ContainsKey(worldId) && value;
+    }
+
+    private void ToggleWorldExpanded(uint worldId)
+    {
+        this.WorldExpanded[worldId] = !this.WorldExpanded.GetValueOrDefault(worldId, true);
+    }
 
     public void Dispose()
     {
@@ -276,16 +296,17 @@ public class MainWindow : ExtendedWindow, IDisposable
                         {
                             ImGui.TextWrapped("No worlds found. Please login.");
                         }
+
                         foreach (var worldId in worlds)
                         {
                             var world = this.worldSheet.GetRow(worldId)!;
                             if (ImGui.Selectable(
                                     world.Name.AsReadOnly().ExtractText(),
-                                    this.saleFilter.WorldId == worldId))
+                                    this.saleFilter.WorldId == worldId, ImGuiSelectableFlags.AllowItemOverlap))
                             {
                                 this.SwitchWorld(worldId);
                             }
-
+                            
                             if (ImGui.IsItemHovered())
                             {
                                 using (var tooltip = ImRaii.Tooltip())
@@ -293,8 +314,24 @@ public class MainWindow : ExtendedWindow, IDisposable
                                     if (tooltip)
                                     {
                                         ImGui.Text("Left Click: Select/Unselect");
+                                        ImGui.Text("Arrow: Collapse/Uncollapse");
                                     }
                                 }
+                            }
+
+                            ImGui.SameLine();
+                            var style = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
+                            if (ImGui.ArrowButton(
+                                    "world",
+                                    this.IsWorldExpanded(worldId) ? ImGuiDir.Down : ImGuiDir.Right))
+                            {
+                                this.ToggleWorldExpanded(worldId);
+                            }
+                            style.Pop();
+
+                            if (!this.IsWorldExpanded(worldId))
+                            {
+                                continue;
                             }
 
                             using (ImRaii.PushIndent())
@@ -348,6 +385,10 @@ public class MainWindow : ExtendedWindow, IDisposable
                                             {
                                                 this.SwitchCharacter(retainer.CharacterId);
                                             }
+
+                                            ImGui.SameLine();
+                                            var icon = this.TextureProvider.GetFromGameIcon(new GameIconLookup(retainer.ClassJobId + 62000));
+                                            ImGui.Image(icon.GetWrapOrEmpty().ImGuiHandle, new Vector2(16, 16) * ImGui.GetIO().FontGlobalScale);
 
                                             if (ImGui.IsItemHovered())
                                             {

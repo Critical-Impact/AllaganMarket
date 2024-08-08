@@ -54,7 +54,7 @@ public class PluginBootService : IHostedService
             this.configuration.Gil,
             this.configuration.Sales);
         this.clientState.Login += this.ClientLoggedIn;
-        if (!this.clientState.IsLoggedIn)
+        if (this.clientState.IsLoggedIn)
         {
             this.ClientLoggedIn();
         }
@@ -65,7 +65,7 @@ public class PluginBootService : IHostedService
 
     private void ClientLoggedIn()
     {
-        if (this.configurationWizardService.ShouldShowWizard)
+        if (this.configurationWizardService.ShouldShowWizard || !this.configurationWizardService.ConfiguredOnce)
         {
             this.wizardWindow.IsOpen = true;
         }

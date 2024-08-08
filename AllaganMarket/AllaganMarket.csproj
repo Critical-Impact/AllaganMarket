@@ -39,6 +39,10 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <TargetPath>Images\logo_small.png</TargetPath>
         </ContentWithTargetPath>
+        <ContentWithTargetPath Include="Images\logo_menu.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>Images\logo_menu.png</TargetPath>
+        </ContentWithTargetPath>
     </ItemGroup>
 
     <ItemGroup>

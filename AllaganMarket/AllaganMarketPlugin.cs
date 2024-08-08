@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 
 using AllaganLib.Data.Service;
@@ -6,11 +7,14 @@ using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
 using AllaganLib.Universalis.Services;
 
+using AllaganMarket.Models;
 using AllaganMarket.Settings;
 
 using DalaMock.Host.Mediator;
 using DalaMock.Shared.Classes;
 using DalaMock.Shared.Interfaces;
+
+using Lumina;
 
 namespace AllaganMarket;
 
@@ -48,7 +52,9 @@ public class AllaganMarketPlugin : HostedPlugin
         IFramework framework,
         IDataManager dataManager,
         IChatGui chatGui,
-        IMarketBoard marketBoard)
+        IMarketBoard marketBoard,
+        ITitleScreenMenu titleScreenMenu,
+        IDtrBar dtrBar)
         : base(
             pluginInterface,
             pluginLog,
@@ -61,7 +67,9 @@ public class AllaganMarketPlugin : HostedPlugin
             framework,
             dataManager,
             chatGui,
-            marketBoard)
+            marketBoard,
+            titleScreenMenu,
+            dtrBar)
     {
         this.CreateHost();
         this.Start();
@@ -117,9 +125,12 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<CharacterMonitorService>().As<ICharacterMonitorService>()
             .SingleInstance();
         containerBuilder.RegisterType<PluginBootService>().SingleInstance();
+        containerBuilder.RegisterType<PluginStateService>().SingleInstance();
         containerBuilder.RegisterType<ConfigurationLoaderService>().SingleInstance();
         containerBuilder.RegisterType<RetainerService>().As<IRetainerService>().SingleInstance();
         containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
+        containerBuilder.RegisterType<LaunchButtonService>().SingleInstance();
+        containerBuilder.RegisterType<DtrService>().SingleInstance();
         containerBuilder.RegisterType<SaleFilter>();
         containerBuilder.Register(c => new WizardWidgetSettings() { PluginName = "Allagan Market", LogoPath = "logo_small" });
         containerBuilder.RegisterType<WizardWidget<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
@@ -130,7 +141,14 @@ public class AllaganMarketPlugin : HostedPlugin
             {
                 var dataManger = s.Resolve<IDataManager>();
                 return dataManger.GetExcelSheet<Item>()!;
-            });
+            }).SingleInstance();
+
+        containerBuilder.Register<ExcelSheet<ClassJob>>(
+            s =>
+            {
+                var dataManger = s.Resolve<IDataManager>();
+                return dataManger.GetExcelSheet<ClassJob>()!;
+            }).SingleInstance();
 
         containerBuilder.Register(
             s =>
@@ -142,6 +160,8 @@ public class AllaganMarketPlugin : HostedPlugin
 
     public override void ConfigureServices(IServiceCollection serviceCollection)
     {
+        serviceCollection.AddHostedService(p => p.GetRequiredService<PluginBootService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<PluginStateService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<WindowService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<CommandService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<InstallerWindowService>());
@@ -150,11 +170,12 @@ public class AllaganMarketPlugin : HostedPlugin
         serviceCollection.AddHostedService(p => p.GetRequiredService<SaleTrackerService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<RetainerMarketService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<ICharacterMonitorService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<PluginBootService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisWebsocketService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisApiService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UndercutService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<MediatorService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<LaunchButtonService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<DtrService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<ConfigurationLoaderService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<AutoSaveService>());
     }

@@ -16,6 +16,8 @@ public class SettingTypeConfiguration
                 return "Chat";
             case General:
                 return "General";
+            case SettingType.Features:
+                return "Features";
         }
 
         return settingType.ToString();
@@ -23,6 +25,6 @@ public class SettingTypeConfiguration
 
     public List<SettingType> GetCategoryOrder()
     {
-        return this.settingTypes ??= [General, Chat];
+        return this.settingTypes ??= [General, SettingType.Features, Chat];
     }
 }

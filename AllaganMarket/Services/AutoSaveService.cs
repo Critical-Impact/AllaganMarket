@@ -20,20 +20,24 @@ namespace AllaganMarket.Services;
 public class AutoSaveService : IHostedService, IMediatorSubscriber
 {
     private readonly Configuration configuration;
+    private readonly ConfigurationLoaderService configurationLoaderService;
     private readonly IFramework framework;
     private readonly MediatorService mediatorService;
-    private TimeSpan defaultSaveTime = TimeSpan.FromSeconds(10);
-    private DateTime? nextSaveTime;
+    private readonly IPluginLog pluginLog;
     private bool pluginLoaded;
 
     public AutoSaveService(
         Configuration configuration,
+        ConfigurationLoaderService configurationLoaderService,
         IFramework framework,
-        MediatorService mediatorService)
+        MediatorService mediatorService,
+        IPluginLog pluginLog)
     {
         this.configuration = configuration;
+        this.configurationLoaderService = configurationLoaderService;
         this.framework = framework;
         this.mediatorService = mediatorService;
+        this.pluginLog = pluginLog;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -57,11 +61,9 @@ public class AutoSaveService : IHostedService, IMediatorSubscriber
 
         if (this.configuration.IsDirty)
         {
-            if (this.nextSaveTime == null || this.nextSaveTime < DateTime.Now)
-            {
-                this.nextSaveTime = DateTime.Now.Add(this.defaultSaveTime);
-                //do something
-            }
+            this.pluginLog.Verbose("Configuration is dirty, saving.");
+            this.configurationLoaderService.Save();
+            this.mediatorService.Publish(new ConfigurationModifiedMessage());
         }
     }
 

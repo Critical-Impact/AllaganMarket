@@ -10,3 +10,4 @@ public record OpenWindowMessage(Type WindowType) : MessageBase;
 
 public record CloseWindowMessage(Type WindowType) : MessageBase;
 public record PluginLoadedMessage() : MessageBase;
+public record ConfigurationModifiedMessage() : MessageBase;

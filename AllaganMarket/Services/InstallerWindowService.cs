@@ -1,4 +1,6 @@
-﻿namespace AllaganMarket.Services;
+﻿using AllaganMarket.Models;
+
+namespace AllaganMarket.Services;
 
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,11 +10,16 @@ using Microsoft.Extensions.Hosting;
 
 public class InstallerWindowService : IHostedService
 {
+    private readonly PluginStateService pluginStateService;
+
     public InstallerWindowService(
         IDalamudPluginInterface pluginInterface,
         ConfigWindow configWindow,
-        MainWindow mainWindow)
+        MainWindow mainWindow,
+        PluginStateService pluginStateService
+        )
     {
+        this.pluginStateService = pluginStateService;
         this.PluginInterface = pluginInterface;
         this.ConfigWindow = configWindow;
         this.MainWindow = mainWindow;
@@ -41,11 +48,13 @@ public class InstallerWindowService : IHostedService
 
     private void ToggleMainUi()
     {
+        this.pluginStateService.ShowWindows = !this.pluginStateService.ShowWindows;
         this.MainWindow.Toggle();
     }
 
     private void ToggleConfigUi()
     {
+        this.pluginStateService.ShowWindows = !this.pluginStateService.ShowWindows;
         this.ConfigWindow.Toggle();
     }
 }
