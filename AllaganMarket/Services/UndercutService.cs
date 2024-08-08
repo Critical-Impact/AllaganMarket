@@ -79,10 +79,10 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.configuration = configuration;
         this.chatNotifyUndercutSetting = chatNotifyUndercutSetting;
         this.chatNotifyUndercutLoginSetting = chatNotifyUndercutLoginSetting;
-        this.mediatorService.Subscribe<PluginLoaded>(this, this.PluginLoaded);
+        this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
     }
 
-    private void PluginLoaded(PluginLoaded obj)
+    private void PluginLoaded(PluginLoadedMessage obj)
     {
         this.pluginLog.Verbose("Plugin has loaded, performing an initial scan of undercuts.");
         var allSales = this.saleTrackerService.GetSales(null, null);

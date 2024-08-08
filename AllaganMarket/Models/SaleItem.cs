@@ -1,11 +1,18 @@
-﻿namespace AllaganMarket.Models;
+﻿using System.Globalization;
+
+using AllaganLib.Data.Interfaces;
+
+using Lumina;
+using Lumina.Data;
+
+namespace AllaganMarket.Models;
 
 using System;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GameInterop;
 using Interfaces;
 
-public class SaleItem : IDebuggable, IEquatable<SaleItem>
+public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
 {
     public SaleItem(InventoryItem inventoryItem, RetainerMarketItemPrice? retainerMarketItemPrice, ulong retainerId, uint worldId)
     {
@@ -94,8 +101,13 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>
     {
         return this.ItemId == 0;
     }
-
+    
     public uint Total => this.Quantity * this.UnitPrice;
+
+    public bool NeedsUpdate(int updatePeriodMinutes)
+    {
+        return DateTime.Now > this.UpdatedAt + TimeSpan.FromMinutes(updatePeriodMinutes);
+    }
 
     public string AsDebugString()
     {
@@ -142,5 +154,59 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>
     public override int GetHashCode()
     {
         return HashCode.Combine(this.RetainerId, this.WorldId, this.ItemId, this.IsHq, this.Quantity, this.UnitPrice);
+    }
+
+    public void FromCsv(string[] lineData)
+    {
+        this.RetainerId = Convert.ToUInt64(lineData[0]);
+        this.WorldId = Convert.ToUInt32(lineData[1]);
+        this.ItemId = Convert.ToUInt32(lineData[2]);
+        this.IsHq = lineData[3] == "1" ? true : false;
+        this.Quantity = Convert.ToUInt32(lineData[4], CultureInfo.InvariantCulture);
+        this.UnitPrice = Convert.ToUInt32(lineData[5], CultureInfo.InvariantCulture);
+        this.UndercutBy = lineData[6] == string.Empty ? null : Convert.ToUInt32(lineData[6], CultureInfo.InvariantCulture);
+        this.ListedAt = DateTime.Parse(lineData[7], CultureInfo.InvariantCulture);
+        this.UpdatedAt = DateTime.Parse(lineData[8], CultureInfo.InvariantCulture);
+    }
+
+    public static string[] GetHeaders()
+    {
+        return
+        [
+            "Retainer ID",
+            "World ID",
+            "Item ID",
+            "Is HQ?",
+            "Quantity",
+            "Unit Price",
+            "Undercut By?",
+            "Listed At",
+            "Updated At"
+        ];
+    }
+
+    public string[] ToCsv()
+    {
+        return
+        [
+            this.RetainerId.ToString(),
+            this.WorldId.ToString(),
+            this.ItemId.ToString(),
+            this.IsHq ? "1" : "0",
+            this.Quantity.ToString(CultureInfo.InvariantCulture),
+            this.UnitPrice.ToString(CultureInfo.InvariantCulture),
+            this.UndercutBy?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            this.ListedAt.ToString(CultureInfo.InvariantCulture),
+            this.UpdatedAt.ToString(CultureInfo.InvariantCulture)
+        ];
+    }
+
+    public bool IncludeInCsv()
+    {
+        return true;
+    }
+
+    public void PopulateData(GameData gameData, Language language)
+    {
     }
 }

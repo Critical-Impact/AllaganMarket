@@ -49,14 +49,14 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
 
         this.PluginInterface.UiBuilder.Draw += this.UiBuilderOnDraw;
 
-        this.MediatorService.Subscribe(this, new Action<ToggleWindow>(this.ToggleWindow));
-        this.MediatorService.Subscribe(this, new Action<OpenWindow>(this.OpenWindow));
-        this.MediatorService.Subscribe(this, new Action<CloseWindow>(this.CloseWindow));
+        this.MediatorService.Subscribe(this, new Action<ToggleWindowMessage>(this.ToggleWindow));
+        this.MediatorService.Subscribe(this, new Action<OpenWindowMessage>(this.OpenWindow));
+        this.MediatorService.Subscribe(this, new Action<CloseWindowMessage>(this.CloseWindow));
 
         return Task.CompletedTask;
     }
 
-    private void CloseWindow(CloseWindow obj)
+    private void CloseWindow(CloseWindowMessage obj)
     {
         var window = this.PluginWindows.FirstOrDefault(c => c.GetType() == obj.WindowType);
         if (window != null)
@@ -65,7 +65,7 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
         }
     }
 
-    private void OpenWindow(OpenWindow obj)
+    private void OpenWindow(OpenWindowMessage obj)
     {
         var window = this.PluginWindows.FirstOrDefault(c => c.GetType() == obj.WindowType);
         if (window != null)
@@ -74,7 +74,7 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
         }
     }
 
-    private void ToggleWindow(ToggleWindow obj)
+    private void ToggleWindow(ToggleWindowMessage obj)
     {
         var window = this.PluginWindows.FirstOrDefault(c => c.GetType() == obj.WindowType);
         window?.Toggle();

@@ -1,48 +1,51 @@
-﻿using AllaganLib.Interface.FormFields;
+﻿using System.ComponentModel;
+
+using AllaganLib.Interface.Converters;
+using AllaganLib.Interface.FormFields;
+using AllaganLib.Interface.Wizard;
+
+using Newtonsoft.Json;
 
 namespace AllaganMarket;
 
 using System;
 using System.Collections.Generic;
+
 using Dalamud.Configuration;
 using Dalamud.Plugin;
+
 using Models;
 
 [Serializable]
-public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigurable<bool?>, IConfigurable<Enum?>
+public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigurable<bool?>, IConfigurable<Enum?>,
+                             IWizardConfiguration
 {
-    [NonSerialized]
-    private IDalamudPluginInterface? pluginInterface;
+    private HashSet<string>? wizardVersionsSeen { get; set; } = null;
 
     public bool IsConfigWindowMovable { get; set; } = true;
 
     public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
-    
+
     public Dictionary<ulong, Character> Characters { get; set; } = new();
 
-    //Move these to CSVs
+    [JsonIgnore]
     public Dictionary<ulong, SaleItem[]> SaleItems { get; set; } = new();
+
+    [JsonIgnore]
     public Dictionary<ulong, List<SoldItem>> Sales { get; set; } = new();
+
     public Dictionary<ulong, uint> Gil { get; set; } = new();
 
     public Dictionary<string, int> IntegerSettings { get; set; } = new();
+
     public Dictionary<string, bool> BooleanSettings { get; set; } = new();
+
+    [JsonConverter(typeof(EnumDictionaryConverter))]
     public Dictionary<string, Enum> EnumSettings { get; set; } = new();
 
     public bool IsDirty { get; set; } = false;
 
     public int Version { get; set; } = 0;
-
-    public void Initialize(IDalamudPluginInterface pluginInterface)
-    {
-        this.pluginInterface = pluginInterface;
-    }
-
-    public void Save()
-    {
-        this.IsDirty = false;
-        this.pluginInterface!.SavePluginConfig(this);
-    }
 
     public int? Get(string key)
     {
@@ -60,7 +63,7 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
             this.EnumSettings[key] = newValue;
         }
 
-        this.Save();
+        this.IsDirty = true;
     }
 
     public void Set(string key, bool? newValue)
@@ -74,7 +77,7 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
             this.BooleanSettings[key] = newValue.Value;
         }
 
-        this.Save();
+        this.IsDirty = true;
     }
 
     public void Set(string key, int? newValue)
@@ -88,7 +91,7 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
             this.IntegerSettings[key] = newValue.Value;
         }
 
-        this.Save();
+        this.IsDirty = true;
     }
 
     bool? IConfigurable<bool?>.Get(string key)
@@ -99,5 +102,25 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
     Enum? IConfigurable<Enum?>.Get(string key)
     {
         return this.EnumSettings.GetValueOrDefault(key);
+    }
+
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+    [DefaultValue(true)]
+    public bool ShowWizardNewFeatures { get; set; }
+
+    public HashSet<string> WizardVersionsSeen
+    {
+        get => this.wizardVersionsSeen ??= new HashSet<string>();
+        set
+        {
+            this.wizardVersionsSeen = value;
+            this.IsDirty = true;
+        }
+    }
+
+    public void MarkWizardVersionSeen(string versionNumber)
+    {
+        this.WizardVersionsSeen.Add(versionNumber);
+        this.IsDirty = true;
     }
 }

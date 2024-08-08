@@ -1,6 +1,9 @@
 ﻿using System.Net.Http;
 using System.Reflection;
 
+using AllaganLib.Data.Service;
+using AllaganLib.Interface.Widgets;
+using AllaganLib.Interface.Wizard;
 using AllaganLib.Universalis.Services;
 
 using AllaganMarket.Settings;
@@ -84,8 +87,14 @@ public class AllaganMarketPlugin : HostedPlugin
                .AsSelf()
                .AsImplementedInterfaces();
 
+        containerBuilder.RegisterAssemblyTypes(dataAccess)
+               .Where(t => t.Name.EndsWith("Feature"))
+               .AsSelf()
+               .AsImplementedInterfaces();
+
         containerBuilder.RegisterType<WindowService>().SingleInstance();
         containerBuilder.RegisterType<FileDialogManager>().SingleInstance();
+        containerBuilder.RegisterType<DalamudFileDialogManager>().As<IFileDialogManager>().SingleInstance();
         containerBuilder.RegisterType<InstallerWindowService>().SingleInstance();
         containerBuilder.RegisterType<MarketPriceUpdaterService>().SingleInstance();
         containerBuilder.RegisterType<RetainerMarketService>().SingleInstance();
@@ -98,15 +107,23 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<UniversalisApiService>().SingleInstance();
         containerBuilder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<ConfigWindow>().As<Window>().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<WizardWindow>().As<Window>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<InventoryService>().As<IInventoryService>().SingleInstance();
         containerBuilder.RegisterType<SaleTrackerService>().SingleInstance();
         containerBuilder.RegisterType<UndercutService>().SingleInstance();
+        containerBuilder.RegisterType<CsvLoaderService>().SingleInstance();
+        containerBuilder.RegisterType<AutoSaveService>().SingleInstance();
+        containerBuilder.Register(c => c.Resolve<IDataManager>().GameData).SingleInstance();
         containerBuilder.RegisterType<CharacterMonitorService>().As<ICharacterMonitorService>()
             .SingleInstance();
         containerBuilder.RegisterType<PluginBootService>().SingleInstance();
-        containerBuilder.RegisterType<ConfigurationService>().SingleInstance();
+        containerBuilder.RegisterType<ConfigurationLoaderService>().SingleInstance();
         containerBuilder.RegisterType<RetainerService>().As<IRetainerService>().SingleInstance();
+        containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
         containerBuilder.RegisterType<SaleFilter>();
+        containerBuilder.Register(c => new WizardWidgetSettings() { PluginName = "Allagan Market", LogoPath = "logo_small" });
+        containerBuilder.RegisterType<WizardWidget<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
+        containerBuilder.RegisterType<ConfigurationWizardService<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
         containerBuilder.RegisterType<Font>().As<IFont>().SingleInstance();
         containerBuilder.Register<ExcelSheet<Item>>(
             s =>
@@ -115,26 +132,11 @@ public class AllaganMarketPlugin : HostedPlugin
                 return dataManger.GetExcelSheet<Item>()!;
             });
 
-        //Add configuration
         containerBuilder.Register(
             s =>
             {
-                var dalamudPluginInterface = s.Resolve<IDalamudPluginInterface>();
-                var pluginLog = s.Resolve<IPluginLog>();
-                Configuration configuration;
-                try
-                {
-                    configuration = dalamudPluginInterface.GetPluginConfig() as Configuration ??
-                                                  new Configuration();
-                }
-                catch (Exception e)
-                {
-                    pluginLog.Error(e, "Failed to load configuration");
-                    configuration = new Configuration();
-                }
-
-                configuration.Initialize(dalamudPluginInterface);
-                return configuration;
+                var configurationLoaderService = s.Resolve<ConfigurationLoaderService>();
+                return configurationLoaderService.GetConfiguration();
             }).SingleInstance();
     }
 
@@ -153,6 +155,7 @@ public class AllaganMarketPlugin : HostedPlugin
         serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisApiService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<UndercutService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<MediatorService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<ConfigurationService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<ConfigurationLoaderService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<AutoSaveService>());
     }
 }

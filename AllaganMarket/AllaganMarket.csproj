@@ -13,9 +13,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AllaganLib.Interface" Version="1.0.0" />
-        <PackageReference Include="AllaganLib.Shared" Version="1.0.0" />
-        <PackageReference Include="AllaganLib.Universalis" Version="1.0.0" />
+        <PackageReference Include="AllaganLib.Data" Version="1.0.2" />
+        <PackageReference Include="AllaganLib.Interface" Version="1.0.2" />
+        <PackageReference Include="AllaganLib.Shared" Version="1.0.2" />
+        <PackageReference Include="AllaganLib.Universalis" Version="1.0.2" />
         <PackageReference Include="Autofac" Version="8.0.0"/>
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0"/>
         <PackageReference Include="DalaMock.Host" Version="2.0.24" />
@@ -27,6 +28,17 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ContentWithTargetPath Include="Images\logo.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>Images\logo.png</TargetPath>
+        </ContentWithTargetPath>
+        <ContentWithTargetPath Include="Images\logo_small.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>Images\logo_small.png</TargetPath>
+        </ContentWithTargetPath>
     </ItemGroup>
 
     <ItemGroup>

@@ -1,22 +1,23 @@
-// <copyright file="ConfigurationService.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 using System;
+using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using AllaganLib.Data.Service;
 
 using AllaganMarket.Models;
 
 using DalaMock.Host.Mediator;
 
+using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 
 using Microsoft.Extensions.Hosting;
 
 namespace AllaganMarket.Services;
 
-public class ConfigurationService : IHostedService, IMediatorSubscriber
+public class AutoSaveService : IHostedService, IMediatorSubscriber
 {
     private readonly Configuration configuration;
     private readonly IFramework framework;
@@ -25,7 +26,10 @@ public class ConfigurationService : IHostedService, IMediatorSubscriber
     private DateTime? nextSaveTime;
     private bool pluginLoaded;
 
-    public ConfigurationService(Configuration configuration, IFramework framework, MediatorService mediatorService)
+    public AutoSaveService(
+        Configuration configuration,
+        IFramework framework,
+        MediatorService mediatorService)
     {
         this.configuration = configuration;
         this.framework = framework;
@@ -34,12 +38,12 @@ public class ConfigurationService : IHostedService, IMediatorSubscriber
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.mediatorService.Subscribe<PluginLoaded>(this, this.PluginLoaded);
+        this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
         this.framework.Update += this.FrameworkOnUpdate;
         return Task.CompletedTask;
     }
 
-    private void PluginLoaded(PluginLoaded obj)
+    private void PluginLoaded(PluginLoadedMessage obj)
     {
         this.pluginLoaded = true;
     }
@@ -56,10 +60,11 @@ public class ConfigurationService : IHostedService, IMediatorSubscriber
             if (this.nextSaveTime == null || this.nextSaveTime < DateTime.Now)
             {
                 this.nextSaveTime = DateTime.Now.Add(this.defaultSaveTime);
-                this.configuration.Save();
+                //do something
             }
         }
     }
+
 
     public Task StopAsync(CancellationToken cancellationToken)
     {

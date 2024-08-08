@@ -1,4 +1,6 @@
-﻿namespace AllaganMarket.Filtering;
+﻿using AllaganMarket.Settings;
+
+namespace AllaganMarket.Filtering;
 
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +18,8 @@ public class SaleFilter
     private readonly ExcelSheet<Item> itemSheet;
     private readonly SaleTrackerService saleTrackerService;
     private readonly ICharacterMonitorService characterMonitorService;
+    private readonly ItemUpdatePeriodSetting itemUpdatePeriodSetting;
+    private readonly Configuration configuration;
     private long aggSalesTotalGil;
     private long aggSoldTotalGil;
     private List<SaleItem>? cachedSales;
@@ -23,6 +27,7 @@ public class SaleFilter
     private ulong? characterId;
     private bool? isHq;
     private bool? showEmpty;
+    private bool? needUpdating;
 
     private uint? itemId;
     private string? itemName;
@@ -36,11 +41,18 @@ public class SaleFilter
     private string? updatedAt;
     private uint? worldId;
 
-    public SaleFilter(IDataManager dataManager, SaleTrackerService saleTrackerService, ICharacterMonitorService characterMonitorService)
+    public SaleFilter(
+        IDataManager dataManager,
+        SaleTrackerService saleTrackerService,
+        ICharacterMonitorService characterMonitorService,
+        ItemUpdatePeriodSetting itemUpdatePeriodSetting,
+        Configuration configuration)
     {
         this.dataManager = dataManager;
         this.saleTrackerService = saleTrackerService;
         this.characterMonitorService = characterMonitorService;
+        this.itemUpdatePeriodSetting = itemUpdatePeriodSetting;
+        this.configuration = configuration;
         this.itemSheet = dataManager.GetExcelSheet<Item>()!;
     }
 
@@ -168,6 +180,17 @@ public class SaleFilter
         }
     }
 
+
+    public bool? NeedUpdating
+    {
+        get => this.needUpdating;
+        set
+        {
+            this.needsRefresh = true;
+            this.needUpdating = value;
+        }
+    }
+
     public void Clear()
     {
         this.characterId = null;
@@ -182,6 +205,7 @@ public class SaleFilter
         this.total = null;
         this.itemName = null;
         this.showEmpty = null;
+        this.needUpdating = null;
         this.needsRefresh = true;
     }
 
@@ -201,6 +225,16 @@ public class SaleFilter
         if (this.ShowEmpty != true)
         {
             sales = sales.Where(c => !c.IsEmpty());
+        }
+
+        if (this.NeedUpdating != null)
+        {
+            sales = sales.Where(    
+                c =>
+            {
+                var needsUpdate = c.NeedsUpdate(this.itemUpdatePeriodSetting.CurrentValue(this.configuration));
+                return (needsUpdate && this.NeedUpdating.Value) || (!needsUpdate && this.NeedUpdating.Value);
+            });
         }
 
         if (this.itemId != null)

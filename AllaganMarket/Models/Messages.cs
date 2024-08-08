@@ -4,9 +4,9 @@ namespace AllaganMarket.Models;
 
 using System;
 
-public record ToggleWindow(Type WindowType) : MessageBase;
+public record ToggleWindowMessage(Type WindowType) : MessageBase;
 
-public record OpenWindow(Type WindowType) : MessageBase;
+public record OpenWindowMessage(Type WindowType) : MessageBase;
 
-public record CloseWindow(Type WindowType) : MessageBase;
-public record PluginLoaded() : MessageBase;
+public record CloseWindowMessage(Type WindowType) : MessageBase;
+public record PluginLoadedMessage() : MessageBase;

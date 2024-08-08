@@ -1,3 +1,5 @@
+using System.Linq;
+
 using AllaganMarket.Models;
 
 namespace AllaganMarket.Extensions;
@@ -15,6 +17,7 @@ public static class SaleItemArrayExtensions
                 saleItems[index] = saleItem;
             }
         }
+
         return saleItems!;
     }
 }

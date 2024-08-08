@@ -1,9 +1,16 @@
-﻿namespace AllaganMarket.Models;
+﻿using System.Globalization;
+
+using AllaganLib.Data.Interfaces;
+
+using Lumina;
+using Lumina.Data;
+
+namespace AllaganMarket.Models;
 
 using System;
 using Interfaces;
 
-public class SoldItem : IDebuggable
+public class SoldItem : IDebuggable, ICsv
 {
     public SoldItem(SaleItem saleItem)
     {
@@ -45,5 +52,57 @@ public class SoldItem : IDebuggable
     {
         return
             $"Retainer ID: {this.RetainerId}, World ID: {this.WorldId}, Item ID: {this.ItemId}, Is HQ: {this.IsHq}, Quantity: {this.Quantity}, Unit Price: {this.UnitPrice}";
+    }
+
+    public static string[] GetHeaders()
+    {
+        return
+        [
+            "Retainer ID",
+            "World ID",
+            "Item ID",
+            "Is HQ?",
+            "Quantity",
+            "Unit Price",
+            "Tax Rate",
+            "Sold At"
+        ];
+    }
+
+    public void FromCsv(string[] lineData)
+    {
+        this.RetainerId = Convert.ToUInt64(lineData[0]);
+        this.WorldId = Convert.ToUInt32(lineData[1]);
+        this.ItemId = Convert.ToUInt32(lineData[2]);
+        this.IsHq = lineData[3] == "1" ? true : false;
+        this.Quantity = Convert.ToUInt32(lineData[4], CultureInfo.InvariantCulture);
+        this.UnitPrice = Convert.ToUInt32(lineData[5], CultureInfo.InvariantCulture);
+        this.TaxRate = Convert.ToUInt32(lineData[6], CultureInfo.InvariantCulture);
+        this.SoldAt = Convert.ToDateTime(lineData[7], CultureInfo.InvariantCulture);
+    }
+
+    public string[] ToCsv()
+    {
+        return
+        [
+            this.RetainerId.ToString(),
+            this.WorldId.ToString(),
+            this.ItemId.ToString(),
+            this.IsHq ? "1" : "0",
+            this.Quantity.ToString(CultureInfo.InvariantCulture),
+            this.UnitPrice.ToString(CultureInfo.InvariantCulture),
+            this.TaxRate.ToString(CultureInfo.InvariantCulture),
+            this.SoldAt.ToString(CultureInfo.InvariantCulture)
+        ];
+    }
+
+    public bool IncludeInCsv()
+    {
+        return this.ItemId != 0 && this.RetainerId != 0;
+    }
+
+    public void PopulateData(GameData gameData, Language language)
+    {
+        
     }
 }

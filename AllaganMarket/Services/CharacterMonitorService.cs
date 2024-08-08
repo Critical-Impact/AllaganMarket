@@ -146,7 +146,8 @@ public class CharacterMonitorService : ICharacterMonitorService
                 CharacterType.Character,
                 this.clientState.LocalContentId,
                 this.clientState.LocalPlayer.Name.ToString(),
-                this.clientState.LocalPlayer.HomeWorld.Id);
+                this.clientState.LocalPlayer.HomeWorld.Id,
+                this.clientState.LocalPlayer.ClassJob.Id);
             this.Characters[this.clientState.LocalContentId] = newCharacter;
         }
     }
@@ -167,7 +168,8 @@ public class CharacterMonitorService : ICharacterMonitorService
                         CharacterType.Retainer,
                         retainerId,
                         retainerName,
-                        this.clientState.LocalPlayer.HomeWorld.Id);
+                        this.clientState.LocalPlayer.HomeWorld.Id,
+                        retainer.ClassJob);
                     newRetainer.RetainerTown = retainer.Town;
                     newRetainer.OwnerId = this.clientState.LocalContentId;
                     this.Characters[retainerId] = newRetainer;

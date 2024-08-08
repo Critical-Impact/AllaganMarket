@@ -1,5 +1,9 @@
 ﻿
 
+using AllaganLib.Data.Service;
+using AllaganLib.Interface.Widgets;
+using AllaganLib.Shared.Extensions;
+
 using AllaganMarket.Settings;
 
 using DalaMock.Host.Mediator;
@@ -40,7 +44,10 @@ public class MainWindow : ExtendedWindow, IDisposable
     private readonly SaleFilter saleFilter;
     private readonly NumberFormatInfo gilNumberFormat;
     private readonly ItemUpdatePeriodSetting itemUpdatePeriodSetting;
+    private readonly ICommandManager commandManager;
     private readonly IFont font;
+    private readonly CsvLoaderService csvLoaderService;
+    private readonly IFileDialogManager fileDialogManager;
     private readonly ExcelSheet<World> worldSheet;
     private bool filterMenuOpen;
 
@@ -58,14 +65,20 @@ public class MainWindow : ExtendedWindow, IDisposable
         SaleFilter saleFilter,
         NumberFormatInfo gilNumberFormat,
         ItemUpdatePeriodSetting itemUpdatePeriodSetting,
-        IFont font)
+        ICommandManager commandManager,
+        IFont font,
+        CsvLoaderService csvLoaderService,
+        IFileDialogManager fileDialogManager)
         : base(mediatorService, imGuiService, "Allagan Market##AllaganMarkets")
     {
         this.pluginLog = pluginLog;
         this.saleFilter = saleFilter;
         this.gilNumberFormat = gilNumberFormat;
         this.itemUpdatePeriodSetting = itemUpdatePeriodSetting;
+        this.commandManager = commandManager;
         this.font = font;
+        this.csvLoaderService = csvLoaderService;
+        this.fileDialogManager = fileDialogManager;
         this.Configuration = configuration;
         this.TextureProvider = textureProvider;
         this.ConfigWindow = configWindow;
@@ -78,8 +91,10 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(375, 330),
-            MaximumSize = new Vector2(float.MaxValue, float.MaxValue)
+            MaximumSize = new Vector2(float.MaxValue, float.MaxValue),
         };
+        this.Size = new Vector2(600, 600);
+        this.SizeCondition = ImGuiCond.FirstUseEver;
         this.Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.MenuBar;
         this.SaleTrackerService.SnapshotCreated += this.SnapshotCreated;
     }
@@ -118,23 +133,23 @@ public class MainWindow : ExtendedWindow, IDisposable
             {
                 if (ImGui.MenuItem("Configuration"))
                 {
-                }
-
-                if (ImGui.MenuItem("Help"))
-                {
+                    this.MediatorService.Publish(new OpenWindowMessage(typeof(ConfigWindow)));
                 }
 
                 if (ImGui.MenuItem("Report a Issue"))
                 {
+                    "https://github.com/Critical-Impact/AllaganMarket".OpenBrowser();
                 }
 
                 if (ImGui.MenuItem("Ko-Fi"))
                 {
+                    "https://ko-fi.com/critical_impact".OpenBrowser();
                 }
 
 
                 if (ImGui.MenuItem("Close"))
                 {
+                    this.IsOpen = false;
                 }
 
                 ImGui.EndMenu();
@@ -144,15 +159,41 @@ public class MainWindow : ExtendedWindow, IDisposable
             {
                 if (ImGui.MenuItem("Export Current Sales (CSV)"))
                 {
-                    
+                    this.fileDialogManager.SaveFileDialog("Select a save location",
+                                                          "*.csv",
+                                                          "Current Sales.csv",
+                                                          ".csv",
+                                                          (success, fileName) =>
+                                                          {
+                                                              if (success)
+                                                              {
+                                                                  this.csvLoaderService.ToCsv(
+                                                                      this.Configuration.SaleItems
+                                                                          .SelectMany(c => c.Value).ToList(),
+                                                                      fileName,
+                                                                      true);
+                                                              }
+                                                          });
                 }
 
                 if (ImGui.MenuItem("Export History (CSV)"))
                 {
-                    
+                    this.fileDialogManager.SaveFileDialog("Select a save location",
+                                                          "*.csv",
+                                                          "Sales History.csv",
+                                                          ".csv",
+                                                          (success, fileName) =>
+                                                          {
+                                                              if (success)
+                                                              {
+                                                                  this.csvLoaderService.ToCsv(
+                                                                      this.Configuration.Sales
+                                                                          .SelectMany(c => c.Value).ToList(),
+                                                                      fileName,
+                                                                      true);
+                                                              }
+                                                          });
                 }
-                
-                
 
                 ImGui.EndMenu();
             }
@@ -584,6 +625,45 @@ public class MainWindow : ExtendedWindow, IDisposable
                         ImGui.SameLine();
                         this.DrawBooleanTooltip("Search against the quality of the item listed.");
 
+                        string needsUpdate;
+                        switch (this.saleFilter.NeedUpdating)
+                        {
+                            case null:
+                                needsUpdate = "N/A";
+                                break;
+                            case false:
+                                needsUpdate = "No";
+                                break;
+                            case true:
+                                needsUpdate = "Yes";
+                                break;
+                        }
+
+                        ImGui.Text("Needs Update?");
+                        using (var combo = ImRaii.Combo("##needsUpdate", needsUpdate))
+                        {
+                            if (combo)
+                            {
+                                if (ImGui.Selectable("N/A", isHq == "N/A"))
+                                {
+                                    this.saleFilter.NeedUpdating = null;
+                                }
+
+                                if (ImGui.Selectable("No", isHq == "No"))
+                                {
+                                    this.saleFilter.NeedUpdating = false;
+                                }
+
+                                if (ImGui.Selectable("Yes", isHq == "Yes"))
+                                {
+                                    this.saleFilter.NeedUpdating = true;
+                                }
+                            }
+                        }
+
+                        ImGui.SameLine();
+                        this.DrawBooleanTooltip("Does this item need to be updated? Checking to see if you are undercut in your retainer will reset the last updated flag on an item.");
+
                         ImGui.Text("Quantity:");
                         var quantity = this.saleFilter.Quantity ?? "";
                         if (ImGui.InputText("##quantityFilter", ref quantity, 200))
@@ -849,7 +929,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                     }
 
                     bool undercutHovered = false;
-                    
+
                     ImGui.SameLine();
                     using (var infoChild = ImRaii.Child(
                                $"info_{index}",
@@ -863,6 +943,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                             {
                                 var startPosition = ImGui.GetCursorPos();
                                 ImGui.SetCursorPosX(ImGui.GetWindowContentRegionMax().X - 16);
+                                ImGui.SetCursorPosY(ImGui.GetWindowContentRegionMax().Y - 16);
                                 ImGui.Image(
                                     this.TextureProvider.GetFromGameIcon(new GameIconLookup(61575)).GetWrapOrEmpty()
                                         .ImGuiHandle,
@@ -871,15 +952,16 @@ public class MainWindow : ExtendedWindow, IDisposable
                                 this.ImGuiService.HoverTooltip($"You have been undercut on this item by {SeIconChar.Gil.ToIconString()} {saleItem.UndercutBy}");
                                 ImGui.SetCursorPos(startPosition);
                             }
+
                             ImGui.Text(item.Name.AsReadOnly().ExtractText());
                             ImGui.PushTextWrapPos();
                             ImGui.Text(
                                 $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
-                            ImGui.Text($"Listed: {saleItem.ListedAt.Humanize()}");
+                            ImGui.Text($"Listed: {saleItem.ListedAt.Humanize(false)}");
 
-                            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, DateTime.Now > saleItem.UpdatedAt + TimeSpan.FromMinutes(this.itemUpdatePeriodSetting.CurrentValue(this.Configuration))))
+                            using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudYellow, saleItem.NeedsUpdate(this.itemUpdatePeriodSetting.CurrentValue(this.Configuration))))
                             {
-                                ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize()}");
+                                ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize(false)}");
                             }
 
                             ImGui.PopTextWrapPos();
@@ -901,6 +983,22 @@ public class MainWindow : ExtendedWindow, IDisposable
                                 ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize()}");
                             }
                         }
+                    }
+                }
+            }
+
+            if (ImGui.IsItemHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenOverlapped) && ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+            {
+                ImGui.OpenPopup("RightClick");
+            }
+
+            using (var popup = ImRaii.Popup("RightClick"))
+            {
+                if (popup)
+                {
+                    if (ImGui.Selectable("More Information"))
+                    {
+                        this.commandManager.ProcessCommand("/moreinfo " + saleItem.ItemId);
                     }
                 }
             }
