@@ -42,6 +42,7 @@ public class MainWindow : ExtendedWindow, IDisposable
     }
 
     private readonly ExcelSheet<Item> itemSheet;
+    private readonly ExcelSheet<ClassJob> classJobSheet;
     private readonly IPluginLog pluginLog;
     private readonly SaleFilter saleFilter;
     private readonly NumberFormatInfo gilNumberFormat;
@@ -89,8 +90,10 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.CharacterMonitorService = characterMonitorService;
         this.DataManager = dataManager;
         this.WorldExpanded = new Dictionary<uint, bool>();
+        this.CharacterExpanded = new Dictionary<ulong, bool>();
         this.itemSheet = this.DataManager.GetExcelSheet<Item>()!;
         this.worldSheet = this.DataManager.GetExcelSheet<World>()!;
+        this.classJobSheet = this.DataManager.GetExcelSheet<ClassJob>()!;
         this.SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(375, 330),
@@ -122,8 +125,10 @@ public class MainWindow : ExtendedWindow, IDisposable
     public IDataManager DataManager { get; }
 
     private MainWindowTab SelectedTab { get; set; }
-    
+
     private Dictionary<uint, bool> WorldExpanded { get; set; }
+
+    private Dictionary<ulong, bool> CharacterExpanded { get; set; }
 
     private bool IsWorldExpanded(uint worldId)
     {
@@ -138,6 +143,21 @@ public class MainWindow : ExtendedWindow, IDisposable
     private void ToggleWorldExpanded(uint worldId)
     {
         this.WorldExpanded[worldId] = !this.WorldExpanded.GetValueOrDefault(worldId, true);
+    }
+
+    private bool IsCharacterExpanded(ulong characterId)
+    {
+        if (!this.CharacterExpanded.TryGetValue(characterId, out var value))
+        {
+            return true;
+        }
+
+        return this.CharacterExpanded.ContainsKey(characterId) && value;
+    }
+
+    private void ToggleCharacterExpanded(ulong characterId)
+    {
+        this.CharacterExpanded[characterId] = !this.CharacterExpanded.GetValueOrDefault(characterId, true);
     }
 
     public void Dispose()
@@ -306,7 +326,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                             {
                                 this.SwitchWorld(worldId);
                             }
-                            
+
                             if (ImGui.IsItemHovered())
                             {
                                 using (var tooltip = ImRaii.Tooltip())
@@ -327,6 +347,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                             {
                                 this.ToggleWorldExpanded(worldId);
                             }
+
                             style.Pop();
 
                             if (!this.IsWorldExpanded(worldId))
@@ -342,7 +363,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                                 {
                                     if (ImGui.Selectable(
                                             character.Name,
-                                            this.saleFilter.CharacterId == character.CharacterId))
+                                            this.saleFilter.CharacterId == character.CharacterId, ImGuiSelectableFlags.AllowItemOverlap))
                                     {
                                         this.SwitchCharacter(character.CharacterId);
                                     }
@@ -372,6 +393,22 @@ public class MainWindow : ExtendedWindow, IDisposable
 
                                     this.DrawCharacterDeleteConfirmPopup(character);
 
+                                    ImGui.SameLine();
+                                    style.Push(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
+                                    if (ImGui.ArrowButton(
+                                            character.CharacterId.ToString(),
+                                            this.IsCharacterExpanded(character.CharacterId) ? ImGuiDir.Down : ImGuiDir.Right))
+                                    {
+                                        this.ToggleCharacterExpanded(character.CharacterId);
+                                    }
+
+                                    style.Pop();
+
+                                    if (!this.IsCharacterExpanded(character.CharacterId))
+                                    {
+                                        continue;
+                                    }
+
                                     ImGui.Separator();
                                     using (ImRaii.PushIndent())
                                     {
@@ -386,16 +423,22 @@ public class MainWindow : ExtendedWindow, IDisposable
                                                 this.SwitchCharacter(retainer.CharacterId);
                                             }
 
+                                            var retainerHovered = ImGui.IsItemHovered();
+
                                             ImGui.SameLine();
                                             var icon = this.TextureProvider.GetFromGameIcon(new GameIconLookup(retainer.ClassJobId + 62000));
                                             ImGui.Image(icon.GetWrapOrEmpty().ImGuiHandle, new Vector2(16, 16) * ImGui.GetIO().FontGlobalScale);
 
-                                            if (ImGui.IsItemHovered())
+                                            if (retainerHovered || ImGui.IsItemHovered())
                                             {
                                                 using (var tooltip = ImRaii.Tooltip())
                                                 {
                                                     if (tooltip)
                                                     {
+                                                        ImGui.Text(retainer.Name);
+                                                        ImGui.Separator();
+                                                        ImGui.Text($"Class: {this.classJobSheet.GetRow(retainer.ClassJobId)?.Abbreviation.AsReadOnly().ExtractText() ?? "Unknown Class"}");
+                                                        ImGui.Text($"Level: {retainer.Level}");
                                                         ImGui.Text("Left Click: Select/Unselect");
                                                         ImGui.Text("Right Click: Menu");
                                                     }

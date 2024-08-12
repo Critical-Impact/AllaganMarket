@@ -7,13 +7,14 @@ using Services;
 
 public class Character : IEquatable<Character>
 {
-    public Character(CharacterType characterType, ulong characterId, string name, uint worldId, uint classJobId)
+    public Character(CharacterType characterType, ulong characterId, string name, uint worldId, uint classJobId, byte level)
     {
         this.CharacterType = characterType;
         this.CharacterId = characterId;
         this.Name = name;
         this.WorldId = worldId;
         this.ClassJobId = classJobId;
+        this.Level = level;
     }
 
     public Character()
@@ -31,6 +32,8 @@ public class Character : IEquatable<Character>
     public uint WorldId { get; set; }
 
     public uint ClassJobId { get; set; }
+
+    public byte Level { get; set; }
 
 
     public RetainerManager.RetainerTown? RetainerTown { get; set; }
@@ -50,7 +53,7 @@ public class Character : IEquatable<Character>
         return this.CharacterId == other.CharacterId && this.CharacterType == other.CharacterType &&
                this.OwnerId == other.OwnerId && this.Name == other.Name && this.WorldId == other.WorldId &&
                other.RetainerTown == this.RetainerTown &&
-               other.ClassJobId == this.ClassJobId;
+               other.ClassJobId == this.ClassJobId && other.Level == this.Level;
     }
 
     public override bool Equals(object? obj)
@@ -81,6 +84,7 @@ public class Character : IEquatable<Character>
             this.OwnerId,
             this.WorldId,
             this.ClassJobId,
+            this.Level,
             this.RetainerTown,
             this.Name);
     }

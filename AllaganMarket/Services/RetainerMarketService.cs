@@ -221,7 +221,10 @@ public class RetainerMarketService : IHostedService, IDisposable
                      }
                  }
              }
-        
+
+             // Store the original quantity of the stack in the inventory, then compare it with the new value once the retainer item command has finished to work out how much they put up
+             var originalQuantity = selectedItem->Quantity;
+
              if (hasEvent)
              {
                  this.MarketListEvent = new RetainerMarketListEvent(eventType, slot);
@@ -231,6 +234,15 @@ public class RetainerMarketService : IHostedService, IDisposable
                      this.MarketListEvent.SaleItem = saleItem;
                  }
              }
+
+             var retainerItemCommandDetour = this.RetainerItemCommandHook!.Original(agentRetainerItemCommandModule, result, a3, a4, command);
+
+             if (this.MarketListEvent?.SaleItem != null)
+             {
+                 this.MarketListEvent.SaleItem.Quantity = originalQuantity - selectedItem->Quantity;
+             }
+
+             return retainerItemCommandDetour;
          }
          catch (Exception e)
          {
