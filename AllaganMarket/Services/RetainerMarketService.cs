@@ -237,7 +237,7 @@ public class RetainerMarketService : IHostedService, IDisposable
 
              var retainerItemCommandDetour = this.RetainerItemCommandHook!.Original(agentRetainerItemCommandModule, result, a3, a4, command);
 
-             if (this.MarketListEvent?.SaleItem != null)
+             if (eventType == RetainerMarketListEventType.Added && this.MarketListEvent?.SaleItem != null)
              {
                  this.MarketListEvent.SaleItem.Quantity = originalQuantity - selectedItem->Quantity;
              }
@@ -358,7 +358,14 @@ public class RetainerMarketService : IHostedService, IDisposable
         }
         else
         {
-            this.OnUpdated?.Invoke(RetainerMarketListEventType.Updated);
+            if (this.InventoryService.HasSeenInventory((uint)InventoryType.RetainerMarket))
+            {
+                this.OnUpdated?.Invoke(RetainerMarketListEventType.Updated);
+            }
+            else
+            {
+                this.InBadState = true;
+            }
         }
     }
 
