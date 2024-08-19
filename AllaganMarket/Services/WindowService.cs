@@ -24,11 +24,13 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
     public WindowService(MediatorService mediatorService,
         IDalamudPluginInterface pluginInterface,
         IEnumerable<Window> pluginWindows,
-        IWindowSystemFactory windowSystemFactory)
+        IWindowSystemFactory windowSystemFactory,
+        IFileDialogManager fileDialogManager)
     {
         this.MediatorService = mediatorService;
         this.PluginInterface = pluginInterface;
         this.PluginWindows = pluginWindows;
+        this.FileDialogManager = fileDialogManager;
         this.WindowSystem = windowSystemFactory.Create("AllaganMarket");
     }
 
@@ -37,6 +39,8 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
     public IDalamudPluginInterface PluginInterface { get; }
 
     public IEnumerable<Window> PluginWindows { get; }
+
+    public IFileDialogManager FileDialogManager { get; }
 
     public IWindowSystem WindowSystem { get; }
 
@@ -90,6 +94,7 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
     private void UiBuilderOnDraw()
     {
         this.WindowSystem.Draw();
+        this.FileDialogManager.Draw();
     }
 
     public void Dispose()

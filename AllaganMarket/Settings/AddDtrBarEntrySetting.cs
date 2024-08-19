@@ -3,7 +3,7 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class AddDtrBarEntrySetting : BooleanSetting<Configuration>, ISetting
+public class AddDtrBarEntrySetting : BooleanFormField<Configuration>, ISetting
 {
     public AddDtrBarEntrySetting(ImGuiService imGuiService) : base(imGuiService)
     {

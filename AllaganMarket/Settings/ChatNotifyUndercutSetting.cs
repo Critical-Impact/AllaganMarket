@@ -1,13 +1,9 @@
-// <copyright file="ChatNotifyUndercutSetting.cs" company="PlaceholderCompany">
-// Copyright (c) PlaceholderCompany. All rights reserved.
-// </copyright>
-
 using AllaganLib.Interface.FormFields;
 using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ChatNotifyUndercutSetting : BooleanSetting<Configuration>, ISetting
+public class ChatNotifyUndercutSetting : BooleanFormField<Configuration>, ISetting
 {
     public ChatNotifyUndercutSetting(ImGuiService imGuiService) : base(imGuiService)
     {

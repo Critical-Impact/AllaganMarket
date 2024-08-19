@@ -1,4 +1,5 @@
-﻿using AllaganMarket.Settings;
+﻿using AllaganMarket.Grids;
+using AllaganMarket.Settings;
 
 namespace AllaganMarket.Filtering;
 
@@ -24,21 +25,12 @@ public class SaleFilter
     private long aggSoldTotalGil;
     private List<SaleItem>? cachedSales;
     private List<SoldItem>? cachedSoldItems;
+    private List<SearchResult>? cachedSaleResults;
+    private List<SearchResult>? cachedSoldResults;
     private ulong? characterId;
-    private bool? isHq;
     private bool? showEmpty;
     private bool? needUpdating;
-
-    private uint? itemId;
-    private string? itemName;
-    private string? listedAt;
-
     private bool needsRefresh;
-    private string? quantity;
-    private string? soldAt;
-    private string? total;
-    private string? unitPrice;
-    private string? updatedAt;
     private uint? worldId;
 
     public SaleFilter(
@@ -60,16 +52,6 @@ public class SaleFilter
 
     public long AggregateSoldTotalGil => this.aggSoldTotalGil;
 
-    public string? ItemName
-    {
-        get => this.itemName;
-        set
-        {
-            this.needsRefresh = true;
-            this.itemName = value;
-        }
-    }
-
     public ulong? CharacterId
     {
         get => this.characterId;
@@ -77,86 +59,6 @@ public class SaleFilter
         {
             this.needsRefresh = true;
             this.characterId = value;
-        }
-    }
-
-    public uint? ItemId
-    {
-        get => this.itemId;
-        set
-        {
-            this.needsRefresh = true;
-            this.itemId = value;
-        }
-    }
-
-    public bool? IsHq
-    {
-        get => this.isHq;
-        set
-        {
-            this.needsRefresh = true;
-            this.isHq = value;
-        }
-    }
-
-    public string? Quantity
-    {
-        get => this.quantity;
-        set
-        {
-            this.needsRefresh = true;
-            this.quantity = value;
-        }
-    }
-
-    public string? UnitPrice
-    {
-        get => this.unitPrice;
-        set
-        {
-            this.needsRefresh = true;
-            this.unitPrice = value;
-        }
-    }
-
-    public string? ListedAt
-    {
-        get => this.listedAt;
-        set
-        {
-            this.needsRefresh = true;
-            this.listedAt = value;
-        }
-    }
-
-    public string? UpdatedAt
-    {
-        get => this.updatedAt;
-        set
-        {
-            this.needsRefresh = true;
-            this.updatedAt = value;
-        }
-    }
-
-    public string? SoldAt
-    {
-        get => this.soldAt;
-        set
-        {
-            this.needsRefresh = true;
-            this.soldAt = value;
-        }
-    }
-
-    public string? Total
-    {
-        get => this.total;
-        set
-        {
-            this.needsRefresh = true;
-            this.total = value;
         }
     }
 
@@ -195,15 +97,6 @@ public class SaleFilter
     {
         this.characterId = null;
         this.worldId = null;
-        this.itemId = null;
-        this.isHq = null;
-        this.quantity = null;
-        this.unitPrice = null;
-        this.listedAt = null;
-        this.updatedAt = null;
-        this.soldAt = null;
-        this.total = null;
-        this.itemName = null;
         this.showEmpty = null;
         this.needUpdating = null;
         this.needsRefresh = true;
@@ -229,54 +122,12 @@ public class SaleFilter
 
         if (this.NeedUpdating != null)
         {
-            sales = sales.Where(    
+            sales = sales.Where(
                 c =>
             {
                 var needsUpdate = c.NeedsUpdate(this.itemUpdatePeriodSetting.CurrentValue(this.configuration));
                 return (needsUpdate && this.NeedUpdating.Value) || (!needsUpdate && this.NeedUpdating.Value);
             });
-        }
-
-        if (this.itemId != null)
-        {
-            sales = sales.Where(c => c.ItemId == this.itemId);
-        }
-
-        if (this.isHq != null)
-        {
-            sales = sales.Where(c => c.IsHq == this.isHq);
-        }
-
-        if (this.quantity != null)
-        {
-            sales = sales.Where(c => c.Quantity.PassesFilter(this.quantity));
-        }
-
-        if (this.unitPrice != null)
-        {
-            sales = sales.Where(c => c.UnitPrice.PassesFilter(this.unitPrice));
-        }
-
-        if (this.listedAt != null)
-        {
-            sales = sales.Where(c => c.ListedAt.PassesFilter(this.listedAt));
-        }
-
-        if (this.updatedAt != null)
-        {
-            sales = sales.Where(c => c.UpdatedAt.PassesFilter(this.updatedAt));
-        }
-
-        if (this.total != null)
-        {
-            sales = sales.Where(c => c.Total.PassesFilter(this.total));
-        }
-
-        if (this.itemName != null)
-        {
-            sales = sales.Where(
-                c => this.GetItem(c.ItemId)?.Name.AsReadOnly().ExtractText().ToLowerInvariant()
-                    .PassesFilter(this.itemName.ToLowerInvariant()) ?? false);
         }
 
         sales = sales.Where(c => this.characterMonitorService.IsCharacterKnown(c.RetainerId));
@@ -290,42 +141,6 @@ public class SaleFilter
     private List<SoldItem> RecalculateSoldItems()
     {
         var sales = this.saleTrackerService.GetSalesHistory(this.characterId, this.worldId);
-        if (this.itemId != null)
-        {
-            sales = sales.Where(c => c.ItemId == this.itemId);
-        }
-
-        if (this.isHq != null)
-        {
-            sales = sales.Where(c => c.IsHq == this.isHq);
-        }
-
-        if (this.quantity != null)
-        {
-            sales = sales.Where(c => c.Quantity.PassesFilter(this.quantity));
-        }
-
-        if (this.unitPrice != null)
-        {
-            sales = sales.Where(c => c.UnitPrice.PassesFilter(this.unitPrice));
-        }
-
-        if (this.soldAt != null)
-        {
-            sales = sales.Where(c => c.SoldAt.PassesFilter(this.soldAt));
-        }
-
-        if (this.total != null)
-        {
-            sales = sales.Where(c => c.Total.PassesFilter(this.total));
-        }
-
-        if (this.itemName != null)
-        {
-            sales = sales.Where(
-                c => this.GetItem(c.ItemId)?.Name.AsReadOnly().ExtractText().ToLowerInvariant()
-                    .PassesFilter(this.itemName.ToLowerInvariant()) ?? false);
-        }
 
         sales = sales.Where(c => this.characterMonitorService.IsCharacterKnown(c.RetainerId));
 
@@ -333,6 +148,22 @@ public class SaleFilter
         this.cachedSoldItems = sales.ToList();
         this.aggSoldTotalGil = this.cachedSoldItems.Select(c => c.Total).Sum(c => c);
         return this.cachedSoldItems;
+    }
+
+    public List<SearchResult> RecalculateSaleResults()
+    {
+        var saleItems = this.GetSaleItems();
+        var searchResults = new List<SearchResult>();
+        searchResults.AddRange(saleItems.Select(c => new SearchResult() { SaleItem = c }));
+        return searchResults;
+    }
+
+    public List<SearchResult> RecalculateSoldResults()
+    {
+        var soldItems = this.GetSoldItems();
+        var searchResults = new List<SearchResult>();
+        searchResults.AddRange(soldItems.Select(c => new SearchResult() { SoldItem = c }));
+        return searchResults;
     }
 
     public List<SaleItem> GetSaleItems()
@@ -355,5 +186,25 @@ public class SaleFilter
         }
 
         return this.cachedSoldItems;
+    }
+
+    public List<SearchResult> GetSaleResults()
+    {
+        if (this.needsRefresh || this.cachedSaleResults == null)
+        {
+            this.cachedSaleResults = this.RecalculateSaleResults();
+        }
+
+        return this.cachedSaleResults;
+    }
+
+    public List<SearchResult> GetSoldResults()
+    {
+        if (this.needsRefresh || this.cachedSoldResults == null)
+        {
+            this.cachedSoldResults = this.RecalculateSoldResults();
+        }
+
+        return this.cachedSoldResults;
     }
 }

@@ -3,7 +3,7 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class AddTitleMenuButtonSetting : BooleanSetting<Configuration>, ISetting
+public class AddTitleMenuButtonSetting : BooleanFormField<Configuration>, ISetting
 {
     public AddTitleMenuButtonSetting(ImGuiService imGuiService)
         : base(imGuiService)

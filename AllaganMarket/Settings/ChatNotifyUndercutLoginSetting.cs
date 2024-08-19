@@ -3,7 +3,7 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ChatNotifyUndercutLoginSetting : BooleanSetting<Configuration>, ISetting
+public class ChatNotifyUndercutLoginSetting : BooleanFormField<Configuration>, ISetting
 {
     public ChatNotifyUndercutLoginSetting(ImGuiService imGuiService) : base(imGuiService)
     {

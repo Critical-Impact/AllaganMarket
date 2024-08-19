@@ -3,9 +3,11 @@
 using System.Collections.Generic;
 
 using AllaganLib.Data.Service;
+using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Shared.Extensions;
 
+using AllaganMarket.Grids;
 using AllaganMarket.Settings;
 
 using DalaMock.Host.Mediator;
@@ -51,8 +53,15 @@ public class MainWindow : ExtendedWindow, IDisposable
     private readonly IFont font;
     private readonly CsvLoaderService csvLoaderService;
     private readonly IFileDialogManager fileDialogManager;
+    private readonly SaleItemTable saleItemTable;
+    private readonly SoldItemTable soldItemTable;
+    private readonly SearchResultConfiguration saleItemSearchConfiguration;
+    private readonly SearchResultConfiguration soldItemSearchConfiguration;
+    private readonly ViewModeSetting viewModeSetting;
     private readonly ExcelSheet<World> worldSheet;
     private bool filterMenuOpen;
+    private readonly GridQuickSearchWidget<SearchResultConfiguration,SearchResult, MessageBase> saleQuickSearchWidget;
+    private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> soldQuickSearchWidget;
 
     public MainWindow(
         MediatorService mediatorService,
@@ -71,7 +80,10 @@ public class MainWindow : ExtendedWindow, IDisposable
         ICommandManager commandManager,
         IFont font,
         CsvLoaderService csvLoaderService,
-        IFileDialogManager fileDialogManager)
+        IFileDialogManager fileDialogManager,
+        SaleItemTable saleItemTable,
+        SoldItemTable soldItemTable,
+        ViewModeSetting viewModeSetting)
         : base(mediatorService, imGuiService, "Allagan Market##AllaganMarkets")
     {
         this.pluginLog = pluginLog;
@@ -82,6 +94,11 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.font = font;
         this.csvLoaderService = csvLoaderService;
         this.fileDialogManager = fileDialogManager;
+        this.saleItemTable = saleItemTable;
+        this.soldItemTable = soldItemTable;
+        this.saleItemSearchConfiguration = saleItemTable.SearchFilter;
+        this.soldItemSearchConfiguration = soldItemTable.SearchFilter;
+        this.viewModeSetting = viewModeSetting;
         this.Configuration = configuration;
         this.TextureProvider = textureProvider;
         this.ConfigWindow = configWindow;
@@ -103,6 +120,8 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.SizeCondition = ImGuiCond.FirstUseEver;
         this.Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.MenuBar;
         this.SaleTrackerService.SnapshotCreated += this.SnapshotCreated;
+        this.saleQuickSearchWidget = new GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase>(this.saleItemTable);
+        this.soldQuickSearchWidget = new GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase>(this.soldItemTable);
     }
 
     private void SnapshotCreated()
@@ -194,10 +213,40 @@ public class MainWindow : ExtendedWindow, IDisposable
 
                 ImGui.EndMenu();
             }
-            
+
+            if (ImGui.BeginMenu("Edit"))
+            {
+                if (ImGui.MenuItem("Mark all visible sale items as updated"))
+                {
+                    var saleItems = this.saleItemTable.GetFilteredItems(this.saleItemSearchConfiguration);
+                    foreach (var saleItem in saleItems)
+                    {
+                        saleItem.SaleItem!.UpdatedAt = DateTime.Now;
+                    }
+                }
+
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("View"))
+            {
+                var currentViewMode = this.viewModeSetting.CurrentValue(this.Configuration);
+                if (ImGui.MenuItem("Grid" + (currentViewMode == ViewMode.Grid ? " (Active)" : string.Empty)))
+                {
+                    this.viewModeSetting.UpdateFilterConfiguration(this.Configuration, ViewMode.Grid);
+                }
+
+                if (ImGui.MenuItem("List" + (currentViewMode == ViewMode.List ? " (Active)" : string.Empty)))
+                {
+                    this.viewModeSetting.UpdateFilterConfiguration(this.Configuration, ViewMode.List);
+                }
+
+                ImGui.EndMenu();
+            }
+
             if (ImGui.BeginMenu("Export"))
             {
-                if (ImGui.MenuItem("Export Current Sales (CSV)"))
+                if (ImGui.MenuItem("Export Current Sales"))
                 {
                     this.fileDialogManager.SaveFileDialog("Select a save location",
                                                           "*.csv",
@@ -207,11 +256,31 @@ public class MainWindow : ExtendedWindow, IDisposable
                                                           {
                                                               if (success)
                                                               {
-                                                                  this.csvLoaderService.ToCsv(
-                                                                      this.Configuration.SaleItems
-                                                                          .SelectMany(c => c.Value).ToList(),
-                                                                      fileName,
-                                                                      true);
+                                                                  this.saleItemTable.SaveToCsv(
+                                                                      this.saleItemSearchConfiguration,
+                                                                      new RenderTableCsvExportOptions()
+                                                                      {
+                                                                          ExportPath = fileName, IncludeHeaders = true,
+                                                                      });
+                                                              }
+                                                          });
+                }
+                if (ImGui.MenuItem("Export Current Sales (Filtered)"))
+                {
+                    this.fileDialogManager.SaveFileDialog("Select a save location",
+                                                          "*.csv",
+                                                          "Current Sales(Filtered).csv",
+                                                          ".csv",
+                                                          (success, fileName) =>
+                                                          {
+                                                              if (success)
+                                                              {
+                                                                  this.saleItemTable.SaveToCsv(
+                                                                      this.saleItemSearchConfiguration,
+                                                                      new RenderTableCsvExportOptions()
+                                                                      {
+                                                                          ExportPath = fileName, IncludeHeaders = true, UseFiltering = true,
+                                                                      });
                                                               }
                                                           });
                 }
@@ -226,14 +295,35 @@ public class MainWindow : ExtendedWindow, IDisposable
                                                           {
                                                               if (success)
                                                               {
-                                                                  this.csvLoaderService.ToCsv(
-                                                                      this.Configuration.Sales
-                                                                          .SelectMany(c => c.Value).ToList(),
-                                                                      fileName,
-                                                                      true);
+                                                                  this.soldItemTable.SaveToCsv(
+                                                                      this.soldItemSearchConfiguration,
+                                                                      new RenderTableCsvExportOptions()
+                                                                      {
+                                                                          ExportPath = fileName, IncludeHeaders = true,
+                                                                      });
                                                               }
                                                           });
                 }
+                if (ImGui.MenuItem("Export History (Filtered)"))
+                {
+                    this.fileDialogManager.SaveFileDialog("Select a save location",
+                                                          "*.csv",
+                                                          "Sales History(Filtered).csv",
+                                                          ".csv",
+                                                          (success, fileName) =>
+                                                          {
+                                                              if (success)
+                                                              {
+                                                                  this.soldItemTable.SaveToCsv(
+                                                                      this.soldItemSearchConfiguration,
+                                                                      new RenderTableCsvExportOptions()
+                                                                      {
+                                                                          ExportPath = fileName, IncludeHeaders = true, UseFiltering = true,
+                                                                      });
+                                                              }
+                                                          });
+                }
+
 
                 ImGui.EndMenu();
             }
@@ -654,187 +744,13 @@ public class MainWindow : ExtendedWindow, IDisposable
                 {
                     if (searchMain)
                     {
-                        ImGui.Text("Search");
-                        ImGui.Separator();
-                        ImGui.Text("Name");
-                        var itemName = this.saleFilter.ItemName ?? "";
-                        if (ImGui.InputText("##nameFilter", ref itemName, 200))
-                        {
-                            var newItemName = itemName == "" ? null : itemName;
-                            if (this.saleFilter.ItemName != newItemName)
-                            {
-                                this.saleFilter.ItemName = newItemName;
-                            }
-                        }
-
-                        ImGui.SameLine();
-                        this.DrawStringTooltip("Search against the name of the item listed.");
-
-                        string isHq;
-                        switch (this.saleFilter.IsHq)
-                        {
-                            case null:
-                                isHq = "N/A";
-                                break;
-                            case false:
-                                isHq = "No";
-                                break;
-                            case true:
-                                isHq = "Yes";
-                                break;
-                        }
-
-                        ImGui.Text("Is HQ?");
-                        using (var combo = ImRaii.Combo("##isHq", isHq))
-                        {
-                            if (combo)
-                            {
-                                if (ImGui.Selectable("N/A", isHq == "N/A"))
-                                {
-                                    this.saleFilter.IsHq = null;
-                                }
-
-                                if (ImGui.Selectable("No", isHq == "No"))
-                                {
-                                    this.saleFilter.IsHq = false;
-                                }
-
-                                if (ImGui.Selectable("Yes", isHq == "Yes"))
-                                {
-                                    this.saleFilter.IsHq = true;
-                                }
-                            }
-                        }
-
-                        ImGui.SameLine();
-                        this.DrawBooleanTooltip("Search against the quality of the item listed.");
-
-                        string needsUpdate;
-                        switch (this.saleFilter.NeedUpdating)
-                        {
-                            case null:
-                                needsUpdate = "N/A";
-                                break;
-                            case false:
-                                needsUpdate = "No";
-                                break;
-                            case true:
-                                needsUpdate = "Yes";
-                                break;
-                        }
-
-                        ImGui.Text("Needs Update?");
-                        using (var combo = ImRaii.Combo("##needsUpdate", needsUpdate))
-                        {
-                            if (combo)
-                            {
-                                if (ImGui.Selectable("N/A", isHq == "N/A"))
-                                {
-                                    this.saleFilter.NeedUpdating = null;
-                                }
-
-                                if (ImGui.Selectable("No", isHq == "No"))
-                                {
-                                    this.saleFilter.NeedUpdating = false;
-                                }
-
-                                if (ImGui.Selectable("Yes", isHq == "Yes"))
-                                {
-                                    this.saleFilter.NeedUpdating = true;
-                                }
-                            }
-                        }
-
-                        ImGui.SameLine();
-                        this.DrawBooleanTooltip("Does this item need to be updated? Checking to see if you are undercut in your retainer will reset the last updated flag on an item.");
-
-                        ImGui.Text("Quantity:");
-                        var quantity = this.saleFilter.Quantity ?? "";
-                        if (ImGui.InputText("##quantityFilter", ref quantity, 200))
-                        {
-                            var newQuantity = quantity == "" ? null : quantity;
-                            if (this.saleFilter.Quantity != newQuantity)
-                            {
-                                this.saleFilter.Quantity = quantity;
-                            }
-                        }
-
-                        ImGui.SameLine();
-                        this.DrawNumericTooltip("Search against the quantity of the item listed.");
-
-                        ImGui.Text("Unit Price:");
-                        var unitPrice = this.saleFilter.UnitPrice ?? "";
-                        if (ImGui.InputText("##unitPriceFilter", ref unitPrice, 200))
-                        {
-                            var newUnitPrice = unitPrice == "" ? null : unitPrice;
-                            if (this.saleFilter.UnitPrice != newUnitPrice)
-                            {
-                                this.saleFilter.UnitPrice = unitPrice;
-                            }
-                        }
-
-                        ImGui.SameLine();
-                        this.DrawNumericTooltip("Search against the unit price of the item listed.");
-
-                        ImGui.Text("Total:");
-                        var total = this.saleFilter.Total ?? "";
-                        if (ImGui.InputText("##totalFilter", ref total, 200))
-                        {
-                            var newTotal = total == "" ? null : total;
-                            if (this.saleFilter.Total != newTotal)
-                            {
-                                this.saleFilter.Total = total;
-                            }
-                        }
-
-                        ImGui.SameLine();
-                        this.DrawNumericTooltip("Search against the total of the item listed.");
-
                         if (this.SelectedTab == MainWindowTab.CurrentlySelling)
                         {
-                            ImGui.Text("Listed At:");
-                            var listedAt = this.saleFilter.ListedAt ?? "";
-                            if (ImGui.InputText("##listedAt", ref listedAt, 300))
-                            {
-                                var newListedAt = listedAt == "" ? null : listedAt;
-                                if (this.saleFilter.ListedAt != newListedAt)
-                                {
-                                    this.saleFilter.ListedAt = newListedAt;
-                                }
-                            }
-
-                            ImGui.SameLine();
-                            this.DrawDateTooltip("Search against the listed at date of the item.");
-
-                            ImGui.Text("Updated At:");
-                            var updatedAt = this.saleFilter.UpdatedAt ?? "";
-                            if (ImGui.InputText("##updatedAt", ref updatedAt, 300))
-                            {
-                                var newUpdatedAt = updatedAt == "" ? null : updatedAt;
-                                if (this.saleFilter.UpdatedAt != newUpdatedAt)
-                                {
-                                    this.saleFilter.UpdatedAt = newUpdatedAt;
-                                }
-                            }
-
-                            ImGui.SameLine();
-                            this.DrawDateTooltip("Search against the updated at date of the item.");
+                            this.saleQuickSearchWidget.Draw(this.saleItemSearchConfiguration, 150, 150);
                         }
-                        else
+                        else if (this.SelectedTab == MainWindowTab.SalesHistory)
                         {
-                            ImGui.Text("Sold At:");
-                            var soldAt = this.saleFilter.SoldAt ?? "";
-                            if (ImGui.InputText("##soldAt", ref soldAt, 300))
-                            {
-                                var newSoldAt = soldAt == "" ? null : soldAt;
-                                if (this.saleFilter.SoldAt != newSoldAt)
-                                {
-                                    this.saleFilter.SoldAt = newSoldAt;
-                                }
-                            }
-
-                            ImGui.SameLine();
-                            this.DrawDateTooltip("Search against the sold at date of the item.");
+                            this.soldQuickSearchWidget.Draw(this.soldItemSearchConfiguration, 150, 150);
                         }
                     }
                 }
@@ -869,103 +785,118 @@ public class MainWindow : ExtendedWindow, IDisposable
 
     private void DrawCurrentlySelling()
     {
-        var widthAvailable = ImGui.GetContentRegionAvail().X;
-        var totalItems = Math.Floor(widthAvailable / 300);
-        using (var currentlySelling = ImRaii.Child("currentlySelling", new Vector2(0, 0), false))
+        var currentViewMode = this.viewModeSetting.CurrentValue(this.Configuration);
+        if (currentViewMode == ViewMode.Grid)
         {
-            if (currentlySelling)
+            var widthAvailable = ImGui.GetContentRegionAvail().X;
+            var totalItems = Math.Floor(widthAvailable / 300);
+            using (var currentlySelling = ImRaii.Child("currentlySelling", new Vector2(0, 0), false))
             {
-                var retainerItems = this.saleFilter.GetSaleItems();
-                var iterateList = retainerItems.Select(c => c).SortByRetainerMarketOrder(this.itemSheet).ToList();
-                var total = 0;
-                for (var index = 0; index < iterateList.Count; index++)
+                if (currentlySelling)
                 {
-                    var saleItem = iterateList[index];
-                    if (total >= totalItems)
+                    var retainerItems = this.saleItemTable.GetFilteredItems(this.saleItemSearchConfiguration).Select(c => c.SaleItem!);
+                    var iterateList = retainerItems.Select(c => c).SortByRetainerMarketOrder(this.itemSheet).ToList();
+                    var total = 0;
+                    for (var index = 0; index < iterateList.Count; index++)
                     {
-                        total = 0;
-                    }
-                    else if (index != 0)
-                    {
-                        ImGui.SameLine();
-                    }
+                        var saleItem = iterateList[index];
+                        if (total >= totalItems)
+                        {
+                            total = 0;
+                        }
+                        else if (index != 0)
+                        {
+                            ImGui.SameLine();
+                        }
 
-                    total++;
-                    this.DrawSaleItem(saleItem, index);
+                        total++;
+                        this.DrawSaleItem(saleItem, index);
+                    }
                 }
             }
+        }
+        else
+        {
+            this.MediatorService.Publish(this.saleItemTable.Draw(this.saleItemSearchConfiguration, new Vector2(0, 0)));
         }
     }
 
     private void DrawSalesHistory()
     {
-        ImRaii.IEndObject saleItems;
-        var widthAvailable = ImGui.GetContentRegionAvail().X;
-        var totalItems = Math.Floor(widthAvailable / 300);
-
-        var retainerItems = this.saleFilter.GetSoldItems();
-        var total = 0;
-        if (retainerItems.Count == 0)
+        var currentViewMode = this.viewModeSetting.CurrentValue(this.Configuration);
+        if (currentViewMode == ViewMode.Grid)
         {
-            ImGui.Text("No sales yet, get out there and make some gil!");
-        }
+            var widthAvailable = ImGui.GetContentRegionAvail().X;
+            var totalItems = Math.Floor(widthAvailable / 300);
 
-        for (var index = 0; index < retainerItems.Count; index++)
-        {
-            var saleItem = retainerItems[index];
-            if (total >= totalItems)
+            var retainerItems = this.saleFilter.GetSoldItems();
+            var total = 0;
+            if (retainerItems.Count == 0)
             {
-                total = 0;
-            }
-            else if (index != 0 && index != retainerItems.Count)
-            {
-                ImGui.SameLine();
+                ImGui.Text("No sales yet, get out there and make some gil!");
             }
 
-            total++;
-            using (var itemChild = ImRaii.Child(
-                       $"item_{index}",
-                       new Vector2(300, 80),
-                       true,
-                       ImGuiWindowFlags.NoScrollbar))
+            for (var index = 0; index < retainerItems.Count; index++)
             {
-                if (itemChild)
+                var saleItem = retainerItems[index];
+                if (total >= totalItems)
                 {
-                    var item = this.itemSheet.GetRow(saleItem.ItemId)!;
-                    using (var iconChild = ImRaii.Child(
-                               $"icon_{index}",
-                               new Vector2(64, 64),
-                               false,
-                               ImGuiWindowFlags.NoScrollbar))
-                    {
-                        if (iconChild)
-                        {
-                            var icon = this.TextureProvider.GetFromGameIcon(
-                                new GameIconLookup(item.Icon, saleItem.IsHq));
-
-                            ImGui.Image(icon.GetWrapOrEmpty().ImGuiHandle, new Vector2(64, 64));
-                        }
-                    }
-
+                    total = 0;
+                }
+                else if (index != 0 && index != retainerItems.Count)
+                {
                     ImGui.SameLine();
-                    using (var infoChild = ImRaii.Child(
-                               $"info_{index}",
-                               new Vector2(0, 0),
-                               false,
-                               ImGuiWindowFlags.NoScrollbar))
+                }
+
+                total++;
+                using (var itemChild = ImRaii.Child(
+                           $"item_{index}",
+                           new Vector2(300, 80),
+                           true,
+                           ImGuiWindowFlags.NoScrollbar))
+                {
+                    if (itemChild)
                     {
-                        if (infoChild)
+                        var item = this.itemSheet.GetRow(saleItem.ItemId)!;
+                        using (var iconChild = ImRaii.Child(
+                                   $"icon_{index}",
+                                   new Vector2(64, 64),
+                                   false,
+                                   ImGuiWindowFlags.NoScrollbar))
                         {
-                            ImGui.Text(item.Name.AsReadOnly().ExtractText());
-                            ImGui.PushTextWrapPos();
-                            ImGui.Text(
-                                $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.TotalIncTax.ToString("C", this.gilNumberFormat)})");
-                            ImGui.Text($"Sold on {saleItem.SoldAt.ToString(CultureInfo.CurrentCulture)}");
-                            ImGui.PopTextWrapPos();
+                            if (iconChild)
+                            {
+                                var icon = this.TextureProvider.GetFromGameIcon(
+                                    new GameIconLookup(item.Icon, saleItem.IsHq));
+
+                                ImGui.Image(icon.GetWrapOrEmpty().ImGuiHandle, new Vector2(64, 64));
+                            }
+                        }
+
+                        ImGui.SameLine();
+                        using (var infoChild = ImRaii.Child(
+                                   $"info_{index}",
+                                   new Vector2(0, 0),
+                                   false,
+                                   ImGuiWindowFlags.NoScrollbar))
+                        {
+                            if (infoChild)
+                            {
+                                ImGui.Text(item.Name.AsReadOnly().ExtractText());
+                                ImGui.PushTextWrapPos();
+                                ImGui.Text(
+                                    $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.TotalIncTax.ToString("C", this.gilNumberFormat)})");
+                                ImGui.Text($"Sold on {saleItem.SoldAt.ToString(CultureInfo.CurrentCulture)}");
+                                ImGui.PopTextWrapPos();
+                            }
                         }
                     }
                 }
             }
+        }
+        else
+        {
+            this.MediatorService.Publish(this.soldItemTable.Draw(this.soldItemSearchConfiguration, new Vector2(0, 0)));
         }
     }
 
@@ -1063,8 +994,8 @@ public class MainWindow : ExtendedWindow, IDisposable
                                 ImGui.Text($"{retainerWorld.Name.AsReadOnly().ExtractText()}");
                                 ImGui.Text(
                                     $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
-                                ImGui.Text($"Listed: {saleItem.ListedAt.Humanize()}");
-                                ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize()}");
+                                ImGui.Text($"Listed: {saleItem.ListedAt.Humanize(false)}");
+                                ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize(false)}");
                             }
                         }
                     }
@@ -1082,7 +1013,12 @@ public class MainWindow : ExtendedWindow, IDisposable
                 {
                     if (ImGui.Selectable("More Information"))
                     {
-                        this.commandManager.ProcessCommand("/moreinfo " + saleItem.ItemId);
+                        this.MediatorService.Publish(new OpenMoreInformation(saleItem.ItemId));
+                    }
+
+                    if (ImGui.Selectable("Mark as Updated"))
+                    {
+                        saleItem.UpdatedAt = DateTime.Now;
                     }
                 }
             }
@@ -1099,7 +1035,7 @@ public class MainWindow : ExtendedWindow, IDisposable
         {
             if (buttonBar)
             {
-                var search = this.saleFilter.ItemName ?? "";
+                var search = (this.SelectedTab == MainWindowTab.CurrentlySelling ? this.saleItemTable.SearchFilter.Get("Name") : this.soldItemTable.SearchFilter.Get("Name")) ?? "";
                 var searchWidth = ImGui.CalcTextSize("Search").X + ImGui.GetStyle().ItemSpacing.X;
                 ImGui.SetNextItemWidth(searchWidth);
                 this.ImGuiService.VerticalCenter();
@@ -1110,10 +1046,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                 if (ImGui.InputText("##searchBox", ref search, 200))
                 {
                     var newItemName = search == "" ? null : search;
-                    if (this.saleFilter.ItemName != newItemName)
-                    {
-                        this.saleFilter.ItemName = newItemName;
-                    }
+                    this.saleItemTable.SearchFilter.Set("Name", newItemName);
                 }
 
                 ImGui.SameLine();

@@ -3,7 +3,7 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ItemUpdatePeriodSetting : IntegerSetting<Configuration>, ISetting
+public class ItemUpdatePeriodSetting : IntegerFormField<Configuration>, ISetting
 {
     public ItemUpdatePeriodSetting(ImGuiService imGuiService) : base(imGuiService)
     {

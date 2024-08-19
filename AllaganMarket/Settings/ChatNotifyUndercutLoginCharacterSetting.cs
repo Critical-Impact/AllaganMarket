@@ -6,7 +6,7 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ChatNotifyUndercutLoginCharacterSetting : EnumSetting<ChatNotifyCharacterEnum, Configuration>, ISetting
+public class ChatNotifyUndercutLoginCharacterSetting : EnumFormField<ChatNotifyCharacterEnum, Configuration>, ISetting
 {
     public ChatNotifyUndercutLoginCharacterSetting(ImGuiService imGuiService) : base(imGuiService)
     {

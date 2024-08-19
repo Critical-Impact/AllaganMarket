@@ -1,4 +1,6 @@
-﻿using AllaganLib.Universalis.Models;
+﻿using System;
+
+using AllaganLib.Universalis.Models;
 using AllaganLib.Universalis.Models.Bson;
 using AllaganLib.Universalis.Services;
 
@@ -108,6 +110,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
     private void UniversalisApiPriceRetrieved(uint itemId, uint worldId, UniversalisPricing response)
     {
+        var lastUpdate = response.LastUpdate;
         var salesByItem = this.saleTrackerService.GetSales(null, worldId).GroupBy(c => c.ItemId).ToDictionary(c => c.Key, c => c.ToList());
         if (salesByItem.TryGetValue(itemId, out var currentSales))
         {
@@ -129,6 +132,24 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                     continue;
                 }
 
+                var latestUpdateDate = saleItem.UpdatedAt;
+
+                if (response.listings != null)
+                {
+                    foreach (var listing in response.listings)
+                    {
+                        var listingDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(listing.lastReviewTime);
+                        if (listingDate > latestUpdateDate)
+                        {
+                            latestUpdateDate = listingDate;
+                        }
+                    }
+                }
+
+                if (saleItem.UpdatedAt != latestUpdateDate)
+                {
+                    saleItem.UpdatedAt = latestUpdateDate;
+                }
 
                 if (lowestPrice < saleItem.UnitPrice)
                 {
@@ -213,6 +234,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             {
                 foreach (var saleItem in currentSales)
                 {
+                    saleItem.UpdatedAt = DateTime.Now;
                     if (lowestOffering < saleItem.UnitPrice)
                     {
                         var undercutAmount = (uint?)(saleItem.UnitPrice - lowestOffering);
@@ -267,6 +289,19 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 var ourCheapestPrice = value.Where(saleItem => message.World == saleItem.WorldId).DefaultIfEmpty(null).Min(c => c?.UnitPrice ?? 0);
                 var theirCheapestPrice = message.Listings.Where(c => !retainerNames.Contains(c.RetainerName))
                     .DefaultIfEmpty(null).Min(c => c?.PricePerUnit ?? 0);
+                var oldestReviewTime = message.Listings.DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
+                if (oldestReviewTime != null)
+                {
+                    var listingDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTime.Value);
+                    foreach (var saleItem in value)
+                    {
+                        if (listingDate > saleItem.UpdatedAt)
+                        {
+                            saleItem.UpdatedAt = DateTime.Now;
+                        }
+                    }
+                }
+
                 if (theirCheapestPrice < ourCheapestPrice)
                 {
                     var undercutAmount = (uint?)(theirCheapestPrice - ourCheapestPrice);
@@ -275,8 +310,9 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                     foreach (var saleItem in value)
                     {
                         saleItem.UndercutBy = undercutAmount;
-                        this.configuration.IsDirty = true;
                     }
+
+                    this.configuration.IsDirty = true;
 
                     if (item != null)
                     {

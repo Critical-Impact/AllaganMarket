@@ -3,10 +3,13 @@ using System.Net.Http;
 using System.Reflection;
 
 using AllaganLib.Data.Service;
+using AllaganLib.Interface.Grid;
+using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
 using AllaganLib.Universalis.Services;
 
+using AllaganMarket.Grids;
 using AllaganMarket.Models;
 using AllaganMarket.Settings;
 
@@ -100,30 +103,36 @@ public class AllaganMarketPlugin : HostedPlugin
                .AsSelf()
                .AsImplementedInterfaces();
 
+        containerBuilder.RegisterAssemblyTypes(dataAccess)
+               .Where(t => t.Name.EndsWith("Column"))
+               .AsSelf()
+               .AsImplementedInterfaces();
+
+        var interfacesAssembly = typeof(StringColumnFilter).Assembly;
+
+        containerBuilder.RegisterAssemblyTypes(interfacesAssembly)
+                        .Where(t => t.Name.EndsWith("ColumnFilter"))
+                        .AsSelf()
+                        .AsImplementedInterfaces();
+
+        //Services
         containerBuilder.RegisterType<WindowService>().SingleInstance();
-        containerBuilder.RegisterType<FileDialogManager>().SingleInstance();
-        containerBuilder.RegisterType<DalamudFileDialogManager>().As<IFileDialogManager>().SingleInstance();
         containerBuilder.RegisterType<InstallerWindowService>().SingleInstance();
         containerBuilder.RegisterType<MarketPriceUpdaterService>().SingleInstance();
         containerBuilder.RegisterType<RetainerMarketService>().SingleInstance();
+        containerBuilder.RegisterType<ATService>().SingleInstance();
         containerBuilder.RegisterType<ImGuiService>().AsSelf().As<AllaganLib.Interface.Services.ImGuiService>().SingleInstance();
         containerBuilder.RegisterType<MediatorService>().SingleInstance();
-        containerBuilder.RegisterType<ClientWebSocket>();
         containerBuilder.RegisterType<CommandService>().SingleInstance();
-        containerBuilder.Register(c => new HttpClient()).As<HttpClient>();
         containerBuilder.RegisterType<UniversalisWebsocketService>().SingleInstance();
         containerBuilder.RegisterType<UniversalisApiService>().SingleInstance();
-        containerBuilder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<ConfigWindow>().As<Window>().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<WizardWindow>().As<Window>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<InventoryService>().As<IInventoryService>().SingleInstance();
         containerBuilder.RegisterType<SaleTrackerService>().SingleInstance();
         containerBuilder.RegisterType<UndercutService>().SingleInstance();
         containerBuilder.RegisterType<CsvLoaderService>().SingleInstance();
         containerBuilder.RegisterType<AutoSaveService>().SingleInstance();
-        containerBuilder.Register(c => c.Resolve<IDataManager>().GameData).SingleInstance();
         containerBuilder.RegisterType<CharacterMonitorService>().As<ICharacterMonitorService>()
-            .SingleInstance();
+                        .SingleInstance();
         containerBuilder.RegisterType<PluginBootService>().SingleInstance();
         containerBuilder.RegisterType<PluginStateService>().SingleInstance();
         containerBuilder.RegisterType<ConfigurationLoaderService>().SingleInstance();
@@ -131,11 +140,31 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
         containerBuilder.RegisterType<LaunchButtonService>().SingleInstance();
         containerBuilder.RegisterType<DtrService>().SingleInstance();
-        containerBuilder.RegisterType<SaleFilter>();
+
+        containerBuilder.RegisterType<SaleItemTable>().SingleInstance();
+        containerBuilder.RegisterType<SoldItemTable>().SingleInstance();
+        containerBuilder.RegisterType<SearchResultConfiguration>();
+        containerBuilder.RegisterType<FileDialogManager>().SingleInstance();
+        containerBuilder.RegisterType<DalamudFileDialogManager>().As<IFileDialogManager>().SingleInstance();
+
+        containerBuilder.RegisterType<ClientWebSocket>();
+        containerBuilder.Register(c => new HttpClient()).As<HttpClient>();
+
+        // Windows
+        containerBuilder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<ConfigWindow>().As<Window>().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<WizardWindow>().As<Window>().AsSelf().SingleInstance();
+
+        containerBuilder.Register(c => c.Resolve<IDataManager>().GameData).SingleInstance();
+
+
+        containerBuilder.RegisterType<SaleFilter>().SingleInstance();
         containerBuilder.Register(c => new WizardWidgetSettings() { PluginName = "Allagan Market", LogoPath = "logo_small" });
         containerBuilder.RegisterType<WizardWidget<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
         containerBuilder.RegisterType<ConfigurationWizardService<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
         containerBuilder.RegisterType<Font>().As<IFont>().SingleInstance();
+
+        // Sheets
         containerBuilder.Register<ExcelSheet<Item>>(
             s =>
             {
@@ -148,6 +177,13 @@ public class AllaganMarketPlugin : HostedPlugin
             {
                 var dataManger = s.Resolve<IDataManager>();
                 return dataManger.GetExcelSheet<ClassJob>()!;
+            }).SingleInstance();
+
+        containerBuilder.Register<ExcelSheet<World>>(
+            s =>
+            {
+                var dataManger = s.Resolve<IDataManager>();
+                return dataManger.GetExcelSheet<World>()!;
             }).SingleInstance();
 
         containerBuilder.Register(
@@ -178,5 +214,6 @@ public class AllaganMarketPlugin : HostedPlugin
         serviceCollection.AddHostedService(p => p.GetRequiredService<DtrService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<ConfigurationLoaderService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<AutoSaveService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<ATService>());
     }
 }

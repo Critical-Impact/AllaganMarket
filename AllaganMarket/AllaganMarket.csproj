@@ -13,10 +13,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AllaganLib.Data" Version="1.0.2" />
-        <PackageReference Include="AllaganLib.Interface" Version="1.0.2" />
-        <PackageReference Include="AllaganLib.Shared" Version="1.0.2" />
-        <PackageReference Include="AllaganLib.Universalis" Version="1.0.2" />
         <PackageReference Include="Autofac" Version="8.0.0"/>
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="9.0.0"/>
         <PackageReference Include="DalaMock.Host" Version="2.0.25" />
@@ -29,6 +25,20 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
     </ItemGroup>
+
+<!--    <ItemGroup Condition="'$(Configuration)'=='Debug'">-->
+<!--        <ProjectReference Include="..\..\..\RiderProjects\AllaganLib\AllaganLib.Data\AllaganLib.Data.csproj" />-->
+<!--        <ProjectReference Include="..\..\..\RiderProjects\AllaganLib\AllaganLib.Interface\AllaganLib.Interface.csproj" />-->
+<!--        <ProjectReference Include="..\..\..\RiderProjects\AllaganLib\AllaganLib.Shared\AllaganLib.Shared.csproj" />-->
+<!--        <ProjectReference Include="..\..\..\RiderProjects\AllaganLib\AllaganLib.Universalis\AllaganLib.Universalis.csproj" />-->
+<!--    </ItemGroup>-->
+    <ItemGroup>
+        <PackageReference Include="AllaganLib.Data" Version="1.0.3" />
+        <PackageReference Include="AllaganLib.Interface" Version="1.0.3" />
+        <PackageReference Include="AllaganLib.Shared" Version="1.0.3" />
+        <PackageReference Include="AllaganLib.Universalis" Version="1.0.3" />
+    </ItemGroup>
+
 
     <ItemGroup>
         <ContentWithTargetPath Include="Images\logo.png">

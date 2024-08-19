@@ -4,9 +4,9 @@
     "net8.0-windows7.0": {
       "AllaganLib.Data": {
         "type": "Direct",
-        "requested": "[1.0.2, )",
-        "resolved": "1.0.2",
-        "contentHash": "3vBI641TiHBtY28ArpV2Ie2f2nbqpCl6451jzvRBr1PfdcNXLL2CkUIgDPnkLhBi0uvkFdYv61R9NZwbyswUoA==",
+        "requested": "[1.0.3, )",
+        "resolved": "1.0.3",
+        "contentHash": "4IIzG3F369FiwlGGUBb4a98w+rvJJR5aMmeFC3szsY5t1eXL9L3i9NBiSp8HbuFmvXqBG1s60lPWwN0Jj5tBoQ==",
         "dependencies": {
           "CSVFile": "3.1.0",
           "CsvHelper": "30.0.1"
@@ -14,18 +14,20 @@
       },
       "AllaganLib.Interface": {
         "type": "Direct",
-        "requested": "[1.0.2, )",
-        "resolved": "1.0.2",
-        "contentHash": "uHO2BfO7Xv5ucDTuWXm1iCJde2hkuBa1eiZjankj4ECWSy7HHTsAb3ciVT5KYG4VrZwQZs6neoTWxsxIUn6Vsg==",
+        "requested": "[1.0.3, )",
+        "resolved": "1.0.3",
+        "contentHash": "LjRQjOdedZxKH1xAPP/UJqiUR8W5lKref6Je0CtEfnnxz6+JT9nCPsai5XJKhcMnRWXJUHi7goEnq5/2GYSe9A==",
         "dependencies": {
-          "AllaganLib.Shared": "1.0.2"
+          "AllaganLib.Data": "1.0.3",
+          "AllaganLib.Shared": "1.0.3",
+          "NaturalSort.Extension": "4.3.0"
         }
       },
       "AllaganLib.Shared": {
         "type": "Direct",
-        "requested": "[1.0.2, )",
-        "resolved": "1.0.2",
-        "contentHash": "z5BxJqJkxpVJ1YZ/b+BUlSkYC1FMKBNbbLZphHH0bL/8ESqWUFCDZkdX6kcEqFAt2OVhlzP9bhumJuASx8Z+fQ==",
+        "requested": "[1.0.3, )",
+        "resolved": "1.0.3",
+        "contentHash": "9payc8rMO6X8n8nU21sp+79OlGuKRuOk9NdEFiRA3ZSt75auYEibrNUjuRV8u2YE/CB7g/kGNDTqSwuxD+BasQ==",
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0"
@@ -33,11 +35,11 @@
       },
       "AllaganLib.Universalis": {
         "type": "Direct",
-        "requested": "[1.0.2, )",
-        "resolved": "1.0.2",
-        "contentHash": "K3GYazTuMJVAJBUTSUgo0HnoVaftfIMAuN80moPSwj8FRxEkDPiDL2qVA5Qo7mhmNV3/4x5ue3E/uIAci2mhAg==",
+        "requested": "[1.0.3, )",
+        "resolved": "1.0.3",
+        "contentHash": "zhRD3WUUOgEa7bUo4mQm1HJsf6I1MsqwC52uhqyb65TRQZUfKSKlkevnkxIN7FYum+rcbiwqXSi2MhCD3jhRFQ==",
         "dependencies": {
-          "AllaganLib.Shared": "1.0.2",
+          "AllaganLib.Shared": "1.0.3",
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
           "MongoDB.Bson": "2.25.0"
@@ -857,6 +859,11 @@
         "type": "Transitive",
         "resolved": "8.0.0",
         "contentHash": "bXJEZrW9ny8vjMF1JV253WeLhpEVzFo1lyaZu1vQ4ZxWUlVvknZ/+ftFgVheLubb4eZPSwwxBeqS1JkCOjxd8g=="
+      },
+      "NaturalSort.Extension": {
+        "type": "Transitive",
+        "resolved": "4.3.0",
+        "contentHash": "NGr3z/Izk16yxEcXKsopZvfYH8hh3iY7mmLJlT8iWVWBlidqGHeq2ykoy2JposrdM6aGvqjMfso9l0N8FzxAUw=="
       },
       "Serilog": {
         "type": "Transitive",
