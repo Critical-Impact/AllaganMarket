@@ -43,7 +43,23 @@ public class RetainerColumn : StringColumn<SearchResultConfiguration, SearchResu
             return this.characterMonitorService.GetCharacterById(retainerId.Value)?.Name;
         }
 
-        return "";
+        if (item.SaleSummaryItem != null)
+        {
+            if (item.SaleSummaryItem.Grouping is { IsGrouped: true, RetainerId: not null })
+            {
+                return this.characterMonitorService.GetCharacterById(item.SaleSummaryItem.Grouping.RetainerId.Value)?.Name ?? string.Empty;
+            }
+
+            if (item.SaleSummaryItem.Grouping.IsGrouped == false && item.SaleSummaryItem.RetainerId != null)
+            {
+                return this.characterMonitorService.GetCharacterById(item.SaleSummaryItem.RetainerId.Value)?.Name ??
+                       string.Empty;
+            }
+
+            return "N/A";
+        }
+
+        return string.Empty;
     }
 
     public override string HelpText { get; set; } = "The name of the retainer";

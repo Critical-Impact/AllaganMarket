@@ -8,8 +8,6 @@ using AllaganLib.Data.Service;
 
 using AllaganMarket.Models;
 
-using DalaMock.Host.Mediator;
-
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 

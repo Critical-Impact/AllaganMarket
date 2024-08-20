@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using AllaganLib.Interface.FormFields;
 using AllaganLib.Interface.Wizard;
 
-using AllaganMarket.Settings;
-
 namespace AllaganMarket.Features;
 
 public class GameIntegrationsFeature : Feature<Configuration>

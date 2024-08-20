@@ -8,6 +8,7 @@ using AllaganLib.Interface.Widgets;
 using AllaganLib.Shared.Extensions;
 
 using AllaganMarket.Grids;
+using AllaganMarket.Grids.Fields;
 using AllaganMarket.Settings;
 
 using DalaMock.Host.Mediator;
@@ -37,12 +38,6 @@ using Services.Interfaces;
 
 public class MainWindow : ExtendedWindow, IDisposable
 {
-    public enum MainWindowTab
-    {
-        CurrentlySelling,
-        SalesHistory
-    }
-
     private readonly ExcelSheet<Item> itemSheet;
     private readonly ExcelSheet<ClassJob> classJobSheet;
     private readonly IPluginLog pluginLog;
@@ -55,13 +50,24 @@ public class MainWindow : ExtendedWindow, IDisposable
     private readonly IFileDialogManager fileDialogManager;
     private readonly SaleItemTable saleItemTable;
     private readonly SoldItemTable soldItemTable;
+    private readonly SaleSummaryTable saleSummaryTable;
     private readonly SearchResultConfiguration saleItemSearchConfiguration;
     private readonly SearchResultConfiguration soldItemSearchConfiguration;
+    private readonly SearchResultConfiguration saleSummarySearchConfiguration;
     private readonly ViewModeSetting viewModeSetting;
+    private readonly SaleSummaryGroupFormField saleSummaryGroupFormField;
     private readonly ExcelSheet<World> worldSheet;
-    private bool filterMenuOpen;
-    private readonly GridQuickSearchWidget<SearchResultConfiguration,SearchResult, MessageBase> saleQuickSearchWidget;
+    private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> saleQuickSearchWidget;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> soldQuickSearchWidget;
+    private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> saleSummarySearchWidget;
+    private bool filterMenuOpen;
+
+    public enum MainWindowTab
+    {
+        CurrentlySelling,
+        SalesHistory,
+        SalesSummary,
+    }
 
     public MainWindow(
         MediatorService mediatorService,
@@ -83,7 +89,9 @@ public class MainWindow : ExtendedWindow, IDisposable
         IFileDialogManager fileDialogManager,
         SaleItemTable saleItemTable,
         SoldItemTable soldItemTable,
-        ViewModeSetting viewModeSetting)
+        SaleSummaryTable saleSummaryTable,
+        ViewModeSetting viewModeSetting,
+        SaleSummaryGroupFormField saleSummaryGroupFormField)
         : base(mediatorService, imGuiService, "Allagan Market##AllaganMarkets")
     {
         this.pluginLog = pluginLog;
@@ -96,9 +104,12 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.fileDialogManager = fileDialogManager;
         this.saleItemTable = saleItemTable;
         this.soldItemTable = soldItemTable;
+        this.saleSummaryTable = saleSummaryTable;
         this.saleItemSearchConfiguration = saleItemTable.SearchFilter;
         this.soldItemSearchConfiguration = soldItemTable.SearchFilter;
+        this.saleSummarySearchConfiguration = saleSummaryTable.SearchFilter;
         this.viewModeSetting = viewModeSetting;
+        this.saleSummaryGroupFormField = saleSummaryGroupFormField;
         this.Configuration = configuration;
         this.TextureProvider = textureProvider;
         this.ConfigWindow = configWindow;
@@ -122,6 +133,7 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.SaleTrackerService.SnapshotCreated += this.SnapshotCreated;
         this.saleQuickSearchWidget = new GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase>(this.saleItemTable);
         this.soldQuickSearchWidget = new GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase>(this.soldItemTable);
+        this.saleSummarySearchWidget = new GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase>(this.saleSummaryTable);
     }
 
     private void SnapshotCreated()
@@ -285,6 +297,8 @@ public class MainWindow : ExtendedWindow, IDisposable
                                                           });
                 }
 
+                ImGui.Separator();
+
                 if (ImGui.MenuItem("Export History (CSV)"))
                 {
                     this.fileDialogManager.SaveFileDialog("Select a save location",
@@ -324,11 +338,55 @@ public class MainWindow : ExtendedWindow, IDisposable
                                                           });
                 }
 
+                ImGui.Separator();
+
+                if (ImGui.MenuItem("Export Sales Summary (CSV)"))
+                {
+                    this.fileDialogManager.SaveFileDialog("Select a save location",
+                                                          "*.csv",
+                                                          "Sales Summary.csv",
+                                                          ".csv",
+                                                          (success, fileName) =>
+                                                          {
+                                                              if (success)
+                                                              {
+                                                                  this.saleSummaryTable.SaveToCsv(
+                                                                      this.saleSummarySearchConfiguration,
+                                                                      new RenderTableCsvExportOptions()
+                                                                      {
+                                                                          ExportPath = fileName, IncludeHeaders = true,
+                                                                      });
+                                                              }
+                                                          });
+                }
+
+                if (ImGui.MenuItem("Export Sales Summary (Filtered)"))
+                {
+                    this.fileDialogManager.SaveFileDialog("Select a save location",
+                                                          "*.csv",
+                                                          "Sales Summary(Filtered).csv",
+                                                          ".csv",
+                                                          (success, fileName) =>
+                                                          {
+                                                              if (success)
+                                                              {
+                                                                  this.saleSummaryTable.SaveToCsv(
+                                                                      this.saleSummarySearchConfiguration,
+                                                                      new RenderTableCsvExportOptions()
+                                                                      {
+                                                                          ExportPath = fileName, IncludeHeaders = true, UseFiltering = true,
+                                                                      });
+                                                              }
+                                                          });
+                }
+
 
                 ImGui.EndMenu();
             }
+
             ImGui.EndMenuBar();
         }
+
         this.DrawCharacterSideBar();
         ImGui.SameLine();
         this.DrawSalesPane();
@@ -595,7 +653,6 @@ public class MainWindow : ExtendedWindow, IDisposable
                                         this.DrawCurrentlySelling();
                                     }
                                 }
-                                
 
                                 using (var recentSales = ImRaii.TabItem("Sale History"))
                                 {
@@ -608,7 +665,16 @@ public class MainWindow : ExtendedWindow, IDisposable
                                     }
                                 }
 
-                                this.ImGuiService.HoverTooltip("These are the items that you have sold.");
+                                using (var recentSales = ImRaii.TabItem("Sale Summary"))
+                                {
+                                    if (recentSales)
+                                    {
+                                        this.ImGuiService.HoverTooltip("Provides a groupable list of items you have sold over a given period.");
+                                        this.SelectedTab = MainWindowTab.SalesSummary;
+                                        this.DrawButtonBar();
+                                        this.DrawSalesSummary();
+                                    }
+                                }
                             }
                         }
                     }
@@ -751,6 +817,10 @@ public class MainWindow : ExtendedWindow, IDisposable
                         else if (this.SelectedTab == MainWindowTab.SalesHistory)
                         {
                             this.soldQuickSearchWidget.Draw(this.soldItemSearchConfiguration, 150, 150);
+                        }
+                        else if (this.SelectedTab == MainWindowTab.SalesSummary)
+                        {
+                            this.saleSummarySearchWidget.Draw(this.saleSummarySearchConfiguration, 150, 150);
                         }
                     }
                 }
@@ -900,6 +970,11 @@ public class MainWindow : ExtendedWindow, IDisposable
         }
     }
 
+    private void DrawSalesSummary()
+    {
+        this.MediatorService.Publish(this.saleSummaryTable.Draw(this.saleSummarySearchConfiguration, new Vector2(0, 0)));
+    }
+
     public void DrawSaleItem(SaleItem saleItem, int index)
     {
         using (var id = ImRaii.PushId(index))
@@ -1035,18 +1110,42 @@ public class MainWindow : ExtendedWindow, IDisposable
         {
             if (buttonBar)
             {
-                var search = (this.SelectedTab == MainWindowTab.CurrentlySelling ? this.saleItemTable.SearchFilter.Get("Name") : this.soldItemTable.SearchFilter.Get("Name")) ?? "";
+                var search = string.Empty;
+                switch (this.SelectedTab)
+                {
+                    case MainWindowTab.CurrentlySelling:
+                        search = this.saleItemTable.SearchFilter.Get("Name") ?? string.Empty;
+                        break;
+                    case MainWindowTab.SalesHistory:
+                        search = this.soldItemTable.SearchFilter.Get("Name") ?? string.Empty;
+                        break;
+                    case MainWindowTab.SalesSummary:
+                        search = this.saleSummaryTable.SearchFilter.Get("Name") ?? string.Empty;
+                        break;
+                }
+
                 var searchWidth = ImGui.CalcTextSize("Search").X + ImGui.GetStyle().ItemSpacing.X;
                 ImGui.SetNextItemWidth(searchWidth);
                 this.ImGuiService.VerticalCenter();
-                ImGui.LabelText("", "Search:");
+                ImGui.LabelText(string.Empty, "Search:");
                 ImGui.SameLine();
                 ImGui.SetNextItemWidth(150);
                 this.ImGuiService.VerticalCenter();
                 if (ImGui.InputText("##searchBox", ref search, 200))
                 {
                     var newItemName = search == "" ? null : search;
-                    this.saleItemTable.SearchFilter.Set("Name", newItemName);
+                    switch (this.SelectedTab)
+                    {
+                        case MainWindowTab.CurrentlySelling:
+                            this.saleItemTable.SearchFilter.Set("Name", newItemName);
+                            break;
+                        case MainWindowTab.SalesHistory:
+                            this.soldItemTable.SearchFilter.Set("Name", newItemName);
+                            break;
+                        case MainWindowTab.SalesSummary:
+                            this.saleSummaryTable.SearchFilter.Set("Name", newItemName);
+                            break;
+                    }
                 }
 
                 ImGui.SameLine();
@@ -1065,12 +1164,22 @@ public class MainWindow : ExtendedWindow, IDisposable
                     }
                 }
 
-                ImGui.SameLine();
-
-                var showEmptySlots = this.saleFilter.ShowEmpty ?? false;
-                if (ImGui.Checkbox("Show empty slots:", ref showEmptySlots))
+                if (this.SelectedTab == MainWindowTab.CurrentlySelling)
                 {
-                    this.saleFilter.ShowEmpty = showEmptySlots;
+                    ImGui.SameLine();
+                    var showEmptySlots = this.saleFilter.ShowEmpty ?? false;
+                    this.ImGuiService.VerticalCenter();
+                    if (ImGui.Checkbox("Show empty slots:", ref showEmptySlots))
+                    {
+                        this.saleFilter.ShowEmpty = showEmptySlots;
+                    }
+                }
+
+                if (this.SelectedTab == MainWindowTab.SalesSummary)
+                {
+                    ImGui.SameLine();
+                    this.ImGuiService.VerticalCenter();
+                    this.saleSummaryGroupFormField.DrawInput(this.saleSummaryTable.SaleSummary);
                 }
 
                 ImGui.SameLine();

@@ -33,7 +33,17 @@ public class QuantityColumn : IntegerColumn<SearchResultConfiguration, SearchRes
 
     public override string? CurrentValue(SearchResult item)
     {
-        return item.SaleItem?.Quantity.ToString() ?? item.SoldItem?.Quantity.ToString();
+        if (item.SaleItem != null || item.SoldItem != null)
+        {
+            return item.SaleItem?.Quantity.ToString() ?? item.SoldItem?.Quantity.ToString();
+        }
+
+        if (item.SaleSummaryItem != null)
+        {
+            return item.SaleSummaryItem.Quantity.ToString();
+        }
+
+        return string.Empty;
     }
 
     public override string HelpText { get; set; } = "The quantity of item being sold.";

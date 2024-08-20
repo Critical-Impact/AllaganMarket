@@ -5,7 +5,7 @@ namespace AllaganMarket.Windows;
 using System;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using Interfaces;
+
 using Services;
 
 public abstract class ExtendedWindow : Window, IMediatorSubscriber, IDisposable

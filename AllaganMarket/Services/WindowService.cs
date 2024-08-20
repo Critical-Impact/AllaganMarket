@@ -7,9 +7,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AllaganMarket.Interfaces;
+
 using DalaMock.Host.Factories;
-using DalaMock.Shared;
 using DalaMock.Shared.Interfaces;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;

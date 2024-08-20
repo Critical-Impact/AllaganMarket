@@ -6,7 +6,7 @@ namespace AllaganMarket.Filtering;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud.Plugin.Services;
-using Extensions;
+
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using Models;

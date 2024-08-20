@@ -3,7 +3,6 @@
 using System.Runtime.InteropServices;
 using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using FFXIVClientStructs.FFXIV.Component.GUI;
 
 [Agent(AgentId.Retainer)]
 [StructLayout(LayoutKind.Explicit, Size = 0x4B84)]

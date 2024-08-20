@@ -1,15 +1,14 @@
-﻿using System.Linq;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Reflection;
 
 using AllaganLib.Data.Service;
-using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
 using AllaganLib.Universalis.Services;
 
 using AllaganMarket.Grids;
+using AllaganMarket.Grids.Fields;
 using AllaganMarket.Models;
 using AllaganMarket.Settings;
 
@@ -17,18 +16,15 @@ using DalaMock.Host.Mediator;
 using DalaMock.Shared.Classes;
 using DalaMock.Shared.Interfaces;
 
-using Lumina;
-
 namespace AllaganMarket;
 
-using System;
 using System.Globalization;
 using System.Net.WebSockets;
 using Windows;
 using Autofac;
-using DalaMock.Host;
+
 using DalaMock.Host.Hosting;
-using DalaMock.Shared;
+
 using Dalamud.Game.Text;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Windowing;
@@ -143,6 +139,7 @@ public class AllaganMarketPlugin : HostedPlugin
 
         containerBuilder.RegisterType<SaleItemTable>().SingleInstance();
         containerBuilder.RegisterType<SoldItemTable>().SingleInstance();
+        containerBuilder.RegisterType<SaleSummaryTable>().SingleInstance();
         containerBuilder.RegisterType<SearchResultConfiguration>();
         containerBuilder.RegisterType<FileDialogManager>().SingleInstance();
         containerBuilder.RegisterType<DalamudFileDialogManager>().As<IFileDialogManager>().SingleInstance();
@@ -157,8 +154,12 @@ public class AllaganMarketPlugin : HostedPlugin
 
         containerBuilder.Register(c => c.Resolve<IDataManager>().GameData).SingleInstance();
 
+        //Custom Widgets
+        containerBuilder.RegisterType<SaleSummaryGroupFormField>();
+
 
         containerBuilder.RegisterType<SaleFilter>().SingleInstance();
+        containerBuilder.RegisterType<SaleSummary>();
         containerBuilder.Register(c => new WizardWidgetSettings() { PluginName = "Allagan Market", LogoPath = "logo_small" });
         containerBuilder.RegisterType<WizardWidget<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
         containerBuilder.RegisterType<ConfigurationWizardService<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();

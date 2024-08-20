@@ -1,4 +1,3 @@
-using System;
 using System.Globalization;
 
 using AllaganLib.Interface.Grid;

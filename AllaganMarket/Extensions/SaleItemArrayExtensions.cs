@@ -1,5 +1,3 @@
-using System.Linq;
-
 using AllaganMarket.Models;
 
 namespace AllaganMarket.Extensions;

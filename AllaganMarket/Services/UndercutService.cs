@@ -5,7 +5,6 @@ using AllaganLib.Universalis.Models.Bson;
 using AllaganLib.Universalis.Services;
 
 using AllaganMarket.Extensions;
-using AllaganMarket.Interfaces;
 using AllaganMarket.Models;
 using AllaganMarket.Services.Interfaces;
 using AllaganMarket.Settings;

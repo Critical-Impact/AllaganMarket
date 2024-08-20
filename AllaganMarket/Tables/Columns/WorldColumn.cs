@@ -44,6 +44,22 @@ public class WorldColumn : StringColumn<SearchResultConfiguration, SearchResult,
             return this.worldSheet.GetRow(worldId.Value)?.Name.AsReadOnly().ExtractText() ?? string.Empty;
         }
 
+        if (item.SaleSummaryItem != null)
+        {
+            if (item.SaleSummaryItem.Grouping is { IsGrouped: true, WorldId: not null })
+            {
+                return this.worldSheet.GetRow(item.SaleSummaryItem.Grouping.WorldId.Value)?.Name.AsReadOnly().ExtractText() ?? string.Empty;
+            }
+
+            if (item.SaleSummaryItem.Grouping.IsGrouped == false && item.SaleSummaryItem.WorldId != null)
+            {
+                return this.worldSheet.GetRow(item.SaleSummaryItem.WorldId.Value)?.Name.AsReadOnly().ExtractText() ??
+                       string.Empty;
+            }
+
+            return "N/A";
+        }
+
         return string.Empty;
     }
 

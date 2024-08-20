@@ -4,9 +4,9 @@
     "net8.0-windows7.0": {
       "AllaganLib.Data": {
         "type": "Direct",
-        "requested": "[1.0.3, )",
-        "resolved": "1.0.3",
-        "contentHash": "4IIzG3F369FiwlGGUBb4a98w+rvJJR5aMmeFC3szsY5t1eXL9L3i9NBiSp8HbuFmvXqBG1s60lPWwN0Jj5tBoQ==",
+        "requested": "[1.0.4, )",
+        "resolved": "1.0.4",
+        "contentHash": "PhPYjouDjHD4mQTnmzWriOfQ8Qx1oiUxZCpQ9oOFxWYQAyr5V+Te2nRZkjwYeN1i7XsXINiF/H09aj86ajuPRw==",
         "dependencies": {
           "CSVFile": "3.1.0",
           "CsvHelper": "30.0.1"
@@ -14,20 +14,20 @@
       },
       "AllaganLib.Interface": {
         "type": "Direct",
-        "requested": "[1.0.3, )",
-        "resolved": "1.0.3",
-        "contentHash": "LjRQjOdedZxKH1xAPP/UJqiUR8W5lKref6Je0CtEfnnxz6+JT9nCPsai5XJKhcMnRWXJUHi7goEnq5/2GYSe9A==",
+        "requested": "[1.0.4, )",
+        "resolved": "1.0.4",
+        "contentHash": "/SQoTZ9vowMvtrPVmcrIAxpQZfM7XsDP+ibhRYYqp8vR9H1S03HsP2lI4hmIFy1yi9Qiax9xWkgNiQFPPSmP3g==",
         "dependencies": {
-          "AllaganLib.Data": "1.0.3",
-          "AllaganLib.Shared": "1.0.3",
+          "AllaganLib.Data": "1.0.4",
+          "AllaganLib.Shared": "1.0.4",
           "NaturalSort.Extension": "4.3.0"
         }
       },
       "AllaganLib.Shared": {
         "type": "Direct",
-        "requested": "[1.0.3, )",
-        "resolved": "1.0.3",
-        "contentHash": "9payc8rMO6X8n8nU21sp+79OlGuKRuOk9NdEFiRA3ZSt75auYEibrNUjuRV8u2YE/CB7g/kGNDTqSwuxD+BasQ==",
+        "requested": "[1.0.4, )",
+        "resolved": "1.0.4",
+        "contentHash": "pzrcQyElVXGRIdEdqe4zLWJIHi1moZHjmhvK9W8ygqKUz4QhvQWmtDbytKEG93JdxVwcr41iFVUc4o8GvzZlwQ==",
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0"
@@ -35,11 +35,11 @@
       },
       "AllaganLib.Universalis": {
         "type": "Direct",
-        "requested": "[1.0.3, )",
-        "resolved": "1.0.3",
-        "contentHash": "zhRD3WUUOgEa7bUo4mQm1HJsf6I1MsqwC52uhqyb65TRQZUfKSKlkevnkxIN7FYum+rcbiwqXSi2MhCD3jhRFQ==",
+        "requested": "[1.0.4, )",
+        "resolved": "1.0.4",
+        "contentHash": "ZhMrKZL+roHbbn9vMpOqd5+F+W9FDWTkU4bGnaCRArUIwA8xGKD+ufOrqAIqiBkkVKaUv/0vzh/zkAEuO/fTBA==",
         "dependencies": {
-          "AllaganLib.Shared": "1.0.3",
+          "AllaganLib.Shared": "1.0.4",
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
           "MongoDB.Bson": "2.25.0"
@@ -66,12 +66,12 @@
       },
       "DalaMock.Host": {
         "type": "Direct",
-        "requested": "[2.0.25, )",
-        "resolved": "2.0.25",
-        "contentHash": "9frq47NhGTnhMw/vciD1+t1UNKBeRWtwfSqiq7B5Us7s73tTr7CkmhNeqiyp1AWA1lffBfTf/dEnPrFKxpR42w==",
+        "requested": "[2.0.26, )",
+        "resolved": "2.0.26",
+        "contentHash": "cfR5TCVwbDTXuoAgZAnGSAaq4hqueTegS9WnKnjyEKxrJXETVxil+h1gQXhSv+TNDYuaGacv7z4rjCpE7u5Tpw==",
         "dependencies": {
           "Autofac.Extensions.DependencyInjection": "9.0.0",
-          "DalaMock.Shared": "2.0.25",
+          "DalaMock.Shared": "2.0.26",
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
           "Microsoft.Extensions.ObjectPool": "9.0.0-preview.6.24328.4",
@@ -83,9 +83,9 @@
       },
       "DalaMock.Shared": {
         "type": "Direct",
-        "requested": "[2.0.25, )",
-        "resolved": "2.0.25",
-        "contentHash": "GJojHE0Leub3RbBWbbslL7boseX73LL58VMiP+o5pTIGV1zqU+gOYIC9ciNWvtwuNy/NZPohiB7/kuOCf+CqPA==",
+        "requested": "[2.0.26, )",
+        "resolved": "2.0.26",
+        "contentHash": "Vnh3UZNDW6a41AtW6H0RjyiVBdWKLGVVhWwPMQE19rzSMfl+jQite94vlZJ87cS+JbUoap2wX12S4tzjeT883A==",
         "dependencies": {
           "Autofac.Extensions.DependencyInjection": "9.0.0",
           "Microsoft.Extensions.Hosting": "8.0.0",

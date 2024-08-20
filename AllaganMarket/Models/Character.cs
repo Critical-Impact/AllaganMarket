@@ -2,8 +2,6 @@
 
 using System;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Newtonsoft.Json;
-using Services;
 
 public class Character : IEquatable<Character>
 {
