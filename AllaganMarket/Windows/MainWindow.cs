@@ -13,6 +13,8 @@ using AllaganMarket.Settings;
 
 using DalaMock.Host.Mediator;
 
+using Dalamud.Interface.Utility;
+
 namespace AllaganMarket.Windows;
 
 using System;
@@ -56,11 +58,20 @@ public class MainWindow : ExtendedWindow, IDisposable
     private readonly SearchResultConfiguration saleSummarySearchConfiguration;
     private readonly ViewModeSetting viewModeSetting;
     private readonly SaleSummaryGroupFormField saleSummaryGroupFormField;
+    private readonly SaleSummaryDateRangeFormField saleSummaryDateRangeFormField;
+    private readonly SaleSummaryTimeSpanFormField saleSummaryTimeSpanFormField;
     private readonly ExcelSheet<World> worldSheet;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> saleQuickSearchWidget;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> soldQuickSearchWidget;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> saleSummarySearchWidget;
     private bool filterMenuOpen;
+    private SummaryDateMode summaryDateMode = SummaryDateMode.Range;
+
+    public enum SummaryDateMode
+    {
+        Range,
+        TimeSpan
+    }
 
     public enum MainWindowTab
     {
@@ -91,7 +102,9 @@ public class MainWindow : ExtendedWindow, IDisposable
         SoldItemTable soldItemTable,
         SaleSummaryTable saleSummaryTable,
         ViewModeSetting viewModeSetting,
-        SaleSummaryGroupFormField saleSummaryGroupFormField)
+        SaleSummaryGroupFormField saleSummaryGroupFormField,
+        SaleSummaryDateRangeFormField saleSummaryDateRangeFormField,
+        SaleSummaryTimeSpanFormField saleSummaryTimeSpanFormField)
         : base(mediatorService, imGuiService, "Allagan Market##AllaganMarkets")
     {
         this.pluginLog = pluginLog;
@@ -110,6 +123,8 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.saleSummarySearchConfiguration = saleSummaryTable.SearchFilter;
         this.viewModeSetting = viewModeSetting;
         this.saleSummaryGroupFormField = saleSummaryGroupFormField;
+        this.saleSummaryDateRangeFormField = saleSummaryDateRangeFormField;
+        this.saleSummaryTimeSpanFormField = saleSummaryTimeSpanFormField;
         this.Configuration = configuration;
         this.TextureProvider = textureProvider;
         this.ConfigWindow = configWindow;
@@ -628,6 +643,11 @@ public class MainWindow : ExtendedWindow, IDisposable
         }
     }
 
+    private DateTime? testDateTime = null;
+    private DateTime? testStartDate = null;
+    private DateTime? testEndDate = null;
+    private TimeUnit? timeUnit = null;
+    private int? timeValue = null;
     private void DrawSalesPane()
     {
         using (var saleItems = ImRaii.Child("saleItems", new Vector2(this.filterMenuOpen ? -200 : 0, 0)))
@@ -1179,7 +1199,44 @@ public class MainWindow : ExtendedWindow, IDisposable
                 {
                     ImGui.SameLine();
                     this.ImGuiService.VerticalCenter();
-                    this.saleSummaryGroupFormField.DrawInput(this.saleSummaryTable.SaleSummary);
+                    this.saleSummaryGroupFormField.DrawInput(this.saleSummaryTable.SaleSummary, (int?)(150 * ImGuiHelpers.GlobalScale));
+
+                    
+                    ImGui.SameLine();
+                    this.ImGuiService.VerticalCenter();
+                    if (this.summaryDateMode == SummaryDateMode.Range)
+                    {
+                        this.saleSummaryDateRangeFormField.DrawInput(
+                            this.saleSummaryTable.SaleSummary,
+                            (int?)(150 * ImGuiHelpers.GlobalScale));
+                    }
+                    else
+                    {
+                        this.saleSummaryTimeSpanFormField.DrawInput(
+                            this.saleSummaryTable.SaleSummary,
+                            (int?)(150 * ImGuiHelpers.GlobalScale));
+                    }
+
+                    using (ImRaii.PushFont(this.font.IconFont))
+                    {
+                        this.ImGuiService.VerticalCenter();
+                        if (ImGui.Button($"{FontAwesomeIcon.Calendar.ToIconString()}"))
+                        {
+                            ImGui.OpenPopup("SDMPicker");
+                        }
+                    }
+
+                    using (ImRaii.Popup("SDMPicker"))
+                    {
+                        if (ImGui.Selectable("Date Range", this.summaryDateMode == SummaryDateMode.Range))
+                        {
+                            this.summaryDateMode = SummaryDateMode.Range;
+                        }
+                        if (ImGui.Selectable("Since Today", this.summaryDateMode == SummaryDateMode.TimeSpan))
+                        {
+                            this.summaryDateMode = SummaryDateMode.TimeSpan;
+                        }
+                    }
                 }
 
                 ImGui.SameLine();

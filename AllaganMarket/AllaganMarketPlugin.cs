@@ -156,6 +156,8 @@ public class AllaganMarketPlugin : HostedPlugin
 
         //Custom Widgets
         containerBuilder.RegisterType<SaleSummaryGroupFormField>();
+        containerBuilder.RegisterType<SaleSummaryDateRangeFormField>();
+        containerBuilder.RegisterType<SaleSummaryTimeSpanFormField>();
 
 
         containerBuilder.RegisterType<SaleFilter>().SingleInstance();

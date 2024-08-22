@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using AllaganLib.Interface.FormFields;
+using AllaganLib.Interface.Widgets;
 
 using AllaganMarket.Extensions;
 using AllaganMarket.Grids;
@@ -22,7 +23,7 @@ public enum SaleSummaryGroup
     Retainer = 16,
 }
 
-public class SaleSummary : IDisposable, IConfigurable<SaleSummaryGroup>
+public class SaleSummary : IDisposable, IConfigurable<SaleSummaryGroup>, IConfigurable<(DateTime, DateTime)?>, IConfigurable<(TimeUnit, int)?>
 {
     private readonly SaleTrackerService saleTrackerService;
     private readonly ICharacterMonitorService characterMonitorService;
@@ -58,7 +59,9 @@ public class SaleSummary : IDisposable, IConfigurable<SaleSummaryGroup>
 
     public DateTime? ToDate { get; set; }
 
-    public TimeSpan? TimeSpanFrom { get; set; }
+    public TimeUnit? TimeUnit { get; set; }
+    
+    public int? TimeValue { get; set; }
 
     public ulong TotalQuantity { get; private set; }
 
@@ -100,9 +103,31 @@ public class SaleSummary : IDisposable, IConfigurable<SaleSummaryGroup>
                                            c => c.Value.OwnerId);
         DateTime? startDate = FromDate;
 
-        if (this.TimeSpanFrom.HasValue)
+        if (this.TimeUnit.HasValue && this.TimeValue.HasValue)
         {
-            startDate = DateTime.Now - this.TimeSpanFrom.Value;
+            switch (this.TimeUnit.Value)
+            {
+                case AllaganLib.Interface.Widgets.TimeUnit.Seconds:
+                    startDate = DateTime.Now - TimeSpan.FromSeconds(this.TimeValue.Value);
+                    break;
+                case AllaganLib.Interface.Widgets.TimeUnit.Minutes:
+                    startDate = DateTime.Now - TimeSpan.FromMinutes(this.TimeValue.Value);
+                    break;
+                case AllaganLib.Interface.Widgets.TimeUnit.Hours:
+                    startDate = DateTime.Now - TimeSpan.FromHours(this.TimeValue.Value);
+                    break;
+                case AllaganLib.Interface.Widgets.TimeUnit.Days:
+                    startDate = DateTime.Now - TimeSpan.FromDays(this.TimeValue.Value);
+                    break;
+                case AllaganLib.Interface.Widgets.TimeUnit.Months:
+                    startDate = DateTime.Now - TimeSpan.FromDays(this.TimeValue.Value * 30);
+                    break;
+                case AllaganLib.Interface.Widgets.TimeUnit.Years:
+                    startDate = DateTime.Now - TimeSpan.FromDays(this.TimeValue.Value * 365);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         var filteredItems = items.Where(
@@ -159,10 +184,60 @@ public class SaleSummary : IDisposable, IConfigurable<SaleSummaryGroup>
         return this.GroupBy;
     }
 
+    public void Set(string key, (TimeUnit, int)? newValue)
+    {
+        if (newValue == null)
+        {
+            this.TimeUnit = null;
+            this.TimeValue = null;
+            this.isDirty = true;
+        }
+        else
+        {
+            this.TimeUnit = newValue.Value.Item1;
+            this.TimeValue = newValue.Value.Item2;
+            this.FromDate = null;
+            this.ToDate = null;
+            this.isDirty = true;
+        }
+    }
+
+    public void Set(string key, (DateTime, DateTime)? newValue)
+    {
+        if (newValue == null)
+        {
+            this.TimeUnit = null;
+            this.TimeValue = null;
+            this.FromDate = null;
+            this.ToDate = null;
+            this.isDirty = true;
+        }
+        else
+        {
+            this.FromDate = newValue.Value.Item1;
+            this.ToDate = newValue.Value.Item2;
+            this.isDirty = true;
+        }
+    }
+
     public void Set(string key, SaleSummaryGroup newValue)
     {
         this.GroupBy = newValue;
         this.isDirty = true;
+    }
+
+    (DateTime, DateTime)? IConfigurable<(DateTime, DateTime)?>.Get(string key)
+    {
+        if (this.FromDate == null || this.ToDate == null)
+        {
+            return null;
+        }
+        return (this.FromDate.Value, this.ToDate.Value);
+    }
+
+    (TimeUnit, int)? IConfigurable<(TimeUnit, int)?>.Get(string key)
+    {
+        return this.TimeUnit != null && this.TimeValue != null ? (this.TimeUnit.Value, this.TimeValue.Value) : null;
     }
 }
 
