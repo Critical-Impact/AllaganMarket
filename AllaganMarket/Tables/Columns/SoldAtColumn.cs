@@ -8,14 +8,11 @@ using DalaMock.Host.Mediator;
 
 using ImGuiNET;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class SoldAtColumn : DateTimeColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class SoldAtColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+    : DateTimeColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    public SoldAtColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter) : base(imGuiService, stringColumnFilter)
-    {
-    }
-
     public override string? DefaultValue { get; set; } = null;
 
     public override string Key { get; set; } = "SoldAt";
@@ -30,15 +27,15 @@ public class SoldAtColumn : DateTimeColumn<SearchResultConfiguration, SearchResu
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    public override string EmptyText { get; set; } = "";
-
-    public override string? CurrentValue(SearchResult item)
-    {
-        return item.SoldItem?.SoldAt.ToString(CultureInfo.CurrentCulture) ?? null;
-    }
+    public override string EmptyText { get; set; } = string.Empty;
 
     public override string HelpText { get; set; } =
         "When the item was sold.";
 
     public override string Version { get; } = "1.0.0";
+
+    public override string? CurrentValue(SearchResult item)
+    {
+        return item.SoldItem?.SoldAt.ToString(CultureInfo.CurrentCulture) ?? null;
+    }
 }

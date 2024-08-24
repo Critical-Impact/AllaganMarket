@@ -28,7 +28,7 @@ public class WizardWindow : ExtendedWindow, IDisposable
         this.SizeConstraints = new WindowSizeConstraints()
         {
             MinimumSize = new Vector2(800, 350),
-            MaximumSize = new Vector2(1000, 1000)
+            MaximumSize = new Vector2(1000, 1000),
         };
     }
 
@@ -38,14 +38,16 @@ public class WizardWindow : ExtendedWindow, IDisposable
         base.OnOpen();
     }
 
-    private void WizardWidgetOnOnClosed()
-    {
-        this.IsOpen = false;
-    }
-
     public override void Draw()
     {
         this.wizardWidget.Draw();
+    }
+
+    public new void Dispose()
+    {
+        this.Dispose(true);
+        base.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -56,10 +58,8 @@ public class WizardWindow : ExtendedWindow, IDisposable
         }
     }
 
-    public new void Dispose()
+    private void WizardWidgetOnOnClosed()
     {
-        this.Dispose(true);
-        base.Dispose();
-        GC.SuppressFinalize(this);
+        this.IsOpen = false;
     }
 }

@@ -7,10 +7,20 @@
             "blankLinesBetweenUsingGroups": "require"
         },
         "documentationRules": {
-            "xmlHeader": false
+            "documentExposedElements": false,
+            "documentInternalElements": false,
+            "documentPrivateElements": false,
+            "documentInterfaces": false,
+            "xmlHeader": false,
+            "documentPrivateFields": false
         },
         "maintainabilityRules": {
-            "topLevelTypes": [ "class", "interface", "struct", "enum" ]
+            "topLevelTypes": [
+                "class",
+                "interface",
+                "struct",
+                "enum"
+            ]
         }
     }
 }

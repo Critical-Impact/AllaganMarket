@@ -1,11 +1,11 @@
-﻿namespace AllaganMarket.Extensions;
-
 using System;
 using System.Collections.Generic;
 
+namespace AllaganMarket.Extensions;
+
 public static class StringExtensions
 {
-    private static Dictionary<string, Func<int, TimeSpan>> timeUnitMap = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, Func<int, TimeSpan>> TimeUnitMap = new(StringComparer.OrdinalIgnoreCase)
     {
         { "second", value => TimeSpan.FromSeconds(value) },
         { "seconds", value => TimeSpan.FromSeconds(value) },
@@ -20,7 +20,7 @@ public static class StringExtensions
         { "month", value => TimeSpan.FromDays(value * 30) }, // Approximation
         { "months", value => TimeSpan.FromDays(value * 30) }, // Approximation
         { "year", value => TimeSpan.FromDays(value * 365) }, // Approximation
-        { "years", value => TimeSpan.FromDays(value * 365) } // Approximation
+        { "years", value => TimeSpan.FromDays(value * 365) }, // Approximation
     };
 
     public static bool IsHumanizedString(this string humanizedString)
@@ -31,7 +31,6 @@ public static class StringExtensions
             return false;
         }
 
-        // Extract the number and unit
         if (!int.TryParse(parts[0], out var value))
         {
             return false;
@@ -39,8 +38,7 @@ public static class StringExtensions
 
         var unit = parts[1].ToLowerInvariant();
 
-        // Check if the unit is present in the dictionary and convert to TimeSpan
-        if (timeUnitMap.TryGetValue(unit, out _))
+        if (TimeUnitMap.TryGetValue(unit, out _))
         {
             return true;
         }
@@ -56,7 +54,6 @@ public static class StringExtensions
             throw new ArgumentException("Invalid humanized string format");
         }
 
-        // Extract the number and unit
         if (!int.TryParse(parts[0], out var value))
         {
             throw new ArgumentException("Invalid number in humanized string");
@@ -64,8 +61,7 @@ public static class StringExtensions
 
         var unit = parts[1].ToLowerInvariant();
 
-        // Check if the unit is present in the dictionary and convert to TimeSpan
-        if (timeUnitMap.TryGetValue(unit, out var timeSpanFactory))
+        if (TimeUnitMap.TryGetValue(unit, out var timeSpanFactory))
         {
             return timeSpanFactory(value);
         }

@@ -1,25 +1,22 @@
-﻿namespace AllaganMarket.Services;
-
 using System.Threading;
 using System.Threading.Tasks;
-using Windows;
+
+using AllaganMarket.Windows;
+
 using Dalamud.Game.Command;
 using Dalamud.Plugin.Services;
+
 using Microsoft.Extensions.Hosting;
 
-public class CommandService : IHostedService
+namespace AllaganMarket.Services;
+
+public class CommandService(ICommandManager commandManager, MainWindow mainWindow) : IHostedService
 {
     private const string CommandName = "/allaganmarket";
 
-    public CommandService(ICommandManager commandManager, MainWindow mainWindow)
-    {
-        this.CommandManager = commandManager;
-        this.MainWindow = mainWindow;
-    }
+    public ICommandManager CommandManager { get; } = commandManager;
 
-    public ICommandManager CommandManager { get; }
-
-    public MainWindow MainWindow { get; }
+    public MainWindow MainWindow { get; } = mainWindow;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -27,7 +24,7 @@ public class CommandService : IHostedService
             CommandName,
             new CommandInfo(this.OnCommand)
             {
-                HelpMessage = "A useful message to display in /xlhelp"
+                HelpMessage = "A useful message to display in /xlhelp",
             });
         return Task.CompletedTask;
     }

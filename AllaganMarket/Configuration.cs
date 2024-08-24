@@ -1,50 +1,139 @@
-﻿using System.ComponentModel;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
 
 using AllaganLib.Interface.Converters;
 using AllaganLib.Interface.FormFields;
 using AllaganLib.Interface.Wizard;
 
-using Newtonsoft.Json;
-
-namespace AllaganMarket;
-
-using System;
-using System.Collections.Generic;
+using AllaganMarket.Models;
 
 using Dalamud.Configuration;
 
-using Models;
+using Newtonsoft.Json;
+
+namespace AllaganMarket;
 
 [Serializable]
 public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigurable<bool?>, IConfigurable<Enum?>,
                              IWizardConfiguration
 {
-    private HashSet<string>? wizardVersionsSeen { get; set; } = null;
+    private HashSet<string>? wizardVersionsSeen1;
+    private bool isConfigWindowMovable = true;
+    private bool somePropertyToBeSavedAndWithADefault = true;
+    private Dictionary<ulong, Character> characters = [];
+    private Dictionary<ulong, SaleItem[]> saleItems = [];
+    private Dictionary<ulong, List<SoldItem>> sales = [];
+    private Dictionary<ulong, uint> gil = [];
+    private Dictionary<string, int> integerSettings = [];
+    private Dictionary<string, bool> booleanSettings = [];
+    private Dictionary<string, Enum> enumSettings = [];
+    private bool isDirty;
+    private int version;
+    private bool showWizardNewFeatures;
 
-    public bool IsConfigWindowMovable { get; set; } = true;
+    public bool IsConfigWindowMovable
+    {
+        get => this.isConfigWindowMovable;
+        set => this.isConfigWindowMovable = value;
+    }
 
-    public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
+    public bool SomePropertyToBeSavedAndWithADefault
+    {
+        get => this.somePropertyToBeSavedAndWithADefault;
+        set => this.somePropertyToBeSavedAndWithADefault = value;
+    }
 
-    public Dictionary<ulong, Character> Characters { get; set; } = new();
+    public Dictionary<ulong, Character> Characters
+    {
+        get => this.characters;
+        set => this.characters = value;
+    }
 
     [JsonIgnore]
-    public Dictionary<ulong, SaleItem[]> SaleItems { get; set; } = new();
+    public Dictionary<ulong, SaleItem[]> SaleItems
+    {
+        get => this.saleItems;
+        set => this.saleItems = value;
+    }
 
     [JsonIgnore]
-    public Dictionary<ulong, List<SoldItem>> Sales { get; set; } = new();
+    public Dictionary<ulong, List<SoldItem>> Sales
+    {
+        get => this.sales;
+        set => this.sales = value;
+    }
 
-    public Dictionary<ulong, uint> Gil { get; set; } = new();
+    public Dictionary<ulong, uint> Gil
+    {
+        get => this.gil;
+        set => this.gil = value;
+    }
 
-    public Dictionary<string, int> IntegerSettings { get; set; } = new();
+    public Dictionary<string, int> IntegerSettings
+    {
+        get => this.integerSettings;
+        set => this.integerSettings = value;
+    }
 
-    public Dictionary<string, bool> BooleanSettings { get; set; } = new();
+    public Dictionary<string, bool> BooleanSettings
+    {
+        get => this.booleanSettings;
+        set => this.booleanSettings = value;
+    }
 
     [JsonConverter(typeof(EnumDictionaryConverter))]
-    public Dictionary<string, Enum> EnumSettings { get; set; } = new();
+    public Dictionary<string, Enum> EnumSettings
+    {
+        get => this.enumSettings;
+        set => this.enumSettings = value;
+    }
 
-    public bool IsDirty { get; set; } = false;
+    public bool IsDirty
+    {
+        get => this.isDirty;
+        set => this.isDirty = value;
+    }
 
-    public int Version { get; set; } = 0;
+    public int Version
+    {
+        get => this.version;
+        set => this.version = value;
+    }
+
+    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
+    [DefaultValue(true)]
+    public bool ShowWizardNewFeatures
+    {
+        get => this.showWizardNewFeatures;
+        set
+        {
+            this.showWizardNewFeatures = value;
+            this.isDirty = true;
+        }
+    }
+
+    public HashSet<string> WizardVersionsSeen
+    {
+        get => this.WizardVersionsSeen1 ??= [];
+        set
+        {
+            this.WizardVersionsSeen1 = value;
+            this.IsDirty = true;
+        }
+    }
+
+    private HashSet<string>? WizardVersionsSeen1
+    {
+        get => this.wizardVersionsSeen1;
+        set => this.wizardVersionsSeen1 = value;
+    }
+
+    public void MarkWizardVersionSeen(string versionNumber)
+    {
+        this.WizardVersionsSeen.Add(versionNumber);
+        this.IsDirty = true;
+    }
 
     public int? Get(string key)
     {
@@ -101,25 +190,5 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
     Enum? IConfigurable<Enum?>.Get(string key)
     {
         return this.EnumSettings.GetValueOrDefault(key);
-    }
-
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
-    [DefaultValue(true)]
-    public bool ShowWizardNewFeatures { get; set; }
-
-    public HashSet<string> WizardVersionsSeen
-    {
-        get => this.wizardVersionsSeen ??= new HashSet<string>();
-        set
-        {
-            this.wizardVersionsSeen = value;
-            this.IsDirty = true;
-        }
-    }
-
-    public void MarkWizardVersionSeen(string versionNumber)
-    {
-        this.WizardVersionsSeen.Add(versionNumber);
-        this.IsDirty = true;
     }
 }

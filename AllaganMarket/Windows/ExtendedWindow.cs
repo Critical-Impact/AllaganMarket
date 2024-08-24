@@ -1,27 +1,27 @@
-﻿using DalaMock.Host.Mediator;
+using System;
+
+using AllaganMarket.Services;
+
+using DalaMock.Host.Mediator;
+
+using Dalamud.Interface.Windowing;
+
+using ImGuiNET;
 
 namespace AllaganMarket.Windows;
 
-using System;
-using Dalamud.Interface.Windowing;
-using ImGuiNET;
-
-using Services;
-
-public abstract class ExtendedWindow : Window, IMediatorSubscriber, IDisposable
+public abstract class ExtendedWindow(
+    MediatorService mediatorService,
+    ImGuiService imGuiService,
+    string name,
+    ImGuiWindowFlags flags = ImGuiWindowFlags.None,
+    bool forceMainWindow = false) : Window(name, flags, forceMainWindow), IMediatorSubscriber, IDisposable
 {
-    public ImGuiService ImGuiService { get; }
+    public ImGuiService ImGuiService { get; } = imGuiService;
 
-    public ExtendedWindow(MediatorService mediatorService, ImGuiService imGuiService, string name, ImGuiWindowFlags flags = ImGuiWindowFlags.None, bool forceMainWindow = false)
-        : base(name, flags, forceMainWindow)
-    {
-        this.ImGuiService = imGuiService;
-        this.MediatorService = mediatorService;
-    }
+    public MediatorService MediatorService { get; } = mediatorService;
 
-    public MediatorService MediatorService { get; }
-
-    public void Dispose()
+    public virtual void Dispose()
     {
         this.MediatorService.UnsubscribeAll(this);
     }

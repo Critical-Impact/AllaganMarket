@@ -8,14 +8,11 @@ using Dalamud.Game.Text;
 
 using ImGuiNET;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class TaxColumn : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class TaxColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+    : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    public TaxColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter) : base(imGuiService, stringColumnFilter)
-    {
-    }
-
     public override string DefaultValue { get; set; } = string.Empty;
 
     public override string Key { get; set; } = "Tax";
@@ -30,7 +27,11 @@ public class TaxColumn : IntegerColumn<SearchResultConfiguration, SearchResult, 
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    public override string EmptyText { get; set; } = "";
+    public override string EmptyText { get; set; } = string.Empty;
+
+    public override string HelpText { get; set; } = "The total tax paid on the item";
+
+    public override string Version { get; } = "1.0.0";
 
     public override string? CurrentValue(SearchResult item)
     {
@@ -46,8 +47,4 @@ public class TaxColumn : IntegerColumn<SearchResultConfiguration, SearchResult, 
 
         return null;
     }
-
-    public override string HelpText { get; set; } = "The total tax paid on the item";
-
-    public override string Version { get; } = "1.0.0";
 }

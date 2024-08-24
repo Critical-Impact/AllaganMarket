@@ -6,16 +6,12 @@ using DalaMock.Host.Mediator;
 
 using ImGuiNET;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class QuantityColumn : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class QuantityColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+    : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    public QuantityColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
-        : base(imGuiService, stringColumnFilter)
-    {
-    }
-
-    public override string DefaultValue { get; set; }
+    public override string DefaultValue { get; set; } = string.Empty;
 
     public override string Key { get; set; } = "quantity";
 
@@ -29,7 +25,11 @@ public class QuantityColumn : IntegerColumn<SearchResultConfiguration, SearchRes
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    public override string EmptyText { get; set; }
+    public override string EmptyText { get; set; } = string.Empty;
+
+    public override string HelpText { get; set; } = "The quantity of item being sold.";
+
+    public override string Version => "1.0.0";
 
     public override string? CurrentValue(SearchResult item)
     {
@@ -45,8 +45,4 @@ public class QuantityColumn : IntegerColumn<SearchResultConfiguration, SearchRes
 
         return string.Empty;
     }
-
-    public override string HelpText { get; set; } = "The quantity of item being sold.";
-
-    public override string Version { get; } = "1.0.0";
 }

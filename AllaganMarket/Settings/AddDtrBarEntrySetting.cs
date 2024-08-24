@@ -3,12 +3,8 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class AddDtrBarEntrySetting : BooleanFormField<Configuration>, ISetting
+public class AddDtrBarEntrySetting(ImGuiService imGuiService) : BooleanFormField<Configuration>(imGuiService), ISetting
 {
-    public AddDtrBarEntrySetting(ImGuiService imGuiService) : base(imGuiService)
-    {
-    }
-
     public override bool DefaultValue { get; set; } = false;
 
     public override string Key { get; set; } = "AddDtrBarEntry";

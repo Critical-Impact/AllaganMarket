@@ -1,4 +1,6 @@
-﻿using System.Net.Http;
+using System.Globalization;
+using System.Net.Http;
+using System.Net.WebSockets;
 using System.Reflection;
 
 using AllaganLib.Data.Service;
@@ -7,38 +9,39 @@ using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
 using AllaganLib.Universalis.Services;
 
-using AllaganMarket.Grids;
-using AllaganMarket.Grids.Fields;
+using AllaganMarket.Filtering;
 using AllaganMarket.Models;
+using AllaganMarket.Services;
+using AllaganMarket.Services.Interfaces;
 using AllaganMarket.Settings;
+using AllaganMarket.Tables;
+using AllaganMarket.Tables.Fields;
+using AllaganMarket.Windows;
 
-using DalaMock.Host.Mediator;
-using DalaMock.Shared.Classes;
-using DalaMock.Shared.Interfaces;
-
-namespace AllaganMarket;
-
-using System.Globalization;
-using System.Net.WebSockets;
-using Windows;
 using Autofac;
 
 using DalaMock.Host.Hosting;
+using DalaMock.Host.Mediator;
+using DalaMock.Shared.Classes;
+using DalaMock.Shared.Interfaces;
 
 using Dalamud.Game.Text;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using Filtering;
+
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
+
 using Microsoft.Extensions.DependencyInjection;
-using Services;
-using Services.Interfaces;
+
+namespace AllaganMarket;
 
 public class AllaganMarketPlugin : HostedPlugin
 {
+    private readonly IGameGui gameGui;
+
     public AllaganMarketPlugin(
         IDalamudPluginInterface pluginInterface,
         IPluginLog pluginLog,
@@ -53,7 +56,8 @@ public class AllaganMarketPlugin : HostedPlugin
         IChatGui chatGui,
         IMarketBoard marketBoard,
         ITitleScreenMenu titleScreenMenu,
-        IDtrBar dtrBar)
+        IDtrBar dtrBar,
+        IGameGui gameGui)
         : base(
             pluginInterface,
             pluginLog,
@@ -68,8 +72,10 @@ public class AllaganMarketPlugin : HostedPlugin
             chatGui,
             marketBoard,
             titleScreenMenu,
-            dtrBar)
+            dtrBar,
+            gameGui)
     {
+        this.gameGui = gameGui;
         this.CreateHost();
         this.Start();
     }
@@ -82,7 +88,7 @@ public class AllaganMarketPlugin : HostedPlugin
             s =>
             {
                 // Assume we only ever have one number format but we could just make this keyed later
-                NumberFormatInfo gilNumberFormat =
+                var gilNumberFormat =
                     (NumberFormatInfo)CultureInfo.CurrentCulture.NumberFormat.Clone();
                 gilNumberFormat.CurrencySymbol = SeIconChar.Gil.ToIconString();
                 gilNumberFormat.CurrencyDecimalDigits = 0;
@@ -90,19 +96,19 @@ public class AllaganMarketPlugin : HostedPlugin
             });
 
         containerBuilder.RegisterAssemblyTypes(dataAccess)
-               .Where(t => t.Name.EndsWith("Setting"))
-               .AsSelf()
-               .AsImplementedInterfaces();
+                        .Where(t => t.Name.EndsWith("Setting"))
+                        .AsSelf()
+                        .AsImplementedInterfaces();
 
         containerBuilder.RegisterAssemblyTypes(dataAccess)
-               .Where(t => t.Name.EndsWith("Feature"))
-               .AsSelf()
-               .AsImplementedInterfaces();
+                        .Where(t => t.Name.EndsWith("Feature"))
+                        .AsSelf()
+                        .AsImplementedInterfaces();
 
         containerBuilder.RegisterAssemblyTypes(dataAccess)
-               .Where(t => t.Name.EndsWith("Column"))
-               .AsSelf()
-               .AsImplementedInterfaces();
+                        .Where(t => t.Name.EndsWith("Column"))
+                        .AsSelf()
+                        .AsImplementedInterfaces();
 
         var interfacesAssembly = typeof(StringColumnFilter).Assembly;
 
@@ -111,13 +117,14 @@ public class AllaganMarketPlugin : HostedPlugin
                         .AsSelf()
                         .AsImplementedInterfaces();
 
-        //Services
+        // Services
         containerBuilder.RegisterType<WindowService>().SingleInstance();
         containerBuilder.RegisterType<InstallerWindowService>().SingleInstance();
         containerBuilder.RegisterType<MarketPriceUpdaterService>().SingleInstance();
         containerBuilder.RegisterType<RetainerMarketService>().SingleInstance();
         containerBuilder.RegisterType<ATService>().SingleInstance();
-        containerBuilder.RegisterType<ImGuiService>().AsSelf().As<AllaganLib.Interface.Services.ImGuiService>().SingleInstance();
+        containerBuilder.RegisterType<ImGuiService>().AsSelf().As<AllaganLib.Interface.Services.ImGuiService>()
+                        .SingleInstance();
         containerBuilder.RegisterType<MediatorService>().SingleInstance();
         containerBuilder.RegisterType<CommandService>().SingleInstance();
         containerBuilder.RegisterType<UniversalisWebsocketService>().SingleInstance();
@@ -151,20 +158,25 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<ConfigWindow>().As<Window>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<WizardWindow>().As<Window>().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<RetainerListOverlayWindow>().As<Window>().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<RetainerSellListOverlayWindow>().As<Window>().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<RetainerSellOverlayWindow>().As<Window>().AsSelf().SingleInstance();
 
         containerBuilder.Register(c => c.Resolve<IDataManager>().GameData).SingleInstance();
 
-        //Custom Widgets
+        // Custom Widgets
         containerBuilder.RegisterType<SaleSummaryGroupFormField>();
         containerBuilder.RegisterType<SaleSummaryDateRangeFormField>();
         containerBuilder.RegisterType<SaleSummaryTimeSpanFormField>();
 
-
         containerBuilder.RegisterType<SaleFilter>().SingleInstance();
         containerBuilder.RegisterType<SaleSummary>();
-        containerBuilder.Register(c => new WizardWidgetSettings() { PluginName = "Allagan Market", LogoPath = "logo_small" });
-        containerBuilder.RegisterType<WizardWidget<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
-        containerBuilder.RegisterType<ConfigurationWizardService<Configuration>>().AsSelf().AsImplementedInterfaces().SingleInstance();
+        containerBuilder.Register(
+            c => new WizardWidgetSettings() { PluginName = "Allagan Market", LogoPath = "logo_small" });
+        containerBuilder.RegisterType<WizardWidget<Configuration>>().AsSelf().AsImplementedInterfaces()
+                        .SingleInstance();
+        containerBuilder.RegisterType<ConfigurationWizardService<Configuration>>().AsSelf().AsImplementedInterfaces()
+                        .SingleInstance();
         containerBuilder.RegisterType<Font>().As<IFont>().SingleInstance();
 
         // Sheets

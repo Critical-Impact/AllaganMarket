@@ -8,14 +8,11 @@ using AllaganLib.Interface.Services;
 using AllaganMarket.Extensions;
 using AllaganMarket.Models;
 
-namespace AllaganMarket.Grids.Fields;
+namespace AllaganMarket.Tables.Fields;
 
-public class SaleSummaryGroupFormField : FlagsEnumFormField<SaleSummaryGroup, SaleSummary>
+public class SaleSummaryGroupFormField(ImGuiService imGuiService)
+    : FlagsEnumFormField<SaleSummaryGroup, SaleSummary>(imGuiService)
 {
-    public SaleSummaryGroupFormField(ImGuiService imGuiService) : base(imGuiService)
-    {
-    }
-
     public override SaleSummaryGroup DefaultValue { get; set; } = SaleSummaryGroup.Item;
 
     public override string Key { get; set; } = "SaleSummaryGroup";
@@ -24,7 +21,9 @@ public class SaleSummaryGroupFormField : FlagsEnumFormField<SaleSummaryGroup, Sa
 
     public override string HelpText { get; set; } = "What to group the sale summary by";
 
-    public override string Version { get; }
+    public override string Version { get; } = "1.0.0";
+
+    public override bool HideAlreadyPicked { get; set; }
 
     public override SaleSummaryGroup AddFlag(SaleSummaryGroup existingFlags, SaleSummaryGroup newFlag)
     {
@@ -45,7 +44,12 @@ public class SaleSummaryGroupFormField : FlagsEnumFormField<SaleSummaryGroup, Sa
     {
         var currentValue = this.CurrentValue(configuration);
         var choices = this.GetChoices(configuration);
-        return "Group by " + string.Join(", ", choices.Where(c => (c.Key != SaleSummaryGroup.None && currentValue.HasFlag(c.Key)) || (currentValue == SaleSummaryGroup.None && c.Key == SaleSummaryGroup.None)).Select(c => c.Value));
+        return "Group by " + string.Join(
+                   ", ",
+                   choices.Where(
+                              c => (c.Key != SaleSummaryGroup.None && currentValue.HasFlag(c.Key)) ||
+                                   (currentValue == SaleSummaryGroup.None && c.Key == SaleSummaryGroup.None))
+                          .Select(c => c.Value));
     }
 
     public override Dictionary<SaleSummaryGroup, string> GetChoices(SaleSummary configuration)
@@ -53,6 +57,4 @@ public class SaleSummaryGroupFormField : FlagsEnumFormField<SaleSummaryGroup, Sa
         var values = Enum.GetValues<SaleSummaryGroup>();
         return values.ToDictionary(c => c, c => c.FormattedName());
     }
-
-    public override bool HideAlreadyPicked { get; set; }
 }

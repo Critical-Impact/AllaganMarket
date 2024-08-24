@@ -1,47 +1,41 @@
-﻿using DalaMock.Host.Mediator;
-
-namespace AllaganMarket.Services;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using AllaganMarket.Mediator;
+
 using DalaMock.Host.Factories;
+using DalaMock.Host.Mediator;
 using DalaMock.Shared.Interfaces;
+
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
+
 using Microsoft.Extensions.Hosting;
-using Models;
+
+namespace AllaganMarket.Services;
 
 /// <summary>
-/// Handles the drawing of plugin windows
+/// Handles the drawing of plugin windows.
 /// </summary>
-public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
+public class WindowService(
+    MediatorService mediatorService,
+    IDalamudPluginInterface pluginInterface,
+    IEnumerable<Window> pluginWindows,
+    IWindowSystemFactory windowSystemFactory,
+    IFileDialogManager fileDialogManager) : IHostedService, IMediatorSubscriber, IDisposable
 {
-    public WindowService(MediatorService mediatorService,
-        IDalamudPluginInterface pluginInterface,
-        IEnumerable<Window> pluginWindows,
-        IWindowSystemFactory windowSystemFactory,
-        IFileDialogManager fileDialogManager)
-    {
-        this.MediatorService = mediatorService;
-        this.PluginInterface = pluginInterface;
-        this.PluginWindows = pluginWindows;
-        this.FileDialogManager = fileDialogManager;
-        this.WindowSystem = windowSystemFactory.Create("AllaganMarket");
-    }
+    public MediatorService MediatorService { get; } = mediatorService;
 
-    public MediatorService MediatorService { get; }
+    public IDalamudPluginInterface PluginInterface { get; } = pluginInterface;
 
-    public IDalamudPluginInterface PluginInterface { get; }
+    public IEnumerable<Window> PluginWindows { get; } = pluginWindows;
 
-    public IEnumerable<Window> PluginWindows { get; }
+    public IFileDialogManager FileDialogManager { get; } = fileDialogManager;
 
-    public IFileDialogManager FileDialogManager { get; }
-
-    public IWindowSystem WindowSystem { get; }
+    public IWindowSystem WindowSystem { get; } = windowSystemFactory.Create("AllaganMarket");
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -57,6 +51,18 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
         this.MediatorService.Subscribe(this, new Action<CloseWindowMessage>(this.CloseWindow));
 
         return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        this.PluginInterface.UiBuilder.Draw -= this.UiBuilderOnDraw;
+        this.WindowSystem.RemoveAllWindows();
+        return Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        this.MediatorService.UnsubscribeAll(this);
     }
 
     private void CloseWindow(CloseWindowMessage obj)
@@ -83,21 +89,9 @@ public class WindowService : IHostedService, IMediatorSubscriber, IDisposable
         window?.Toggle();
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        this.PluginInterface.UiBuilder.Draw -= this.UiBuilderOnDraw;
-        this.WindowSystem.RemoveAllWindows();
-        return Task.CompletedTask;
-    }
-
     private void UiBuilderOnDraw()
     {
         this.WindowSystem.Draw();
         this.FileDialogManager.Draw();
-    }
-
-    public void Dispose()
-    {
-        this.MediatorService.UnsubscribeAll(this);
     }
 }

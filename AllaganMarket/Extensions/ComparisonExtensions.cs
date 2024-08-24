@@ -1,53 +1,14 @@
-﻿namespace AllaganMarket.Extensions;
-
 using System;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
+
 using Dalamud.Utility;
+
+namespace AllaganMarket.Extensions;
 
 public static class ComparisonExtensions
 {
-    [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    public static bool PassesFilter(this string text, FilterComparisonText filterString)
-    {
-        if (filterString.HasOr)
-        {
-            var ors = filterString.SearchText.Split("||");
-            return ors.Select(c => PassesFilter(text, c)).Any(c => c);
-        }
-
-        if (filterString.HasAnd)
-        {
-            var ands = filterString.SearchText.Split("&&");
-            return ands.Select(c => PassesFilter(text, c)).All(c => c);
-        }
-
-        if (filterString.StartsWithEquals)
-        {
-            if (text == filterString.SearchText)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        if (filterString.StartsWithNegate)
-        {
-            return !text.Contains(filterString.SearchText);
-        }
-
-        if (filterString.StartsWithFuzzy)
-        {
-            var filter = filterString.SearchText.Substring(1).Split(" ");
-            var splitText = text.Split(" ");
-            return filter.All(c => splitText.Any(d => d.Contains(c)));
-        }
-
-        return text.Contains(filterString.SearchText, StringComparison.Ordinal);
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
     public static bool PassesFilter(this string text, string filterString)
     {
@@ -64,19 +25,19 @@ public static class ComparisonExtensions
             return ands.Select(c => PassesFilter(text, c)).All(c => c);
         }
 
-        if (filterString.StartsWith("=", StringComparison.Ordinal) && filterString.Length >= 2)
+        if (filterString.StartsWith('=') && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (text == filter)
             {
                 return true;
             }
         }
-        else if (filterString.StartsWith("!", StringComparison.Ordinal))
+        else if (filterString.StartsWith('!'))
         {
             if (filterString.Length >= 2)
             {
-                var filter = filterString.Substring(1);
+                var filter = filterString[1..];
                 return !text.Contains(filter);
             }
 
@@ -85,9 +46,9 @@ public static class ComparisonExtensions
                 return !text.IsNullOrEmpty();
             }
         }
-        else if (filterString.StartsWith("~", StringComparison.Ordinal) && filterString.Length >= 2)
+        else if (filterString.StartsWith('~') && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1).Split(" ");
+            var filter = filterString[1..].Split(" ");
             var splitText = text.Split(" ");
             return filter.All(c => splitText.Any(d => d.Contains(c)));
         }
@@ -111,9 +72,9 @@ public static class ComparisonExtensions
             return ands.Select(c => PassesFilter(date, c)).All(c => c);
         }
 
-        if (filterString.StartsWith("=", StringComparison.Ordinal) && filterString.Length >= 2)
+        if (filterString.StartsWith('=') && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (date.ToString(CultureInfo.CurrentCulture) == filter)
             {
                 return true;
@@ -126,7 +87,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (DateTime.TryParse(filter, CultureInfo.CurrentCulture, out var filterDate))
             {
                 if (filterDate >= date)
@@ -137,7 +98,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (DateTime.TryParse(filter, CultureInfo.CurrentCulture, out var filterDate))
             {
                 if (filterDate <= date)
@@ -148,7 +109,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (DateTime.TryParse(filter, CultureInfo.CurrentCulture, out var filterDate))
             {
                 if (filterDate > date)
@@ -159,7 +120,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (DateTime.TryParse(filter, CultureInfo.CurrentCulture, out var filterDate))
             {
                 if (filterDate < date)
@@ -168,11 +129,11 @@ public static class ComparisonExtensions
                 }
             }
         }
-        else if (filterString.StartsWith("!", StringComparison.Ordinal))
+        else if (filterString.StartsWith('!'))
         {
             if (filterString.Length >= 2)
             {
-                var filter = filterString.Substring(1);
+                var filter = filterString[1..];
                 return !date.ToString(CultureInfo.CurrentCulture).Contains(filter);
             }
 
@@ -181,9 +142,9 @@ public static class ComparisonExtensions
                 return !date.ToString(CultureInfo.CurrentCulture).IsNullOrEmpty();
             }
         }
-        else if (filterString.StartsWith("~", StringComparison.Ordinal) && filterString.Length >= 2)
+        else if (filterString.StartsWith('~') && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1).Split(" ");
+            var filter = filterString[1..].Split(" ");
             var splitText = date.ToString(CultureInfo.CurrentCulture).Split(" ");
             return filter.All(c => splitText.Any(d => d.Contains(c)));
         }
@@ -224,7 +185,7 @@ public static class ComparisonExtensions
 
         if (filterString.StartsWith("=") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (number.ToString() == filter)
             {
                 return true;
@@ -232,7 +193,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult >= number)
@@ -243,7 +204,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult <= number)
@@ -254,7 +215,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult > number)
@@ -265,7 +226,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult < number)
@@ -276,7 +237,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("!") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             return !number.ToString(CultureInfo.InvariantCulture).Contains(filter);
         }
 
@@ -300,7 +261,7 @@ public static class ComparisonExtensions
 
         if (filterString.StartsWith("=") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (number.ToString() == filter)
             {
                 return true;
@@ -308,7 +269,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (decimal.TryParse(filter, out var numberResult))
             {
                 if (numberResult >= number)
@@ -319,7 +280,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (decimal.TryParse(filter, out var numberResult))
             {
                 if (numberResult <= number)
@@ -330,7 +291,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (decimal.TryParse(filter, out var numberResult))
             {
                 if (numberResult > number)
@@ -341,7 +302,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (decimal.TryParse(filter, out var numberResult))
             {
                 if (numberResult < number)
@@ -352,7 +313,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("!") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             return !number.ToString(CultureInfo.InvariantCulture).Contains(filter);
         }
 
@@ -376,7 +337,7 @@ public static class ComparisonExtensions
 
         if (filterString.StartsWith("=") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (number.ToString() == filter)
             {
                 return true;
@@ -384,7 +345,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult >= number)
@@ -395,7 +356,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult <= number)
@@ -406,7 +367,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult > number)
@@ -417,7 +378,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (double.TryParse(filter, out var numberResult))
             {
                 if (numberResult < number)
@@ -428,7 +389,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("!") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             return !number.ToString(CultureInfo.InvariantCulture).Contains(filter);
         }
 
@@ -452,7 +413,7 @@ public static class ComparisonExtensions
 
         if (filterString.StartsWith("=") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (number.ToString() == filter)
             {
                 return true;
@@ -460,7 +421,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (int.TryParse(filter, out var numberResult))
             {
                 if (numberResult >= number)
@@ -471,7 +432,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">=") && filterString.Length >= 3)
         {
-            var filter = filterString.Substring(2);
+            var filter = filterString[2..];
             if (int.TryParse(filter, out var numberResult))
             {
                 if (numberResult <= number)
@@ -482,7 +443,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("<") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (int.TryParse(filter, out var numberResult))
             {
                 if (numberResult > number)
@@ -493,7 +454,7 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith(">") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             if (int.TryParse(filter, out var numberResult))
             {
                 if (numberResult < number)
@@ -504,49 +465,10 @@ public static class ComparisonExtensions
         }
         else if (filterString.StartsWith("!") && filterString.Length >= 2)
         {
-            var filter = filterString.Substring(1);
+            var filter = filterString[1..];
             return !number.ToString().Contains(filter);
         }
 
         return number.ToString().Contains(filterString);
-    }
-
-    public class FilterComparisonText
-    {
-        public bool HasAnd;
-        public bool HasOr;
-        public string SearchText;
-        public bool StartsWithEquals;
-        public bool StartsWithFuzzy;
-        public bool StartsWithNegate;
-
-        public FilterComparisonText(string filterString)
-        {
-            this.SearchText = filterString.ToLower().Trim();
-            if (filterString.Contains("||", StringComparison.Ordinal))
-            {
-                this.HasOr = true;
-            }
-
-            if (filterString.Contains("&&", StringComparison.Ordinal))
-            {
-                this.HasAnd = true;
-            }
-
-            if (filterString.StartsWith("=", StringComparison.Ordinal) && filterString.Length >= 2)
-            {
-                this.StartsWithEquals = true;
-                this.SearchText = this.SearchText.Substring(1);
-            }
-            else if (filterString.StartsWith("!", StringComparison.Ordinal) && filterString.Length >= 2)
-            {
-                this.StartsWithNegate = true;
-                this.SearchText = this.SearchText.Substring(1);
-            }
-            else if (filterString.StartsWith("~", StringComparison.Ordinal) && filterString.Length >= 2)
-            {
-                this.StartsWithFuzzy = true;
-            }
-        }
     }
 }

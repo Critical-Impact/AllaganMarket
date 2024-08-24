@@ -1,36 +1,41 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
 using AllaganLib.Shared.Extensions;
 
-using AllaganMarket.Models;
+using AllaganMarket.Mediator;
+using AllaganMarket.Services;
 using AllaganMarket.Settings;
 
 using DalaMock.Host.Mediator;
 
 using Dalamud.Interface.Utility.Raii;
-// ReSharper disable DisposeOnUsingVariable
-
-namespace AllaganMarket.Windows;
-
-using System;
-using System.Numerics;
 
 using ImGuiNET;
-using Services;
+
+// ReSharper disable DisposeOnUsingVariable
+namespace AllaganMarket.Windows;
 
 public class ConfigWindow : ExtendedWindow, IDisposable
 {
-    private Configuration configuration;
+    private readonly Configuration configuration;
     private readonly IConfigurationWizardService<Configuration> configurationWizardService;
     private readonly SettingTypeConfiguration settingTypeConfiguration;
-    private VerticalSplitter verticalSplitter;
+    private readonly VerticalSplitter verticalSplitter;
     private readonly List<IGrouping<SettingType, ISetting>> settings;
     private SettingType currentSettingType;
 
-    public ConfigWindow(MediatorService mediatorService, ImGuiService imGuiService, Configuration configuration, IEnumerable<ISetting> settings, IConfigurationWizardService<Configuration> configurationWizardService, SettingTypeConfiguration settingTypeConfiguration)
+    public ConfigWindow(
+        MediatorService mediatorService,
+        ImGuiService imGuiService,
+        Configuration configuration,
+        IEnumerable<ISetting> settings,
+        IConfigurationWizardService<Configuration> configurationWizardService,
+        SettingTypeConfiguration settingTypeConfiguration)
         : base(mediatorService, imGuiService, "Allagan Market - Configuration")
     {
         this.SizeConstraints = new WindowSizeConstraints
@@ -44,14 +49,11 @@ public class ConfigWindow : ExtendedWindow, IDisposable
         this.configuration = configuration;
         this.configurationWizardService = configurationWizardService;
         this.settingTypeConfiguration = settingTypeConfiguration;
-        this.settings = settings.GroupBy(c => c.Type).OrderBy(c => settingTypeConfiguration.GetCategoryOrder().IndexOf(c.Key)).ToList();
+        this.settings =
+            [.. settings.GroupBy(c => c.Type).OrderBy(c => settingTypeConfiguration.GetCategoryOrder().IndexOf(c.Key))];
         this.Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.MenuBar;
         this.verticalSplitter = new VerticalSplitter(150, new Vector2(100, 200));
         this.currentSettingType = this.settings.First().Key;
-    }
-
-    public void Dispose()
-    {
     }
 
     public override void PreDraw()
@@ -145,6 +147,5 @@ public class ConfigWindow : ExtendedWindow, IDisposable
                     }
                 }
             });
-
     }
 }

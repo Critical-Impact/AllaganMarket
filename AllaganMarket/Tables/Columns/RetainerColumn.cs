@@ -8,18 +8,15 @@ using DalaMock.Host.Mediator;
 
 using ImGuiNET;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class RetainerColumn : StringColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class RetainerColumn(
+    ICharacterMonitorService characterMonitorService,
+    ImGuiService imGuiService,
+    StringColumnFilter stringColumnFilter)
+    : StringColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    private readonly ICharacterMonitorService characterMonitorService;
-
-    public RetainerColumn(ICharacterMonitorService characterMonitorService, ImGuiService imGuiService, StringColumnFilter stringColumnFilter) : base(imGuiService, stringColumnFilter)
-    {
-        this.characterMonitorService = characterMonitorService;
-    }
-
-    public override string DefaultValue { get; set; } = "";
+    public override string DefaultValue { get; set; } = string.Empty;
 
     public override string Key { get; set; } = "RetainerName";
 
@@ -33,26 +30,31 @@ public class RetainerColumn : StringColumn<SearchResultConfiguration, SearchResu
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    public override string EmptyText { get; set; } = "";
+    public override string EmptyText { get; set; } = string.Empty;
+
+    public override string HelpText { get; set; } = "The name of the retainer";
+
+    public override string Version { get; } = "1.0.0";
 
     public override string? CurrentValue(SearchResult item)
     {
         var retainerId = item.SaleItem?.RetainerId ?? item.SoldItem?.RetainerId;
         if (retainerId != null)
         {
-            return this.characterMonitorService.GetCharacterById(retainerId.Value)?.Name;
+            return characterMonitorService.GetCharacterById(retainerId.Value)?.Name;
         }
 
         if (item.SaleSummaryItem != null)
         {
             if (item.SaleSummaryItem.Grouping is { IsGrouped: true, RetainerId: not null })
             {
-                return this.characterMonitorService.GetCharacterById(item.SaleSummaryItem.Grouping.RetainerId.Value)?.Name ?? string.Empty;
+                return characterMonitorService.GetCharacterById(item.SaleSummaryItem.Grouping.RetainerId.Value)
+                                              ?.Name ?? string.Empty;
             }
 
             if (item.SaleSummaryItem.Grouping.IsGrouped == false && item.SaleSummaryItem.RetainerId != null)
             {
-                return this.characterMonitorService.GetCharacterById(item.SaleSummaryItem.RetainerId.Value)?.Name ??
+                return characterMonitorService.GetCharacterById(item.SaleSummaryItem.RetainerId.Value)?.Name ??
                        string.Empty;
             }
 
@@ -61,8 +63,4 @@ public class RetainerColumn : StringColumn<SearchResultConfiguration, SearchResu
 
         return string.Empty;
     }
-
-    public override string HelpText { get; set; } = "The name of the retainer";
-
-    public override string Version { get; } = "1.0.0";
 }

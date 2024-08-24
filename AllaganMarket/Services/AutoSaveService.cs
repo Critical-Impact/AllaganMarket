@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-using AllaganMarket.Models;
+using AllaganMarket.Mediator;
 
 using DalaMock.Host.Mediator;
 
@@ -11,33 +11,26 @@ using Microsoft.Extensions.Hosting;
 
 namespace AllaganMarket.Services;
 
-public class AutoSaveService : IHostedService, IMediatorSubscriber
+public class AutoSaveService(
+    Configuration configuration,
+    ConfigurationLoaderService configurationLoaderService,
+    IFramework framework,
+    MediatorService mediatorService,
+    IPluginLog pluginLog) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
 {
-    private readonly Configuration configuration;
-    private readonly ConfigurationLoaderService configurationLoaderService;
-    private readonly IFramework framework;
-    private readonly MediatorService mediatorService;
-    private readonly IPluginLog pluginLog;
+    private readonly IPluginLog pluginLog = pluginLog;
     private bool pluginLoaded;
-
-    public AutoSaveService(
-        Configuration configuration,
-        ConfigurationLoaderService configurationLoaderService,
-        IFramework framework,
-        MediatorService mediatorService,
-        IPluginLog pluginLog)
-    {
-        this.configuration = configuration;
-        this.configurationLoaderService = configurationLoaderService;
-        this.framework = framework;
-        this.mediatorService = mediatorService;
-        this.pluginLog = pluginLog;
-    }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
-        this.framework.Update += this.FrameworkOnUpdate;
+        this.MediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
+        framework.Update += this.FrameworkOnUpdate;
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        framework.Update -= this.FrameworkOnUpdate;
         return Task.CompletedTask;
     }
 
@@ -46,27 +39,18 @@ public class AutoSaveService : IHostedService, IMediatorSubscriber
         this.pluginLoaded = true;
     }
 
-    private void FrameworkOnUpdate(IFramework framework)
+    private void FrameworkOnUpdate(IFramework fWork)
     {
         if (!this.pluginLoaded)
         {
             return;
         }
 
-        if (this.configuration.IsDirty)
+        if (configuration.IsDirty)
         {
             this.pluginLog.Verbose("Configuration is dirty, saving.");
-            this.configurationLoaderService.Save();
-            this.mediatorService.Publish(new ConfigurationModifiedMessage());
+            configurationLoaderService.Save();
+            this.MediatorService.Publish(new ConfigurationModifiedMessage());
         }
     }
-
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        this.framework.Update -= this.FrameworkOnUpdate;
-        return Task.CompletedTask;
-    }
-
-    public MediatorService MediatorService { get; set; }
 }

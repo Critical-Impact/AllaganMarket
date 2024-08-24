@@ -1,6 +1,8 @@
 using System.Threading;
 using System.Threading.Tasks;
 
+using AllaganMarket.Mediator;
+
 using DalaMock.Host.Mediator;
 
 using Dalamud.Plugin.Services;
@@ -9,15 +11,9 @@ using Microsoft.Extensions.Hosting;
 
 namespace AllaganMarket.Services;
 
-public class ATService : DisposableMediatorSubscriberBase, IHostedService
+public class ATService(IPluginLog logger, MediatorService mediatorService, ICommandManager commandManager)
+    : DisposableMediatorSubscriberBase(logger, mediatorService), IHostedService
 {
-    private readonly ICommandManager commandManager;
-
-    public ATService(IPluginLog logger, MediatorService mediatorService, ICommandManager commandManager) : base(logger, mediatorService)
-    {
-        this.commandManager = commandManager;
-    }
-
     public Task StartAsync(CancellationToken cancellationToken)
     {
         this.MediatorService.Subscribe<OpenMoreInformation>(this, this.OpenMoreInformationSub);
@@ -26,7 +22,7 @@ public class ATService : DisposableMediatorSubscriberBase, IHostedService
 
     public void OpenMoreInformationSub(OpenMoreInformation openMoreInformation)
     {
-        this.commandManager.ProcessCommand("/moreinfo " + openMoreInformation.itemId);
+        commandManager.ProcessCommand("/moreinfo " + openMoreInformation.ItemId);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)

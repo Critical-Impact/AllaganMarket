@@ -6,6 +6,7 @@ public static class DebugExtensions
 {
     public static string ToDebugString(this SubscriptionReceivedMessage subscriptionReceivedMessage)
     {
-        return $"Event: {subscriptionReceivedMessage.EventType.ToString()}, Item: {subscriptionReceivedMessage.Item}, World: {subscriptionReceivedMessage.World}, Listings: {subscriptionReceivedMessage.Listings.Count}";
+        return
+            $"Event: {subscriptionReceivedMessage.EventType}, Item: {subscriptionReceivedMessage.Item}, World: {subscriptionReceivedMessage.World}, Listings: {subscriptionReceivedMessage.Listings.Count}";
     }
 }

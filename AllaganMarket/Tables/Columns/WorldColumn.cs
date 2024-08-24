@@ -9,18 +9,12 @@ using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class WorldColumn : StringColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class WorldColumn(ExcelSheet<World> worldSheet, ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+    : StringColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    private readonly ExcelSheet<World> worldSheet;
-
-    public WorldColumn(ExcelSheet<World> worldSheet, ImGuiService imGuiService, StringColumnFilter stringColumnFilter) : base(imGuiService, stringColumnFilter)
-    {
-        this.worldSheet = worldSheet;
-    }
-
-    public override string DefaultValue { get; set; } = "";
+    public override string DefaultValue { get; set; } = string.Empty;
 
     public override string Key { get; set; } = "World";
 
@@ -34,26 +28,31 @@ public class WorldColumn : StringColumn<SearchResultConfiguration, SearchResult,
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    public override string EmptyText { get; set; } = "";
+    public override string EmptyText { get; set; } = string.Empty;
+
+    public override string HelpText { get; set; } = "The world";
+
+    public override string Version { get; } = "1.0.0";
 
     public override string? CurrentValue(SearchResult item)
     {
         var worldId = item.SaleItem?.WorldId ?? item.SoldItem?.WorldId;
         if (worldId != null && worldId != 0)
         {
-            return this.worldSheet.GetRow(worldId.Value)?.Name.AsReadOnly().ExtractText() ?? string.Empty;
+            return worldSheet.GetRow(worldId.Value)?.Name.AsReadOnly().ExtractText() ?? string.Empty;
         }
 
         if (item.SaleSummaryItem != null)
         {
             if (item.SaleSummaryItem.Grouping is { IsGrouped: true, WorldId: not null })
             {
-                return this.worldSheet.GetRow(item.SaleSummaryItem.Grouping.WorldId.Value)?.Name.AsReadOnly().ExtractText() ?? string.Empty;
+                return worldSheet.GetRow(item.SaleSummaryItem.Grouping.WorldId.Value)?.Name.AsReadOnly()
+                                 .ExtractText() ?? string.Empty;
             }
 
             if (item.SaleSummaryItem.Grouping.IsGrouped == false && item.SaleSummaryItem.WorldId != null)
             {
-                return this.worldSheet.GetRow(item.SaleSummaryItem.WorldId.Value)?.Name.AsReadOnly().ExtractText() ??
+                return worldSheet.GetRow(item.SaleSummaryItem.WorldId.Value)?.Name.AsReadOnly().ExtractText() ??
                        string.Empty;
             }
 
@@ -62,8 +61,4 @@ public class WorldColumn : StringColumn<SearchResultConfiguration, SearchResult,
 
         return string.Empty;
     }
-
-    public override string HelpText { get; set; } = "The world";
-
-    public override string Version { get; } = "1.0.0";
 }

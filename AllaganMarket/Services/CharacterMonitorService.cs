@@ -1,61 +1,48 @@
-﻿namespace AllaganMarket.Services;
-
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using AllaganMarket.Models;
+using AllaganMarket.Services.Interfaces;
+
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Plugin.Services;
+
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Interfaces;
-using Models;
+
+namespace AllaganMarket.Services;
 
 /// <summary>
-/// Stripped down version of CharacterMonitor from CCL
+/// Stripped down version of CharacterMonitor from CCL.
 /// </summary>
-public class CharacterMonitorService : ICharacterMonitorService
+public class CharacterMonitorService(
+    IFramework framework,
+    IClientState clientState,
+    IRetainerService retainerService,
+    IAddonLifecycle addonLifecycle,
+    IPluginLog pluginLog) : ICharacterMonitorService
 {
-    private readonly IAddonLifecycle addonLifecycle;
-    private readonly IClientState clientState;
-    private readonly IFramework framework;
-    private readonly IPluginLog pluginLog;
-    private readonly IRetainerService retainerService;
-
     private ulong cachedRetainerId;
 
-    public CharacterMonitorService(
-        IFramework framework,
-        IClientState clientState,
-        IRetainerService retainerService,
-        IAddonLifecycle addonLifecycle,
-        IPluginLog pluginLog)
-    {
-        this.framework = framework;
-        this.clientState = clientState;
-        this.retainerService = retainerService;
-        this.addonLifecycle = addonLifecycle;
-        this.pluginLog = pluginLog;
-        this.Characters = new Dictionary<ulong, Character>();
-    }
-
-    public Dictionary<ulong, Character> Characters { get; private set; }
-
-    public List<Character> GetRetainers(ulong character)
-    {
-        return this.Characters.Where(c => c.Value.CharacterType == CharacterType.Retainer).Select(c => c.Value)
-            .ToList();
-    }
+    public Dictionary<ulong, Character> Characters { get; private set; } = [];
 
     public Character? ActiveCharacter => this.Characters.GetValueOrDefault(this.ActiveCharacterId);
 
     public Character? ActiveRetainer => this.Characters.GetValueOrDefault(this.ActiveRetainerId);
 
-    public ulong ActiveRetainerId => this.retainerService.RetainerId;
+    public ulong ActiveRetainerId => retainerService.RetainerId;
 
-    public ulong ActiveCharacterId => this.clientState.LocalContentId;
+    public ulong ActiveCharacterId => clientState.LocalContentId;
 
-    public bool IsLoggedIn => this.clientState.IsLoggedIn;
+    public bool IsLoggedIn => clientState.IsLoggedIn;
+
+    public List<Character> GetRetainers(ulong character)
+    {
+        return this.Characters.Where(c => c.Value.CharacterType == CharacterType.Retainer).Select(c => c.Value)
+                   .ToList();
+    }
 
     public void RemoveCharacter(ulong characterId)
     {
@@ -93,20 +80,21 @@ public class CharacterMonitorService : ICharacterMonitorService
     public List<Character> GetCharactersByType(CharacterType characterType, uint? worldId)
     {
         return this.Characters
-            .Where(c => c.Value.CharacterType == characterType && (worldId == null || c.Value.WorldId == worldId))
-            .Select(c => c.Value).ToList();
+                   .Where(
+                       c => c.Value.CharacterType == characterType && (worldId == null || c.Value.WorldId == worldId))
+                   .Select(c => c.Value).ToList();
     }
 
     public List<Character> GetOwnedCharacters(ulong ownerId, CharacterType characterType)
     {
         return this.Characters.Where(c => c.Value.OwnerId == ownerId && c.Value.CharacterType == characterType)
-            .Select(c => c.Value).ToList();
+                   .Select(c => c.Value).ToList();
     }
 
     public List<uint> GetWorldIds(CharacterType characterType)
     {
         return this.Characters.Where(c => c.Value.CharacterType == characterType).Select(c => c.Value.WorldId)
-            .Distinct().ToList();
+                   .Distinct().ToList();
     }
 
     public bool IsCharacterKnown(ulong characterId)
@@ -116,18 +104,18 @@ public class CharacterMonitorService : ICharacterMonitorService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.clientState.Login += this.ClientStateOnLogin;
-        this.addonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
-        this.framework.Update += this.FrameworkOnUpdate;
-        this.framework.RunOnFrameworkThread(this.UpdatePlayerCharacter);
+        clientState.Login += this.ClientStateOnLogin;
+        addonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
+        framework.Update += this.FrameworkOnUpdate;
+        framework.RunOnFrameworkThread(this.UpdatePlayerCharacter);
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        this.clientState.Login -= this.ClientStateOnLogin;
-        this.addonLifecycle.UnregisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
-        this.framework.Update -= this.FrameworkOnUpdate;
+        clientState.Login -= this.ClientStateOnLogin;
+        addonLifecycle.UnregisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
+        framework.Update -= this.FrameworkOnUpdate;
         return Task.CompletedTask;
     }
 
@@ -138,27 +126,31 @@ public class CharacterMonitorService : ICharacterMonitorService
 
     private void UpdatePlayerCharacter()
     {
-        if (this.clientState.LocalPlayer != null && this.clientState.LocalContentId != 0)
+        if (clientState.LocalPlayer != null && clientState.LocalContentId != 0)
         {
             var newCharacter = new Character(
                 CharacterType.Character,
-                this.clientState.LocalContentId,
-                this.clientState.LocalPlayer.Name.ToString(),
-                this.clientState.LocalPlayer.HomeWorld.Id,
-                this.clientState.LocalPlayer.ClassJob.Id,
-                this.clientState.LocalPlayer.Level);
-            this.Characters[this.clientState.LocalContentId] = newCharacter;
+                clientState.LocalContentId,
+                clientState.LocalPlayer.Name.ToString(),
+                clientState.LocalPlayer.HomeWorld.Id,
+                clientState.LocalPlayer.ClassJob.Id,
+                clientState.LocalPlayer.Level,
+                0);
+            this.Characters[clientState.LocalContentId] = newCharacter;
         }
     }
 
     private unsafe void UpdateRetainer()
     {
         var retainerId = this.cachedRetainerId;
-        if (retainerId != 0 && this.clientState.LocalPlayer != null)
+        if (retainerId != 0 && clientState.LocalPlayer != null)
         {
-            this.pluginLog.Verbose($"Updating retainer: {retainerId}");
-            foreach (var retainer in RetainerManager.Instance()->Retainers)
+            pluginLog.Verbose($"Updating retainer: {retainerId}");
+            var span = RetainerManager.Instance()->Retainers;
+            for (var index = 0; index < span.Length; index++)
             {
+                var retainer = span[index];
+                var displayOrder = RetainerManager.Instance()->DisplayOrder[index];
                 if (retainer.RetainerId == retainerId)
                 {
                     var retainerName = retainer.NameString.Trim();
@@ -167,11 +159,12 @@ public class CharacterMonitorService : ICharacterMonitorService
                         CharacterType.Retainer,
                         retainerId,
                         retainerName,
-                        this.clientState.LocalPlayer.HomeWorld.Id,
+                        clientState.LocalPlayer.HomeWorld.Id,
                         retainer.ClassJob,
-                        retainer.Level);
+                        retainer.Level,
+                        displayOrder);
                     newRetainer.RetainerTown = retainer.Town;
-                    newRetainer.OwnerId = this.clientState.LocalContentId;
+                    newRetainer.OwnerId = clientState.LocalContentId;
                     this.Characters[retainerId] = newRetainer;
                 }
             }
@@ -180,7 +173,7 @@ public class CharacterMonitorService : ICharacterMonitorService
 
     private void FrameworkOnUpdate(IFramework framework1)
     {
-        if (this.retainerService.RetainerId == 0 && this.cachedRetainerId != 0)
+        if (retainerService.RetainerId == 0 && this.cachedRetainerId != 0)
         {
             this.cachedRetainerId = 0;
         }
@@ -188,9 +181,9 @@ public class CharacterMonitorService : ICharacterMonitorService
 
     private void RetainerWindowOpened(AddonEvent type, AddonArgs args)
     {
-        if (this.retainerService.RetainerId != 0)
+        if (retainerService.RetainerId != 0)
         {
-            this.cachedRetainerId = this.retainerService.RetainerId;
+            this.cachedRetainerId = retainerService.RetainerId;
             this.UpdateRetainer();
         }
     }

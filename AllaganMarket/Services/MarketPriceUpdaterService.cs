@@ -1,38 +1,49 @@
-﻿namespace AllaganMarket.Services;
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using AllaganMarket.GameInterop;
+
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
+
 using FFXIVClientStructs.FFXIV.Client.Game;
-using GameInterop;
+
 using Microsoft.Extensions.Hosting;
 
-/// <summary>
-/// Decodes the market price packets and caches them 
-/// </summary>
-public class MarketPriceUpdaterService : IHostedService, IDisposable
-{
-    private uint currentSequenceId;
+namespace AllaganMarket.Services;
 
+/// <summary>
+/// Decodes the market price packets and caches them.
+/// </summary>
+public class MarketPriceUpdaterService(IGameInteropProvider gameInteropProvider, IPluginLog pluginLog)
+    : IHostedService, IDisposable
+{
     [Signature(
         "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D3 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 53 10",
         DetourName = nameof(ItemMarketBoardInfoDetour))]
-    private Hook<ItemMarketBoardInfoData>? itemMarketBoardInfoHook = null;
+    private readonly Hook<ItemMarketBoardInfoData>? itemMarketBoardInfoHook = null;
 
-    public MarketPriceUpdaterService(IGameInteropProvider gameInteropProvider, IPluginLog pluginLog)
-    {
-        this.GameInteropProvider = gameInteropProvider;
-        this.PluginLog = pluginLog;
-    }
+    [Signature(
+        "48 89 5C 24 08 57 48 83 EC 20 48 8B 0D ?? ?? ?? ?? 48 8B FA E8 ?? ?? ?? ?? 48 8B D8 48 85 C0 74 4A",
+        DetourName = nameof(ItemRequestStartPacketDetour))]
+    private readonly Hook<MarketBoardItemRequestStartPacketHandler>? itemRequestStartPacketDetourHook = null;
+    private uint currentSequenceId;
+
+    public delegate void MarketBoardItemRequestReceivedDelegate(MarketBoardItemRequest request);
+
+    private unsafe delegate void* ItemMarketBoardInfoData(int a2, int* a3);
+
+    private delegate nint MarketBoardItemRequestStartPacketHandler(nint a1, nint packetRef);
+
+    public event MarketBoardItemRequestReceivedDelegate? MarketBoardItemRequestReceived;
 
     public RetainerMarketItemPrice[] CachedPrices { get; private set; } = new RetainerMarketItemPrice[20];
 
-    public IGameInteropProvider GameInteropProvider { get; }
+    public IGameInteropProvider GameInteropProvider { get; } = gameInteropProvider;
 
-    public IPluginLog PluginLog { get; }
+    public IPluginLog PluginLog { get; } = pluginLog;
 
     public bool HasCachedPrices { get; } = false;
 
@@ -45,13 +56,29 @@ public class MarketPriceUpdaterService : IHostedService, IDisposable
     {
         this.GameInteropProvider.InitializeFromAttributes(this);
         this.itemMarketBoardInfoHook?.Enable();
+        this.itemRequestStartPacketDetourHook?.Enable();
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         this.itemMarketBoardInfoHook?.Disable();
+        this.itemRequestStartPacketDetourHook?.Disable();
         return Task.CompletedTask;
+    }
+
+    private unsafe nint ItemRequestStartPacketDetour(nint a1, nint packetRef)
+    {
+        try
+        {
+            this.MarketBoardItemRequestReceived?.Invoke(MarketBoardItemRequest.Read(a1));
+        }
+        catch (Exception ex)
+        {
+            this.PluginLog.Error(ex, "ItemRequestStartPacketDetour threw an exception");
+        }
+
+        return this.itemRequestStartPacketDetourHook!.OriginalDisposeSafe(a1, packetRef);
     }
 
     private unsafe void* ItemMarketBoardInfoDetour(int seq, int* a3)
@@ -83,6 +110,4 @@ public class MarketPriceUpdaterService : IHostedService, IDisposable
 
         return this.itemMarketBoardInfoHook!.Original(seq, a3);
     }
-
-    private unsafe delegate void* ItemMarketBoardInfoData(int a2, int* a3);
 }

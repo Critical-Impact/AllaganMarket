@@ -1,22 +1,18 @@
-﻿namespace AllaganMarket.Services;
+using AllaganMarket.Services.Interfaces;
 
 using Dalamud.Plugin.Services;
+
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.System.Framework;
 
+namespace AllaganMarket.Services;
+
 /// <summary>
-/// Wrapper for the item order module's retainer ID
+/// Wrapper for the item order module's retainer ID.
 /// </summary>
-public class RetainerService : IRetainerService
+public class RetainerService(IClientState clientState) : IRetainerService
 {
-    private readonly IClientState clientState;
-
-    public RetainerService(IClientState clientState)
-    {
-        this.clientState = clientState;
-    }
-
-    public uint RetainerWorldId => this.clientState.LocalPlayer?.HomeWorld.Id ?? 0;
+    public uint RetainerWorldId => clientState.LocalPlayer?.HomeWorld.Id ?? 0;
 
     public ulong RetainerId
     {
@@ -32,13 +28,4 @@ public class RetainerService : IRetainerService
     }
 
     public unsafe uint RetainerGil => this.RetainerId == 0 ? 0 : InventoryManager.Instance()->GetRetainerGil();
-}
-
-public interface IRetainerService
-{
-    public uint RetainerWorldId { get; }
-
-    public ulong RetainerId { get; }
-
-    public uint RetainerGil { get; }
 }

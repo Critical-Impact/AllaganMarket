@@ -3,12 +3,9 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ChatNotifyUndercutSetting : BooleanFormField<Configuration>, ISetting
+public class ChatNotifyUndercutSetting(ImGuiService imGuiService)
+    : BooleanFormField<Configuration>(imGuiService), ISetting
 {
-    public ChatNotifyUndercutSetting(ImGuiService imGuiService) : base(imGuiService)
-    {
-    }
-
     public override bool DefaultValue { get; set; } = true;
 
     public override string Key { get; set; } = "ChatNotifyUndercut";

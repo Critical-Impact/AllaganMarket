@@ -5,28 +5,22 @@ using Dalamud.Plugin.Services;
 
 using Microsoft.Extensions.Hosting;
 
-namespace AllaganMarket.Models;
+namespace AllaganMarket.Services;
 
-public class PluginStateService : IHostedService
+public class PluginStateService(IClientState clientState) : IHostedService
 {
-    private readonly IClientState clientState;
-
-    public PluginStateService(IClientState clientState)
-    {
-        this.clientState = clientState;
-    }
-
-    private void ClientStateOnLogin()
-    {
-        this.ShowWindows = true;
-    }
-
     public bool ShowWindows { get; set; }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.clientState.Login += this.ClientStateOnLogin;
-        this.clientState.Logout += this.ClientStateOnLogout;
+        clientState.Login += this.ClientStateOnLogin;
+        clientState.Logout += this.ClientStateOnLogout;
+        return Task.CompletedTask;
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        clientState.Login -= this.ClientStateOnLogin;
         return Task.CompletedTask;
     }
 
@@ -35,9 +29,8 @@ public class PluginStateService : IHostedService
         this.ShowWindows = false;
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    private void ClientStateOnLogin()
     {
-        this.clientState.Login -= this.ClientStateOnLogin;
-        return Task.CompletedTask;
+        this.ShowWindows = true;
     }
 }

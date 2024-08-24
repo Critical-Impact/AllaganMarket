@@ -1,100 +1,85 @@
-﻿using AllaganMarket.Extensions;
-
-namespace AllaganMarket.Services;
-
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using AllaganMarket.Extensions;
+using AllaganMarket.Mediator;
+using AllaganMarket.Models;
+using AllaganMarket.Services.Interfaces;
+
+using DalaMock.Host.Mediator;
+
 using Dalamud.Plugin.Services;
+
 using FFXIVClientStructs.FFXIV.Client.Game;
-using Interfaces;
+
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
+
 using Microsoft.Extensions.Hosting;
-using Models;
+
+namespace AllaganMarket.Services;
 
 /// <summary>
-/// Keeps track of existing sales, current sales and determines when sales have occurred, also provides this data for other services to consume
+/// Keeps track of existing sales, current sales and determines when sales have occurred, also provides this data for other services to consume.
 /// </summary>
-public class SaleTrackerService : IHostedService
+public class SaleTrackerService(
+    IClientState clientState,
+    IGameInventory gameInventory,
+    IFramework framework,
+    IInventoryService inventoryService,
+    IRetainerService retainerService,
+    RetainerMarketService retainerMarketService,
+    IAddonLifecycle addonLifecycle,
+    IPluginLog pluginLog,
+    IDataManager dataManager,
+    ICharacterMonitorService characterMonitorService,
+    IChatGui chatGui,
+    NumberFormatInfo gilNumberFormat,
+    MediatorService mediatorService) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
 {
-    private readonly IChatGui chatGui;
-    private readonly NumberFormatInfo gilNumberFormat;
-    private readonly ExcelSheet<Item> itemSheet;
+    private readonly ExcelSheet<Item> itemSheet = dataManager.GetExcelSheet<Item>()!;
+    private readonly Dictionary<ulong, List<SaleItem>> characterSalesCache = [];
+    private readonly Dictionary<ulong, List<SoldItem>> characterSalesHistoryCache = [];
+    private readonly Dictionary<uint, List<SaleItem>> worldSalesCache = [];
+    private readonly Dictionary<uint, List<SoldItem>> worldSalesHistoryCache = [];
     private List<SaleItem>? allSales;
     private List<SoldItem>? allSalesHistory;
 
-    private Dictionary<ulong, List<SaleItem>> characterSalesCache = new();
-
-    private Dictionary<ulong, List<SoldItem>> characterSalesHistoryCache = new();
-    private Dictionary<uint, List<SaleItem>> worldSalesCache = new();
-    private Dictionary<uint, List<SoldItem>> worldSalesHistoryCache = new();
-
     public delegate void SnapshotCreatedDelegate();
-    public delegate void SaleItemEventDelegate(SaleItem saleItem);
-    public event SaleItemEventDelegate? SaleItemEvent;
 
     public event SnapshotCreatedDelegate? SnapshotCreated;
 
-    public SaleTrackerService(
-        IClientState clientState,
-        IGameInventory gameInventory,
-        IFramework framework,
-        IInventoryService inventoryService,
-        IRetainerService retainerService,
-        RetainerMarketService retainerMarketService,
-        IAddonLifecycle addonLifecycle,
-        IPluginLog pluginLog,
-        IDataManager dataManager,
-        ICharacterMonitorService characterMonitorService,
-        IChatGui chatGui,
-        NumberFormatInfo gilNumberFormat)
-    {
-        this.chatGui = chatGui;
-        this.gilNumberFormat = gilNumberFormat;
-        this.ClientState = clientState;
-        this.GameInventory = gameInventory;
-        this.Framework = framework;
-        this.InventoryService = inventoryService;
-        this.RetainerService = retainerService;
-        this.RetainerMarketService = retainerMarketService;
-        this.AddonLifecycle = addonLifecycle;
-        this.PluginLog = pluginLog;
-        this.DataManager = dataManager;
-        this.CharacterMonitorService = characterMonitorService;
-        this.itemSheet = dataManager.GetExcelSheet<Item>()!;
-    }
+    public IClientState ClientState { get; } = clientState;
 
-    public IClientState ClientState { get; }
+    public IGameInventory GameInventory { get; } = gameInventory;
 
-    public IGameInventory GameInventory { get; }
+    public IFramework Framework { get; } = framework;
 
-    public IFramework Framework { get; }
+    public IInventoryService InventoryService { get; } = inventoryService;
 
-    public IInventoryService InventoryService { get; }
+    public IRetainerService RetainerService { get; } = retainerService;
 
-    public IRetainerService RetainerService { get; }
+    public RetainerMarketService RetainerMarketService { get; } = retainerMarketService;
 
-    public RetainerMarketService RetainerMarketService { get; }
+    public IAddonLifecycle AddonLifecycle { get; } = addonLifecycle;
 
-    public IAddonLifecycle AddonLifecycle { get; }
+    public IPluginLog PluginLog { get; } = pluginLog;
 
-    public IPluginLog PluginLog { get; }
+    public IDataManager DataManager { get; } = dataManager;
 
-    public IDataManager DataManager { get; }
+    public ICharacterMonitorService CharacterMonitorService { get; } = characterMonitorService;
 
-    public ICharacterMonitorService CharacterMonitorService { get; }
+    public Dictionary<ulong, SaleItem[]> SaleItems { get; private set; } = [];
 
-    public Dictionary<ulong, SaleItem[]> SaleItems { get; private set; } = new();
+    public Dictionary<uint, List<SaleItem>> SaleItemsByItemId { get; private set; } = [];
 
-    public Dictionary<uint, List<SaleItem>> SaleItemsByItemId { get; private set; } = new();
+    public Dictionary<ulong, uint> Gil { get; private set; } = [];
 
-    public Dictionary<ulong, uint> Gil { get; private set; } = new();
-
-    public Dictionary<ulong, List<SoldItem>> Sales { get; private set; } = new();
+    public Dictionary<ulong, List<SoldItem>> Sales { get; private set; } = [];
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -123,6 +108,16 @@ public class SaleTrackerService : IHostedService
         return (int)Math.Floor(quantity * unitPrice * taxRate);
     }
 
+    public SaleItem? GetSaleItem(uint itemId, uint? worldId)
+    {
+        if (this.SaleItemsByItemId.TryGetValue(itemId, out var saleItems))
+        {
+            return saleItems.FirstOrDefault(c => c.ItemId == itemId && (c.WorldId == worldId || worldId == null));
+        }
+
+        return null;
+    }
+
     public IEnumerable<SaleItem> GetSales(ulong? characterId, uint? worldId)
     {
         if (characterId != null && this.characterSalesCache.TryGetValue(characterId.Value, out var characterSales))
@@ -149,8 +144,8 @@ public class SaleTrackerService : IHostedService
                     characterId.Value,
                     CharacterType.Retainer);
                 var items = ownedCharacters
-                    .SelectMany(
-                        c => this.SaleItems.TryGetValue(c.CharacterId, out var item) ? item : Array.Empty<SaleItem>()).Select(c => c).ToList();
+                            .SelectMany(c => this.SaleItems.TryGetValue(c.CharacterId, out var item) ? item : [])
+                            .Select(c => c).ToList();
                 this.characterSalesCache[character.CharacterId] = items;
                 return items;
             }
@@ -158,8 +153,8 @@ public class SaleTrackerService : IHostedService
             if (character is { CharacterType: CharacterType.Retainer })
             {
                 var items = (this.SaleItems.TryGetValue(character.CharacterId, out var item)
-                    ? item
-                    : Array.Empty<SaleItem>()).Select(c => c).ToList();
+                                 ? item
+                                 : []).Select(c => c).ToList();
                 this.characterSalesCache[character.CharacterId] = items;
                 return items;
             }
@@ -170,8 +165,8 @@ public class SaleTrackerService : IHostedService
             var worldCharacters =
                 this.CharacterMonitorService.GetCharactersByType(CharacterType.Retainer, worldId.Value);
             var items = worldCharacters
-                .SelectMany(
-                    c => this.SaleItems.TryGetValue(c.CharacterId, out var item) ? item : Array.Empty<SaleItem>()).Select(c => c).ToList();
+                        .SelectMany(c => this.SaleItems.TryGetValue(c.CharacterId, out var item) ? item : [])
+                        .Select(c => c).ToList();
             this.worldSalesCache[worldId.Value] = items;
             return items;
         }
@@ -206,14 +201,14 @@ public class SaleTrackerService : IHostedService
                     characterId.Value,
                     CharacterType.Retainer);
                 var items = ownedCharacters.SelectMany(
-                    c => this.Sales.TryGetValue(c.CharacterId, out var item) ? item : new List<SoldItem>()).ToList();
+                    c => this.Sales.TryGetValue(c.CharacterId, out var item) ? item : []).ToList();
                 this.characterSalesHistoryCache[character.CharacterId] = items;
                 return items;
             }
 
             if (character is { CharacterType: CharacterType.Retainer })
             {
-                var items = (this.Sales.TryGetValue(character.CharacterId, out var item) ? item : new List<SoldItem>())
+                var items = (this.Sales.TryGetValue(character.CharacterId, out var item) ? item : [])
                     .ToList();
                 this.characterSalesHistoryCache[character.CharacterId] = items;
                 return items;
@@ -224,14 +219,36 @@ public class SaleTrackerService : IHostedService
         {
             var worldCharacters =
                 this.CharacterMonitorService.GetCharactersByType(CharacterType.Retainer, worldId.Value);
-            var items = worldCharacters.SelectMany(
-                c => this.Sales.TryGetValue(c.CharacterId, out var item) ? item : new List<SoldItem>()).ToList();
+            var items = worldCharacters.SelectMany(c => this.Sales.TryGetValue(c.CharacterId, out var item) ? item : [])
+                                       .ToList();
             this.worldSalesHistoryCache[worldId.Value] = items;
             return items;
         }
 
         this.allSalesHistory = this.Sales.SelectMany(c => c.Value).ToList();
         return this.allSalesHistory;
+    }
+
+    public void Start()
+    {
+        this.RetainerMarketService.OnUpdated += this.MarketOpened;
+        this.MediatorService.Subscribe<DeleteSoldItem>(this, this.DeleteSoldItem);
+    }
+
+    public void LoadExistingData(
+        Dictionary<ulong, SaleItem[]> saleItems,
+        Dictionary<ulong, uint> gil,
+        Dictionary<ulong, List<SoldItem>> sales)
+    {
+        this.SaleItems = saleItems;
+        this.Gil = gil;
+        this.Sales = sales;
+        this.ClearSalesCache();
+    }
+
+    public void Stop()
+    {
+        this.RetainerMarketService.OnUpdated -= this.MarketOpened;
     }
 
     private void ClearSalesCache()
@@ -243,13 +260,17 @@ public class SaleTrackerService : IHostedService
         this.allSales = null;
         this.allSalesHistory = null;
         this.UpdateSalesDictionary();
-
-        //let fam know that the sales cache was cleared OR notify an update happened
     }
 
-    public void Start()
+    private void DeleteSoldItem(DeleteSoldItem obj)
     {
-        this.RetainerMarketService.OnUpdated += this.MarketOpened;
+        if (this.Sales.TryGetValue(obj.SoldItem.RetainerId, out var currentSales))
+        {
+            currentSales.Remove(obj.SoldItem);
+            this.Sales[obj.SoldItem.RetainerId] = currentSales;
+            this.ClearSalesCache();
+            this.SnapshotCreated?.Invoke();
+        }
     }
 
     private void MarketOpened(RetainerMarketListEventType eventType)
@@ -264,12 +285,12 @@ public class SaleTrackerService : IHostedService
         }
 
         var previousItems = this.SaleItems[retainerId];
-        uint? oldGil = this.GetRetainerGil(retainerId);
+        var oldGil = this.GetRetainerGil(retainerId);
 
         this.CreateSnapshot(retainerId, previousItems, newSaleItems.FillList(retainerId), oldGil, newRetainerGil);
     }
 
-    public void CreateSnapshot(
+    private void CreateSnapshot(
         ulong retainerId,
         SaleItem[] previousItems,
         SaleItem[] newItems,
@@ -284,7 +305,7 @@ public class SaleTrackerService : IHostedService
 
             if (!previousItem.IsEmpty() && newItem.IsEmpty())
             {
-                //TODO: Use real percents later
+                // TODO: Use real percents later
                 var retainer = this.CharacterMonitorService.GetCharacterById(retainerId);
                 var taxRate = 0.05d;
                 if (retainer != null)
@@ -304,31 +325,32 @@ public class SaleTrackerService : IHostedService
                 if (oldGil == newGil)
                 {
                     this.PluginLog.Verbose("Item removed from market.");
-                    //The assumption is that they took the item off the market
+
+                    // The assumption is that they took the item off the market
                 }
                 else
                 {
                     var actualSalesAmount = previousItem.Total - this.CalculateTax(
-                        taxRate,
-                        (int)previousItem.UnitPrice,
-                        (int)previousItem.Quantity);
+                                                taxRate,
+                                                (int)previousItem.UnitPrice,
+                                                (int)previousItem.Quantity);
                     if (potentialSales - actualSalesAmount >= 0)
                     {
                         var newSale = new SoldItem(previousItem);
                         if (!this.Sales.TryGetValue(retainerId, out var value))
                         {
-                            value = new List<SoldItem>();
+                            value = [];
                             this.Sales[retainerId] = value;
                         }
 
                         value.Add(newSale);
 
-                        //TODO: make message optional
+                        // TODO: make message optional
                         var item = this.itemSheet.GetRow(newSale.ItemId);
                         if (item != null)
                         {
-                            this.chatGui.Print(
-                                $"You sold {newSale.Quantity} {item.Name.AsReadOnly().ExtractText()} for {newSale.TotalIncTax.ToString("C", this.gilNumberFormat)}");
+                            chatGui.Print(
+                                $"You sold {newSale.Quantity} {item.Name.AsReadOnly().ExtractText()} for {newSale.TotalIncTax.ToString("C", gilNumberFormat)}");
                         }
 
                         this.PluginLog.Verbose("Sale created!");
@@ -344,8 +366,6 @@ public class SaleTrackerService : IHostedService
                     if (previousItem.ItemId != newItem.ItemId)
                     {
                         this.PluginLog.Error("Item has been switched, AM does not know about this.");
-
-                        //The item has changed entirely, they could have had the plugin off?
                     }
                     else if (previousItem.UnitPrice != newItem.UnitPrice)
                     {
@@ -353,13 +373,9 @@ public class SaleTrackerService : IHostedService
                     }
                     else
                     {
+                        // TODO: Add reconcilation tab
                         this.PluginLog.Error("Could not reconcile item.");
                     }
-
-                    //not really an error
-                    
-
-                    //Item has changed in some way, we can't reconcile it, create a confirm entry
                 }
             }
         }
@@ -403,21 +419,5 @@ public class SaleTrackerService : IHostedService
         }
 
         this.SaleItemsByItemId = newDict;
-    }
-
-    public void LoadExistingData(
-        Dictionary<ulong, SaleItem[]> saleItems,
-        Dictionary<ulong, uint> gil,
-        Dictionary<ulong, List<SoldItem>> sales)
-    {
-        this.SaleItems = saleItems;
-        this.Gil = gil;
-        this.Sales = sales;
-        this.ClearSalesCache();
-    }
-
-    public void Stop()
-    {
-        this.RetainerMarketService.OnUpdated -= this.MarketOpened;
     }
 }

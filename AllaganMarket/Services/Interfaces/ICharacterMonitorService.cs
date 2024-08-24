@@ -1,11 +1,13 @@
-﻿namespace AllaganMarket.Services.Interfaces;
-
 using System.Collections.Generic;
+
 using AllaganMarket.Models;
+
 using Microsoft.Extensions.Hosting;
 
+namespace AllaganMarket.Services.Interfaces;
+
 /// <summary>
-/// An interface representing the character monitoring service
+/// An interface representing the character monitoring service.
 /// </summary>
 public interface ICharacterMonitorService : IHostedService
 {
@@ -40,7 +42,7 @@ public interface ICharacterMonitorService : IHostedService
     /// </summary>
     /// <param name="ownerId">the id of the owner.</param>
     /// <param name="characterType">the type of character. for future use.</param>
-    /// <returns>A list of owned characters of the given type</returns>
+    /// <returns>A list of owned characters of the given type.</returns>
     public List<Character> GetOwnedCharacters(ulong ownerId, CharacterType characterType);
 
     /// <summary>

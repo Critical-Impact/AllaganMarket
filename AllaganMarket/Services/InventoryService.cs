@@ -1,52 +1,49 @@
-﻿namespace AllaganMarket.Services;
-
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+
+using AllaganMarket.GameInterop;
+using AllaganMarket.Services.Interfaces;
+
 using Dalamud.Hooking;
 using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
+
 using FFXIVClientStructs.FFXIV.Client.Game;
-using GameInterop;
-using Microsoft.Extensions.Hosting;
+
+namespace AllaganMarket.Services;
 
 /// <summary>
-/// Wraps InventoryManager and provides the same functionality
+/// Wraps InventoryManager and provides the same functionality.
 /// </summary>
-public class InventoryService : IInventoryService, IDisposable
+public class InventoryService(
+    IGameInteropProvider gameInteropProvider,
+    IPluginLog pluginLog,
+    IRetainerService retainerService) : IInventoryService, IDisposable
 {
     [Signature(
         "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D3 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D3 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D3 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 53 10 ",
         DetourName = nameof(ContainerInfoDetour),
         UseFlags = SignatureUseFlags.Hook)]
-    private Hook<ContainerInfoNetworkData>? containerInfoNetworkHook = null;
-
+    private readonly Hook<ContainerInfoNetworkData>? containerInfoNetworkHook = null;
+    private readonly HashSet<uint> loadedInventories = [];
     private ulong currentRetainer;
-    private HashSet<uint> loadedInventories = new();
 
-    public InventoryService(
-        IGameInteropProvider gameInteropProvider,
-        IPluginLog pluginLog,
-        IRetainerService retainerService)
-    {
-        this.GameInteropProvider = gameInteropProvider;
-        this.PluginLog = pluginLog;
-        this.RetainerService = retainerService;
-    }
+    private unsafe delegate void* ContainerInfoNetworkData(int a2, int* a3);
 
-    public IGameInteropProvider GameInteropProvider { get; }
+    public event IInventoryService.RetainerInventoryLoadedDelegate? OnRetainerInventoryLoaded;
 
-    public IPluginLog PluginLog { get; }
+    public IGameInteropProvider GameInteropProvider { get; } = gameInteropProvider;
 
-    public IRetainerService RetainerService { get; }
+    public IPluginLog PluginLog { get; } = pluginLog;
+
+    public IRetainerService RetainerService { get; } = retainerService;
 
     public void Dispose()
     {
         this.containerInfoNetworkHook?.Dispose();
     }
-
-    public event RetainerInventoryLoadedDelegate? OnRetainerInventoryLoaded;
 
     public bool HasSeenInventory(uint inventoryType)
     {
@@ -135,7 +132,6 @@ public class InventoryService : IInventoryService, IDisposable
                 if (Enum.IsDefined(typeof(InventoryType), containerInfo.ContainerId))
                 {
                     this.loadedInventories.Add(containerInfo.ContainerId);
-                    this.PluginLog.Verbose(containerInfo.AsDebugString());
                 }
             }
         }
@@ -146,34 +142,4 @@ public class InventoryService : IInventoryService, IDisposable
 
         return this.containerInfoNetworkHook!.Original(seq, a3);
     }
-
-    private unsafe delegate void* ContainerInfoNetworkData(int a2, int* a3);
 }
-
-public unsafe interface IInventoryService : IHostedService
-{
-    public event RetainerInventoryLoadedDelegate OnRetainerInventoryLoaded;
-
-    public InventoryContainer* GetInventoryContainer(InventoryType inventoryType);
-
-    public InventoryItem* GetInventorySlot(InventoryType inventoryType, int index);
-
-    public int GetInventoryItemCount(
-        uint itemId,
-        bool isHq = false,
-        bool checkEquipped = true,
-        bool checkArmory = true,
-        short minCollectability = 0);
-
-    public int GetItemCountInContainer(
-        uint itemId,
-        InventoryType inventoryType,
-        bool isHq = false,
-        short minCollectability = 0);
-
-    short? GetNextFreeSlot(InventoryType inventoryType);
-
-    bool HasSeenInventory(uint inventoryType);
-}
-
-public delegate void RetainerInventoryLoadedDelegate();

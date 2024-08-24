@@ -6,12 +6,9 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ChatNotifyUndercutLoginCharacterSetting : EnumFormField<ChatNotifyCharacterEnum, Configuration>, ISetting
+public class ChatNotifyUndercutLoginCharacterSetting(ImGuiService imGuiService)
+    : EnumFormField<ChatNotifyCharacterEnum, Configuration>(imGuiService), ISetting
 {
-    public ChatNotifyUndercutLoginCharacterSetting(ImGuiService imGuiService) : base(imGuiService)
-    {
-    }
-
     public override Enum DefaultValue { get; set; } = ChatNotifyCharacterEnum.AllCharacters;
 
     public override string Key { get; set; } = "ChatNotifyUndercutLoginCharacter";
@@ -23,7 +20,7 @@ public class ChatNotifyUndercutLoginCharacterSetting : EnumFormField<ChatNotifyC
 
     public override string Version { get; } = "1.0.0";
 
-    public override Dictionary<Enum, string> Choices { get; } = new Dictionary<Enum, string>()
+    public override Dictionary<Enum, string> Choices { get; } = new()
     {
         { ChatNotifyCharacterEnum.OnlyActiveCharacter, "Only undercuts on active character's retainers" },
         { ChatNotifyCharacterEnum.AllCharacters, "All retainers" },

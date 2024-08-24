@@ -6,5 +6,5 @@ public enum RetainerMarketListEventType
     Added,
     Removed,
     Updated,
-    Initial
+    Initial,
 }

@@ -8,23 +8,20 @@ public class SettingTypeConfiguration
 {
     private List<SettingType>? settingTypes;
 
-    public string GetFormattedName(SettingType settingType)
+    public static string GetFormattedName(SettingType settingType)
     {
-        switch (settingType)
+        return settingType switch
         {
-            case Chat:
-                return "Chat";
-            case General:
-                return "General";
-            case SettingType.Features:
-                return "Features";
-        }
-
-        return settingType.ToString();
+            Chat => "Chat",
+            General => "General",
+            SettingType.Features => "Features",
+            Overlays => "Overlays",
+            _ => settingType.ToString(),
+        };
     }
 
     public List<SettingType> GetCategoryOrder()
     {
-        return this.settingTypes ??= [General, SettingType.Features, Chat];
+        return this.settingTypes ??= [General, SettingType.Features, Overlays, Chat];
     }
 }

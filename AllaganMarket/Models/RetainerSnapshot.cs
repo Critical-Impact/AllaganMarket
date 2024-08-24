@@ -1,19 +1,14 @@
-﻿namespace AllaganMarket.Models;
-
 using System.Linq;
-using Interfaces;
 
-public class RetainerSnapshot : IDebuggable
+using AllaganMarket.Interfaces;
+
+namespace AllaganMarket.Models;
+
+public class RetainerSnapshot(uint gil, SaleItem[] saleItems) : IDebuggable
 {
-    public RetainerSnapshot(uint gil, SaleItem[] saleItems)
-    {
-        this.Gil = gil;
-        this.SaleItems = saleItems;
-    }
+    public uint Gil { get; set; } = gil;
 
-    public uint Gil { get; set; }
-
-    public SaleItem[] SaleItems { get; set; }
+    public SaleItem[] SaleItems { get; set; } = saleItems;
 
     public string AsDebugString()
     {

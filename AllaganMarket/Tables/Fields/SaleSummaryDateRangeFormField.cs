@@ -6,14 +6,11 @@ using AllaganLib.Interface.Widgets;
 
 using AllaganMarket.Models;
 
-namespace AllaganMarket.Grids.Fields;
+namespace AllaganMarket.Tables.Fields;
 
-public class SaleSummaryDateRangeFormField : DateRangeFormField<SaleSummary>
+public class SaleSummaryDateRangeFormField(ImGuiService imGuiService)
+    : DateRangeFormField<SaleSummary>(new DateRangePickerWidget(), imGuiService)
 {
-    public SaleSummaryDateRangeFormField(ImGuiService imGuiService) : base(new DateRangePickerWidget(), imGuiService)
-    {
-    }
-
     public override (DateTime, DateTime)? DefaultValue { get; set; } = null;
 
     public override string Key { get; set; } = "SaleSummaryDateRange";

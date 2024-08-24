@@ -1,35 +1,26 @@
-﻿using AllaganMarket.Models;
+using System.Threading;
+using System.Threading.Tasks;
+
+using AllaganMarket.Models;
+using AllaganMarket.Windows;
+
+using Dalamud.Plugin;
+
+using Microsoft.Extensions.Hosting;
 
 namespace AllaganMarket.Services;
 
-using System.Threading;
-using System.Threading.Tasks;
-using Windows;
-using Dalamud.Plugin;
-using Microsoft.Extensions.Hosting;
-
-public class InstallerWindowService : IHostedService
+public class InstallerWindowService(
+    IDalamudPluginInterface pluginInterface,
+    ConfigWindow configWindow,
+    MainWindow mainWindow,
+    PluginStateService pluginStateService) : IHostedService
 {
-    private readonly PluginStateService pluginStateService;
+    public IDalamudPluginInterface PluginInterface { get; } = pluginInterface;
 
-    public InstallerWindowService(
-        IDalamudPluginInterface pluginInterface,
-        ConfigWindow configWindow,
-        MainWindow mainWindow,
-        PluginStateService pluginStateService
-        )
-    {
-        this.pluginStateService = pluginStateService;
-        this.PluginInterface = pluginInterface;
-        this.ConfigWindow = configWindow;
-        this.MainWindow = mainWindow;
-    }
+    public ConfigWindow ConfigWindow { get; } = configWindow;
 
-    public IDalamudPluginInterface PluginInterface { get; }
-
-    public ConfigWindow ConfigWindow { get; }
-
-    public MainWindow MainWindow { get; }
+    public MainWindow MainWindow { get; } = mainWindow;
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
@@ -48,13 +39,13 @@ public class InstallerWindowService : IHostedService
 
     private void ToggleMainUi()
     {
-        this.pluginStateService.ShowWindows = !this.pluginStateService.ShowWindows;
+        pluginStateService.ShowWindows = !pluginStateService.ShowWindows;
         this.MainWindow.Toggle();
     }
 
     private void ToggleConfigUi()
     {
-        this.pluginStateService.ShowWindows = !this.pluginStateService.ShowWindows;
+        pluginStateService.ShowWindows = !pluginStateService.ShowWindows;
         this.ConfigWindow.Toggle();
     }
 }

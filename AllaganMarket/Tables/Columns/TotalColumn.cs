@@ -8,14 +8,11 @@ using Dalamud.Game.Text;
 
 using ImGuiNET;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class TotalColumn : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class TotalColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+    : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    public TotalColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter) : base(imGuiService, stringColumnFilter)
-    {
-    }
-
     public override string DefaultValue { get; set; } = string.Empty;
 
     public override string Key { get; set; } = "Total";
@@ -30,7 +27,11 @@ public class TotalColumn : IntegerColumn<SearchResultConfiguration, SearchResult
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    public override string EmptyText { get; set; } = "";
+    public override string EmptyText { get; set; } = string.Empty;
+
+    public override string HelpText { get; set; } = "The total amount of the sale item/sold item";
+
+    public override string Version { get; } = "1.0.0";
 
     public override string? CurrentValue(SearchResult item)
     {
@@ -51,8 +52,4 @@ public class TotalColumn : IntegerColumn<SearchResultConfiguration, SearchResult
 
         return null;
     }
-
-    public override string HelpText { get; set; } = "The total amount of the sale item/sold item";
-
-    public override string Version { get; } = "1.0.0";
 }

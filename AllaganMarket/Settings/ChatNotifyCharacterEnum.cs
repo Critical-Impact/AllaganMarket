@@ -3,5 +3,5 @@ namespace AllaganMarket.Settings;
 public enum ChatNotifyCharacterEnum
 {
     OnlyActiveCharacter = 0,
-    AllCharacters = 1
+    AllCharacters = 1,
 }

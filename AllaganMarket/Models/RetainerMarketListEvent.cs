@@ -1,18 +1,12 @@
+using AllaganMarket.Interfaces;
+
 namespace AllaganMarket.Models;
 
-using Interfaces;
-
-public class RetainerMarketListEvent : IDebuggable
+public class RetainerMarketListEvent(RetainerMarketListEventType eventType, short slot) : IDebuggable
 {
-    public RetainerMarketListEvent(RetainerMarketListEventType eventType, short slot)
-    {
-        this.EventType = eventType;
-        this.Slot = slot;
-    }
+    public RetainerMarketListEventType EventType { get; } = eventType;
 
-    public RetainerMarketListEventType EventType { get; }
-
-    public short Slot { get; set; }
+    public short Slot { get; set; } = slot;
 
     public SaleItem? SaleItem { get; set; }
 

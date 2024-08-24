@@ -1,8 +1,9 @@
-﻿namespace AllaganMarket.GameInterop;
-
 using System;
 using System.IO;
+
 using FFXIVClientStructs.FFXIV.Client.Game;
+
+namespace AllaganMarket.GameInterop;
 
 public class ContainerInfo
 {
@@ -38,6 +39,6 @@ public class ContainerInfo
     public string AsDebugString()
     {
         return
-            $"Sequence: {this.ContainerSequence}, Number of Items: {this.NumItems}, Container ID: {this.ContainerId}, Start/Finish: {this.StartOrFinish}, InventoryType: {this.InventoryType.ToString()}";
+            $"Sequence: {this.ContainerSequence}, Number of Items: {this.NumItems}, Container ID: {this.ContainerId}, Start/Finish: {this.StartOrFinish}, InventoryType: {this.InventoryType}";
     }
 }

@@ -1,14 +1,14 @@
-﻿using System.Globalization;
+﻿using System;
+using System.Globalization;
 
 using AllaganLib.Data.Interfaces;
+
+using AllaganMarket.Interfaces;
 
 using Lumina;
 using Lumina.Data;
 
 namespace AllaganMarket.Models;
-
-using System;
-using Interfaces;
 
 public class SoldItem : IDebuggable, ICsv
 {
@@ -48,12 +48,6 @@ public class SoldItem : IDebuggable, ICsv
     public uint TotalIncTax =>
         (uint)(this.Total - (int)Math.Floor((double)(this.Quantity * this.UnitPrice * this.TaxRate)));
 
-    public string AsDebugString()
-    {
-        return
-            $"Retainer ID: {this.RetainerId}, World ID: {this.WorldId}, Item ID: {this.ItemId}, Is HQ: {this.IsHq}, Quantity: {this.Quantity}, Unit Price: {this.UnitPrice}";
-    }
-
     public static string[] GetHeaders()
     {
         return
@@ -69,12 +63,18 @@ public class SoldItem : IDebuggable, ICsv
         ];
     }
 
+    public string AsDebugString()
+    {
+        return
+            $"Retainer ID: {this.RetainerId}, World ID: {this.WorldId}, Item ID: {this.ItemId}, Is HQ: {this.IsHq}, Quantity: {this.Quantity}, Unit Price: {this.UnitPrice}";
+    }
+
     public void FromCsv(string[] lineData)
     {
         this.RetainerId = Convert.ToUInt64(lineData[0]);
         this.WorldId = Convert.ToUInt32(lineData[1]);
         this.ItemId = Convert.ToUInt32(lineData[2]);
-        this.IsHq = lineData[3] == "1" ? true : false;
+        this.IsHq = lineData[3] == "1";
         this.Quantity = Convert.ToUInt32(lineData[4], CultureInfo.InvariantCulture);
         this.UnitPrice = Convert.ToUInt32(lineData[5], CultureInfo.InvariantCulture);
         this.TaxRate = Convert.ToUInt32(lineData[6], CultureInfo.InvariantCulture);
@@ -103,6 +103,5 @@ public class SoldItem : IDebuggable, ICsv
 
     public void PopulateData(GameData gameData, Language language)
     {
-        
     }
 }

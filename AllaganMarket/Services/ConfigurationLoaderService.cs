@@ -15,22 +15,12 @@ using Microsoft.Extensions.Hosting;
 
 namespace AllaganMarket.Services;
 
-public class ConfigurationLoaderService : IHostedService
+public class ConfigurationLoaderService(
+    CsvLoaderService csvLoaderService,
+    IDalamudPluginInterface pluginInterface,
+    IPluginLog pluginLog) : IHostedService
 {
-    private readonly CsvLoaderService csvLoaderService;
-    private readonly IDalamudPluginInterface pluginInterface;
-    private readonly IPluginLog pluginLog;
     private Configuration? configuration;
-
-    public ConfigurationLoaderService(
-        CsvLoaderService csvLoaderService,
-        IDalamudPluginInterface pluginInterface,
-        IPluginLog pluginLog)
-    {
-        this.csvLoaderService = csvLoaderService;
-        this.pluginInterface = pluginInterface;
-        this.pluginLog = pluginLog;
-    }
 
     /// <inheritdoc/>
     public Task StartAsync(CancellationToken cancellationToken)
@@ -44,12 +34,12 @@ public class ConfigurationLoaderService : IHostedService
         {
             try
             {
-                this.configuration = this.pluginInterface.GetPluginConfig() as Configuration ??
+                this.configuration = pluginInterface.GetPluginConfig() as Configuration ??
                                      new Configuration();
             }
             catch (Exception e)
             {
-                this.pluginLog.Error(e, "Failed to load configuration");
+                pluginLog.Error(e, "Failed to load configuration");
                 this.configuration = new Configuration();
             }
 
@@ -62,19 +52,29 @@ public class ConfigurationLoaderService : IHostedService
     public void Save()
     {
         this.GetConfiguration().IsDirty = false;
-        this.pluginInterface.SavePluginConfig(this.GetConfiguration());
+        pluginInterface.SavePluginConfig(this.GetConfiguration());
         this.SaveCsvs();
+    }
+
+    /// <inheritdoc/>
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        this.Save();
+        pluginLog.Verbose("Stopping configuration loader, saving.");
+        return Task.CompletedTask;
     }
 
     private void LoadCsvs(Configuration configuration)
     {
         try
         {
-            var saleItems = this.csvLoaderService.LoadCsv<SaleItem>(Path.Combine(this.pluginInterface.GetPluginConfigDirectory(), "SaleItems.csv"), out var failedLines);
+            var saleItems = csvLoaderService.LoadCsv<SaleItem>(
+                Path.Combine(pluginInterface.GetPluginConfigDirectory(), "SaleItems.csv"),
+                out var failedLines);
             configuration.SaleItems = saleItems.GroupBy(c => c.RetainerId).ToDictionary(c => c.Key, c => c.ToArray());
             foreach (var failedLine in failedLines)
             {
-                this.pluginLog.Error($"Failed to parse line {failedLine}");
+                pluginLog.Error($"Failed to parse line {failedLine}");
             }
         }
         catch (FileNotFoundException)
@@ -83,7 +83,12 @@ public class ConfigurationLoaderService : IHostedService
 
         try
         {
-            configuration.Sales = this.csvLoaderService.LoadCsv<SoldItem>(Path.Combine(this.pluginInterface.GetPluginConfigDirectory(), "SoldItems.csv"), out _).GroupBy(c => c.RetainerId).ToDictionary(c => c.Key, c => c.ToList());
+            configuration.Sales = csvLoaderService
+                                      .LoadCsv<SoldItem>(
+                                          Path.Combine(
+                                              pluginInterface.GetPluginConfigDirectory(),
+                                              "SoldItems.csv"),
+                                          out _).GroupBy(c => c.RetainerId).ToDictionary(c => c.Key, c => c.ToList());
         }
         catch (FileNotFoundException)
         {
@@ -93,19 +98,11 @@ public class ConfigurationLoaderService : IHostedService
     private void SaveCsvs()
     {
         var loadedConfiguration = this.GetConfiguration();
-        this.csvLoaderService.ToCsv(
+        csvLoaderService.ToCsv(
             loadedConfiguration.SaleItems.SelectMany(c => c.Value).ToList(),
-            Path.Combine(this.pluginInterface.GetPluginConfigDirectory(), "SaleItems.csv"));
-        this.csvLoaderService.ToCsv(
+            Path.Combine(pluginInterface.GetPluginConfigDirectory(), "SaleItems.csv"));
+        csvLoaderService.ToCsv(
             loadedConfiguration.Sales.SelectMany(c => c.Value).ToList(),
-            Path.Combine(this.pluginInterface.GetPluginConfigDirectory(), "SoldItems.csv"));
-    }
-
-    /// <inheritdoc/>
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        this.Save();
-        this.pluginLog.Verbose("Stopping configuration loader, saving.");
-        return Task.CompletedTask;
+            Path.Combine(pluginInterface.GetPluginConfigDirectory(), "SoldItems.csv"));
     }
 }

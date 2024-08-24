@@ -4,13 +4,16 @@ using System.ComponentModel;
 
 using AllaganLib.Interface.FormFields;
 
-namespace AllaganMarket.Grids;
+namespace AllaganMarket.Tables;
 
-public class SearchResultConfiguration : IConfigurable<string?>, IConfigurable<int?>, INotifyPropertyChanged, IConfigurable<DateTime?>
+public class SearchResultConfiguration : IConfigurable<string?>, IConfigurable<int?>, INotifyPropertyChanged,
+                                         IConfigurable<DateTime?>
 {
     private readonly Dictionary<string, string> stringFilters = [];
     private readonly Dictionary<string, int> integerFilters = [];
     private readonly Dictionary<string, DateTime> dateTimeFilters = [];
+
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     public string? Get(string key)
     {
@@ -27,6 +30,7 @@ public class SearchResultConfiguration : IConfigurable<string?>, IConfigurable<i
         {
             this.dateTimeFilters[key] = newValue.Value;
         }
+
         this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(key));
     }
 
@@ -40,6 +44,7 @@ public class SearchResultConfiguration : IConfigurable<string?>, IConfigurable<i
         {
             this.integerFilters[key] = newValue.Value;
         }
+
         this.PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(key));
     }
 
@@ -61,8 +66,6 @@ public class SearchResultConfiguration : IConfigurable<string?>, IConfigurable<i
     {
         return this.integerFilters.GetValueOrDefault(key);
     }
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     DateTime? IConfigurable<DateTime?>.Get(string key)
     {

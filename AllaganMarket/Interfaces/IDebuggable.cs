@@ -1,4 +1,4 @@
-﻿namespace AllaganMarket.Interfaces;
+namespace AllaganMarket.Interfaces;
 
 public interface IDebuggable
 {

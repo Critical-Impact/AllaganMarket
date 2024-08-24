@@ -1,6 +1,6 @@
 using AllaganMarket.Models;
 
-namespace AllaganMarket.Grids;
+namespace AllaganMarket.Tables;
 
 public class SearchResult
 {

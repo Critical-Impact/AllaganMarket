@@ -1,20 +1,25 @@
-﻿using System.Globalization;
+using System;
+using System.Globalization;
 
 using AllaganLib.Data.Interfaces;
+
+using AllaganMarket.GameInterop;
+using AllaganMarket.Interfaces;
+
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 using Lumina;
 using Lumina.Data;
 
 namespace AllaganMarket.Models;
 
-using System;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using GameInterop;
-using Interfaces;
-
 public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
 {
-    public SaleItem(InventoryItem inventoryItem, RetainerMarketItemPrice? retainerMarketItemPrice, ulong retainerId, uint worldId)
+    public SaleItem(
+        InventoryItem inventoryItem,
+        RetainerMarketItemPrice? retainerMarketItemPrice,
+        ulong retainerId,
+        uint worldId)
     {
         this.RetainerId = retainerId;
         this.WorldId = worldId;
@@ -97,16 +102,52 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
 
     public DateTime UpdatedAt { get; set; }
 
+    public uint Total => this.Quantity * this.UnitPrice;
+
+    public static string[] GetHeaders()
+    {
+        return
+        [
+            "Retainer ID",
+            "World ID",
+            "Item ID",
+            "Is HQ?",
+            "Quantity",
+            "Unit Price",
+            "Undercut By?",
+            "Listed At",
+            "Updated At"
+        ];
+    }
+
     public bool IsEmpty()
     {
         return this.ItemId == 0;
     }
-    
-    public uint Total => this.Quantity * this.UnitPrice;
+
+    public uint RecommendedUnitPrice(uint undercutBy = 5)
+    {
+        if (this.UndercutBy is null or 0)
+        {
+            return this.UnitPrice;
+        }
+
+        return this.UnitPrice - (this.UndercutBy ?? 0) - undercutBy;
+    }
 
     public bool NeedsUpdate(int updatePeriodMinutes)
     {
         return DateTime.Now > this.UpdatedAt + TimeSpan.FromMinutes(updatePeriodMinutes);
+    }
+
+    public DateTime NextUpdateDate(int updatePeriodMinutes)
+    {
+        if (this.NeedsUpdate(updatePeriodMinutes))
+        {
+            return DateTime.Now;
+        }
+
+        return this.UpdatedAt + TimeSpan.FromMinutes(updatePeriodMinutes);
     }
 
     public string AsDebugString()
@@ -115,9 +156,9 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
             $"Retainer ID: {this.RetainerId}, World ID: {this.WorldId}, Item ID: {this.ItemId}, Is HQ: {this.IsHq}, Quantity: {this.Quantity}, Unit Price: {this.UnitPrice}";
     }
 
-    public bool Equals(SaleItem other)
+    public bool Equals(SaleItem? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -127,13 +168,14 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
             return true;
         }
 
-        return this.RetainerId == other.RetainerId && this.WorldId == other.WorldId && this.ItemId == other.ItemId && this.IsHq == other.IsHq &&
+        return this.RetainerId == other.RetainerId && this.WorldId == other.WorldId && this.ItemId == other.ItemId &&
+               this.IsHq == other.IsHq &&
                this.Quantity == other.Quantity && this.UnitPrice == other.UnitPrice;
     }
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }
@@ -161,28 +203,14 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.RetainerId = Convert.ToUInt64(lineData[0]);
         this.WorldId = Convert.ToUInt32(lineData[1]);
         this.ItemId = Convert.ToUInt32(lineData[2]);
-        this.IsHq = lineData[3] == "1" ? true : false;
+        this.IsHq = lineData[3] == "1";
         this.Quantity = Convert.ToUInt32(lineData[4], CultureInfo.InvariantCulture);
         this.UnitPrice = Convert.ToUInt32(lineData[5], CultureInfo.InvariantCulture);
-        this.UndercutBy = lineData[6] == string.Empty ? null : Convert.ToUInt32(lineData[6], CultureInfo.InvariantCulture);
+        this.UndercutBy = lineData[6] == string.Empty
+                              ? null
+                              : Convert.ToUInt32(lineData[6], CultureInfo.InvariantCulture);
         this.ListedAt = DateTime.Parse(lineData[7], CultureInfo.InvariantCulture);
         this.UpdatedAt = DateTime.Parse(lineData[8], CultureInfo.InvariantCulture);
-    }
-
-    public static string[] GetHeaders()
-    {
-        return
-        [
-            "Retainer ID",
-            "World ID",
-            "Item ID",
-            "Is HQ?",
-            "Quantity",
-            "Unit Price",
-            "Undercut By?",
-            "Listed At",
-            "Updated At"
-        ];
     }
 
     public string[] ToCsv()

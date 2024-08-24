@@ -5,16 +5,11 @@ using AllaganLib.Interface.Wizard;
 
 namespace AllaganMarket.Features;
 
-public class GameIntegrationsFeature : Feature<Configuration>
+public class GameIntegrationsFeature(IEnumerable<IFormField<Configuration>> settings) : Feature<Configuration>(
+    [
+    ],
+    settings)
 {
-    public GameIntegrationsFeature(IEnumerable<IFormField<Configuration>> settings)
-        : base(
-            [
-            ],
-            settings)
-    {
-    }
-
     public override string Name { get; } = "Game Integrations";
 
     public override string Description { get; } = "Activate features that integrate directly into the game.";

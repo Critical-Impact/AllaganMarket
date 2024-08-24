@@ -1,8 +1,9 @@
-﻿namespace AllaganMarket.Agents;
-
 using System.Runtime.InteropServices;
+
 using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+
+namespace AllaganMarket.Agents;
 
 [Agent(AgentId.Retainer)]
 [StructLayout(LayoutKind.Explicit, Size = 0x4B84)]

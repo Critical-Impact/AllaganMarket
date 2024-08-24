@@ -1,23 +1,24 @@
-﻿namespace AllaganMarket.GameInterop;
-
 using System;
 using System.IO;
-using Interfaces;
+
+using AllaganMarket.Interfaces;
+
+namespace AllaganMarket.GameInterop;
 
 /// <summary>
-/// This represents the unit price of a particular item a retainer has for sale
+/// This represents the unit price of a particular item a retainer has for sale.
 /// </summary>
-public struct RetainerMarketItemPrice : IDebuggable
+public struct RetainerMarketItemPrice(uint slot, uint unitPrice) : IDebuggable
 {
     public uint Sequence { get; private set; }
 
     public uint ContainerId { get; private set; }
 
-    public uint Slot { get; private set; }
+    public uint Slot { get; private set; } = slot;
 
     public uint Unknown { get; private set; }
 
-    public uint UnitPrice { get; private set; }
+    public uint UnitPrice { get; private set; } = unitPrice;
 
     /// <summary>
     /// Read a packet off the wire.
@@ -29,7 +30,7 @@ public struct RetainerMarketItemPrice : IDebuggable
         using var stream = new UnmanagedMemoryStream((byte*)dataPtr.ToPointer(), 640L);
         using var reader = new BinaryReader(stream);
 
-        var output = new RetainerMarketItemPrice();
+        var output = default(RetainerMarketItemPrice);
 
         output.Sequence = reader.ReadUInt32();
         output.ContainerId = reader.ReadUInt32();
@@ -39,13 +40,7 @@ public struct RetainerMarketItemPrice : IDebuggable
         return output;
     }
 
-    public RetainerMarketItemPrice(uint slot, uint unitPrice)
-    {
-        this.Slot = slot;
-        this.UnitPrice = unitPrice;
-    }
-
-    public string AsDebugString()
+    public readonly string AsDebugString()
     {
         return
             $"Slot: {this.Slot}, Unit Price: {this.UnitPrice}, Sequence: {this.Sequence}, Container ID: {this.ContainerId}";

@@ -8,14 +8,11 @@ using DalaMock.Host.Mediator;
 
 using ImGuiNET;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class UpdatedAtColumn : DateTimeColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class UpdatedAtColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+    : DateTimeColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    public UpdatedAtColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter) : base(imGuiService, stringColumnFilter)
-    {
-    }
-
     public override string? DefaultValue { get; set; } = null;
 
     public override string Key { get; set; } = "UpdatedAt";
@@ -30,7 +27,12 @@ public class UpdatedAtColumn : DateTimeColumn<SearchResultConfiguration, SearchR
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    public override string EmptyText { get; set; } = "";
+    public override string EmptyText { get; set; } = string.Empty;
+
+    public override string HelpText { get; set; } =
+        "When the item was last updated by either confirming the item is not undercut or by adjusting the price to be the lowest.";
+
+    public override string Version { get; } = "1.0.0";
 
     public override string? CurrentValue(SearchResult item)
     {
@@ -41,9 +43,4 @@ public class UpdatedAtColumn : DateTimeColumn<SearchResultConfiguration, SearchR
 
         return item.SaleItem?.UpdatedAt.ToString(CultureInfo.CurrentCulture) ?? null;
     }
-
-    public override string HelpText { get; set; } =
-        "When the item was last updated by either confirming the item is not undercut or by adjusting the price to be the lowest.";
-
-    public override string Version { get; } = "1.0.0";
 }

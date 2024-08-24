@@ -6,28 +6,15 @@ public static class SaleSummaryGroupExtensions
 {
     public static string FormattedName(this SaleSummaryGroup saleSummaryGroup)
     {
-        switch (saleSummaryGroup)
+        return saleSummaryGroup switch
         {
-            case SaleSummaryGroup.None:
-                return "None";
-                break;
-            case SaleSummaryGroup.Item:
-                return "Item";
-                break;
-            case SaleSummaryGroup.World:
-                return "World";
-                break;
-            case SaleSummaryGroup.IsHq:
-                return "Is HQ";
-                break;
-            case SaleSummaryGroup.Owner:
-                return "Owner";
-                break;
-            case SaleSummaryGroup.Retainer:
-                return "Retainer";
-                break;
-        }
-
-        return saleSummaryGroup.ToString();
+            SaleSummaryGroup.None => "None",
+            SaleSummaryGroup.Item => "Item",
+            SaleSummaryGroup.World => "World",
+            SaleSummaryGroup.IsHq => "Is HQ",
+            SaleSummaryGroup.Owner => "Owner",
+            SaleSummaryGroup.Retainer => "Retainer",
+            _ => saleSummaryGroup.ToString(),
+        };
     }
 }

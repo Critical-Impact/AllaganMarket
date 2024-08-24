@@ -3,12 +3,9 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ItemUpdatePeriodSetting : IntegerFormField<Configuration>, ISetting
+public class ItemUpdatePeriodSetting(ImGuiService imGuiService)
+    : IntegerFormField<Configuration>(imGuiService), ISetting
 {
-    public ItemUpdatePeriodSetting(ImGuiService imGuiService) : base(imGuiService)
-    {
-    }
-
     public override string? Affix { get; } = "m";
 
     public override int DefaultValue { get; set; } = 300;

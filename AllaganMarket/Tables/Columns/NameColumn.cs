@@ -15,20 +15,17 @@ using Lumina.Excel.GeneratedSheets;
 
 using ImGuiService = AllaganLib.Interface.Services.ImGuiService;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class NameColumn : StringColumn<SearchResultConfiguration,SearchResult, MessageBase>
+public class NameColumn(
+    ImGuiService imGuiService,
+    StringColumnFilter stringColumnFilter,
+    ExcelSheet<Item> itemSheet,
+    ExcelSheet<World> worldSheet,
+    ICharacterMonitorService characterMonitorService)
+    : StringColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
-    private readonly ExcelSheet<Item> itemSheet;
-    private readonly ExcelSheet<World> worldSheet;
-    private readonly ICharacterMonitorService characterMonitorService;
-
-    public NameColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter, ExcelSheet<Item> itemSheet, ExcelSheet<World> worldSheet, ICharacterMonitorService characterMonitorService) : base(imGuiService, stringColumnFilter)
-    {
-        this.itemSheet = itemSheet;
-        this.worldSheet = worldSheet;
-        this.characterMonitorService = characterMonitorService;
-    }
+    private readonly Dictionary<SaleSummaryKey, string> formattedNames = [];
 
     public override string DefaultValue { get; set; } = string.Empty;
 
@@ -44,21 +41,26 @@ public class NameColumn : StringColumn<SearchResultConfiguration,SearchResult, M
 
     public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
-    private Dictionary<SaleSummaryKey, string> formattedNames = new();
+    public override string EmptyText { get; set; } = string.Empty;
+
+    public override string HelpText { get; set; } = "The name of the item";
+
+    public override string Version { get; } = "1.0.0";
 
     public string GetFormattedSaleSummaryName(SaleSummaryItem saleSummaryItem)
     {
         if (!saleSummaryItem.Grouping.IsGrouped && saleSummaryItem.ItemId != null)
         {
-            return this.itemSheet.GetRow(saleSummaryItem.ItemId.Value)?.Name.AsReadOnly().ExtractText() ?? "Unknown Item";
+            return itemSheet.GetRow(saleSummaryItem.ItemId.Value)?.Name.AsReadOnly().ExtractText() ??
+                   "Unknown Item";
         }
 
         if (!this.formattedNames.ContainsKey(saleSummaryItem.Grouping))
         {
-            List<string> pieces = new List<string>();
+            List<string> pieces = [];
             if (saleSummaryItem.Grouping.WorldId != null)
             {
-                var world = this.worldSheet.GetRow(saleSummaryItem.Grouping.WorldId.Value);
+                var world = worldSheet.GetRow(saleSummaryItem.Grouping.WorldId.Value);
                 if (world != null)
                 {
                     pieces.Add(world.Name.AsReadOnly().ExtractText());
@@ -67,7 +69,7 @@ public class NameColumn : StringColumn<SearchResultConfiguration,SearchResult, M
 
             if (saleSummaryItem.Grouping.OwnerId != null)
             {
-                var character = this.characterMonitorService.GetCharacterById(saleSummaryItem.Grouping.OwnerId.Value);
+                var character = characterMonitorService.GetCharacterById(saleSummaryItem.Grouping.OwnerId.Value);
                 if (character != null)
                 {
                     pieces.Add(character.Name);
@@ -76,16 +78,17 @@ public class NameColumn : StringColumn<SearchResultConfiguration,SearchResult, M
 
             if (saleSummaryItem.Grouping.RetainerId != null)
             {
-                var character = this.characterMonitorService.GetCharacterById(saleSummaryItem.Grouping.RetainerId.Value);
+                var character =
+                    characterMonitorService.GetCharacterById(saleSummaryItem.Grouping.RetainerId.Value);
                 if (character != null)
                 {
                     pieces.Add(character.Name);
-                }   
+                }
             }
 
             if (saleSummaryItem.Grouping.ItemId != null)
             {
-                var item = this.itemSheet.GetRow(saleSummaryItem.Grouping.ItemId.Value);
+                var item = itemSheet.GetRow(saleSummaryItem.Grouping.ItemId.Value);
                 if (item != null)
                 {
                     pieces.Add(item.Name.AsReadOnly().ExtractText());
@@ -112,11 +115,11 @@ public class NameColumn : StringColumn<SearchResultConfiguration,SearchResult, M
                 return "Empty Slot";
             }
 
-            return this.itemSheet.GetRow(item.SaleItem.ItemId)?.Name.AsReadOnly().ToString() ?? string.Empty;
+            return itemSheet.GetRow(item.SaleItem.ItemId)?.Name.AsReadOnly().ToString() ?? string.Empty;
         }
         else if (item.SoldItem != null)
         {
-            return this.itemSheet.GetRow(item.SoldItem.ItemId)?.Name.AsReadOnly().ToString() ?? string.Empty;
+            return itemSheet.GetRow(item.SoldItem.ItemId)?.Name.AsReadOnly().ToString() ?? string.Empty;
         }
         else if (item.SaleSummaryItem != null)
         {
@@ -125,10 +128,4 @@ public class NameColumn : StringColumn<SearchResultConfiguration,SearchResult, M
 
         return string.Empty;
     }
-
-    public override string EmptyText { get; set; } = string.Empty;
-
-    public override string HelpText { get; set; } = "The name of the item";
-
-    public override string Version { get; } = "1.0.0";
 }

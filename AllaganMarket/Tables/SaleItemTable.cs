@@ -5,7 +5,8 @@ using AllaganLib.Data.Service;
 using AllaganLib.Interface.Grid;
 
 using AllaganMarket.Filtering;
-using AllaganMarket.Grids.Columns;
+using AllaganMarket.Mediator;
+using AllaganMarket.Tables.Columns;
 
 using DalaMock.Host.Mediator;
 
@@ -16,7 +17,7 @@ using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
-namespace AllaganMarket.Grids;
+namespace AllaganMarket.Tables;
 
 public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult, MessageBase>
 {
@@ -24,7 +25,20 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
     private readonly ExcelSheet<Item> itemSheet;
     private readonly SaleFilter saleFilter;
 
-    public SaleItemTable(CsvLoaderService csvLoaderService, ICommandManager commandManager, ExcelSheet<Item> itemSheet, NameColumn nameColumn, QuantityColumn quantityColumn, UnitPriceColumn unitPriceColumn, SearchResultConfiguration searchResultConfiguration, SaleFilter saleFilter, WorldColumn worldColumn, RetainerColumn retainerColumn, UndercutByColumn undercutByColumn, ListedAtColumn listedAtColumn, UpdatedAtColumn updatedAtColumn)
+    public SaleItemTable(
+        CsvLoaderService csvLoaderService,
+        ICommandManager commandManager,
+        ExcelSheet<Item> itemSheet,
+        NameColumn nameColumn,
+        QuantityColumn quantityColumn,
+        UnitPriceColumn unitPriceColumn,
+        SearchResultConfiguration searchResultConfiguration,
+        SaleFilter saleFilter,
+        WorldColumn worldColumn,
+        RetainerColumn retainerColumn,
+        UndercutByColumn undercutByColumn,
+        ListedAtColumn listedAtColumn,
+        UpdatedAtColumn updatedAtColumn)
         : base(
             csvLoaderService,
             searchResultConfiguration,
@@ -38,11 +52,7 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
                 listedAtColumn,
                 updatedAtColumn
             ],
-            ImGuiTableFlags.None | ImGuiTableFlags.Resizable | ImGuiTableFlags.Hideable | ImGuiTableFlags.Sortable |
-            ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH | ImGuiTableFlags.BordersOuterH |
-            ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.BordersOuterV | ImGuiTableFlags.BordersH |
-            ImGuiTableFlags.BordersV | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter |
-            ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY,
+            ImGuiTableFlags.None | ImGuiTableFlags.Resizable | ImGuiTableFlags.Hideable | ImGuiTableFlags.Sortable | ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersInnerH | ImGuiTableFlags.BordersOuterH | ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.BordersOuterV | ImGuiTableFlags.BordersH | ImGuiTableFlags.BordersV | ImGuiTableFlags.BordersInner | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Borders | ImGuiTableFlags.ScrollX | ImGuiTableFlags.ScrollY,
             "Sale Item Table",
             "SaleItemTable")
     {
@@ -54,6 +64,11 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
 
     /// <inheritdoc/>
     public override Func<SearchResult, List<MessageBase>>? RightClickFunc => this.OpenMenu;
+
+    public override List<SearchResult> GetItems()
+    {
+        return this.saleFilter.GetSaleResults();
+    }
 
     private List<MessageBase> OpenMenu(SearchResult arg)
     {
@@ -70,10 +85,5 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
         }
 
         return messages;
-    }
-
-    public override List<SearchResult> GetItems()
-    {
-        return this.saleFilter.GetSaleResults();
     }
 }

@@ -3,16 +3,12 @@ using AllaganLib.Interface.Services;
 
 using DalaMock.Host.Mediator;
 
-namespace AllaganMarket.Grids.Columns;
+namespace AllaganMarket.Tables.Columns;
 
-public class IsHQColumn : BooleanColumn<SearchResultConfiguration, SearchResult, MessageBase>
+public class IsHQColumn(ImGuiService imGuiService)
+    : BooleanColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService)
 {
-    public IsHQColumn(ImGuiService imGuiService)
-        : base(imGuiService)
-    {
-    }
-
-    public override string DefaultValue { get; set; } = "";
+    public override string DefaultValue { get; set; } = string.Empty;
 
     public override string Key { get; set; } = "IsHQ";
 
@@ -21,6 +17,10 @@ public class IsHQColumn : BooleanColumn<SearchResultConfiguration, SearchResult,
     public override string? RenderName { get; set; } = null;
 
     public override int Width { get; set; } = 70;
+
+    public override string HelpText { get; set; } = "Is the item high quality?";
+
+    public override string Version => "1.0.0";
 
     public override string? CurrentValue(SearchResult item)
     {
@@ -49,11 +49,6 @@ public class IsHQColumn : BooleanColumn<SearchResultConfiguration, SearchResult,
             return "N/A";
         }
 
-
         return null;
     }
-
-    public override string HelpText { get; set; }
-
-    public override string Version { get; }
 }

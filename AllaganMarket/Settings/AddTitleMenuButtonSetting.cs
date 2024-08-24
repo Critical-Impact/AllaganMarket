@@ -3,13 +3,9 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class AddTitleMenuButtonSetting : BooleanFormField<Configuration>, ISetting
+public class AddTitleMenuButtonSetting(ImGuiService imGuiService)
+    : BooleanFormField<Configuration>(imGuiService), ISetting
 {
-    public AddTitleMenuButtonSetting(ImGuiService imGuiService)
-        : base(imGuiService)
-    {
-    }
-
     public override bool DefaultValue { get; set; } = false;
 
     public override string Key { get; set; } = "AddTitleMenuButton";

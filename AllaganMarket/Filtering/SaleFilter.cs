@@ -1,26 +1,28 @@
-﻿using AllaganMarket.Grids;
-using AllaganMarket.Settings;
-
-namespace AllaganMarket.Filtering;
-
 using System.Collections.Generic;
 using System.Linq;
+
+using AllaganMarket.Models;
+using AllaganMarket.Services;
+using AllaganMarket.Services.Interfaces;
+using AllaganMarket.Settings;
+using AllaganMarket.Tables;
+
 using Dalamud.Plugin.Services;
 
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
-using Models;
-using Services;
-using Services.Interfaces;
 
-public class SaleFilter
+namespace AllaganMarket.Filtering;
+
+public class SaleFilter(
+    IDataManager dataManager,
+    SaleTrackerService saleTrackerService,
+    ICharacterMonitorService characterMonitorService,
+    ItemUpdatePeriodSetting itemUpdatePeriodSetting,
+    Configuration configuration)
 {
-    private readonly IDataManager dataManager;
-    private readonly ExcelSheet<Item> itemSheet;
-    private readonly SaleTrackerService saleTrackerService;
-    private readonly ICharacterMonitorService characterMonitorService;
-    private readonly ItemUpdatePeriodSetting itemUpdatePeriodSetting;
-    private readonly Configuration configuration;
+    private readonly IDataManager dataManager = dataManager;
+    private readonly ExcelSheet<Item> itemSheet = dataManager.GetExcelSheet<Item>()!;
     private long aggSalesTotalGil;
     private long aggSoldTotalGil;
     private List<SaleItem>? cachedSales;
@@ -32,21 +34,6 @@ public class SaleFilter
     private bool? needUpdating;
     private bool needsRefresh;
     private uint? worldId;
-
-    public SaleFilter(
-        IDataManager dataManager,
-        SaleTrackerService saleTrackerService,
-        ICharacterMonitorService characterMonitorService,
-        ItemUpdatePeriodSetting itemUpdatePeriodSetting,
-        Configuration configuration)
-    {
-        this.dataManager = dataManager;
-        this.saleTrackerService = saleTrackerService;
-        this.characterMonitorService = characterMonitorService;
-        this.itemUpdatePeriodSetting = itemUpdatePeriodSetting;
-        this.configuration = configuration;
-        this.itemSheet = dataManager.GetExcelSheet<Item>()!;
-    }
 
     public long AggregateSalesTotalGil => this.aggSalesTotalGil;
 
@@ -82,7 +69,6 @@ public class SaleFilter
         }
     }
 
-
     public bool? NeedUpdating
     {
         get => this.needUpdating;
@@ -110,44 +96,6 @@ public class SaleFilter
     public Item? GetItem(uint rowId)
     {
         return this.itemSheet.GetRow(rowId);
-    }
-
-    private List<SaleItem> RecalculateSaleItems()
-    {
-        var sales = this.saleTrackerService.GetSales(this.characterId, this.worldId);
-        if (this.ShowEmpty != true)
-        {
-            sales = sales.Where(c => !c.IsEmpty());
-        }
-
-        if (this.NeedUpdating != null)
-        {
-            sales = sales.Where(
-                c =>
-            {
-                var needsUpdate = c.NeedsUpdate(this.itemUpdatePeriodSetting.CurrentValue(this.configuration));
-                return (needsUpdate && this.NeedUpdating.Value) || (!needsUpdate && this.NeedUpdating.Value);
-            });
-        }
-
-        sales = sales.Where(c => this.characterMonitorService.IsCharacterKnown(c.RetainerId));
-
-        this.needsRefresh = false;
-        this.cachedSales = sales.ToList();
-        this.aggSalesTotalGil = this.cachedSales.Select(c => c.Total).Sum(c => c);
-        return this.cachedSales;
-    }
-
-    private List<SoldItem> RecalculateSoldItems()
-    {
-        var sales = this.saleTrackerService.GetSalesHistory(this.characterId, this.worldId);
-
-        sales = sales.Where(c => this.characterMonitorService.IsCharacterKnown(c.RetainerId));
-
-        this.needsRefresh = false;
-        this.cachedSoldItems = sales.ToList();
-        this.aggSoldTotalGil = this.cachedSoldItems.Select(c => c.Total).Sum(c => c);
-        return this.cachedSoldItems;
     }
 
     public List<SearchResult> RecalculateSaleResults()
@@ -206,5 +154,43 @@ public class SaleFilter
         }
 
         return this.cachedSoldResults;
+    }
+
+    private List<SaleItem> RecalculateSaleItems()
+    {
+        var sales = saleTrackerService.GetSales(this.characterId, this.worldId);
+        if (this.ShowEmpty != true)
+        {
+            sales = sales.Where(c => !c.IsEmpty());
+        }
+
+        if (this.NeedUpdating != null)
+        {
+            sales = sales.Where(
+                c =>
+                {
+                    var needsUpdate = c.NeedsUpdate(itemUpdatePeriodSetting.CurrentValue(configuration));
+                    return (needsUpdate && this.NeedUpdating.Value) || (!needsUpdate && this.NeedUpdating.Value);
+                });
+        }
+
+        sales = sales.Where(c => characterMonitorService.IsCharacterKnown(c.RetainerId));
+
+        this.needsRefresh = false;
+        this.cachedSales = sales.ToList();
+        this.aggSalesTotalGil = this.cachedSales.Select(c => c.Total).Sum(c => c);
+        return this.cachedSales;
+    }
+
+    private List<SoldItem> RecalculateSoldItems()
+    {
+        var sales = saleTrackerService.GetSalesHistory(this.characterId, this.worldId);
+
+        sales = sales.Where(c => characterMonitorService.IsCharacterKnown(c.RetainerId));
+
+        this.needsRefresh = false;
+        this.cachedSoldItems = sales.ToList();
+        this.aggSoldTotalGil = this.cachedSoldItems.Select(c => c.Total).Sum(c => c);
+        return this.cachedSoldItems;
     }
 }

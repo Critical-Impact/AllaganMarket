@@ -1,12 +1,12 @@
 {
-  "Author": "Critical_Impact",
-  "Name": "Allagan Market",
-  "Punchline": "Get your retainer sales organized, track active sales, historical sales and undercutting!",
-  "Description": "Allagan Market's primary purpose is to provide a list of all retainer listings/sales across all characters.\n\nIt'll do it's best to track your sales but it works best when it's always on!",
-  "ApplicableVersion": "any",
-  "Tags": [
-    "market",
-    "sales",
-    "retainers"
-  ]
+    "Author": "Critical_Impact",
+    "Name": "Allagan Market",
+    "Punchline": "Get your retainer sales organized, track active sales, historical sales and undercutting!",
+    "Description": "Allagan Market's primary purpose is to provide a list of all retainer listings/sales across all characters.\n\nIt'll do it's best to track your sales but it works best when it's always on!",
+    "ApplicableVersion": "any",
+    "Tags": [
+        "market",
+        "sales",
+        "retainers"
+    ]
 }

@@ -5,4 +5,5 @@ public enum SettingType
     General,
     Features,
     Chat,
+    Overlays,
 }

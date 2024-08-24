@@ -1,11 +1,19 @@
-﻿namespace AllaganMarket.Models;
-
 using System;
+
 using FFXIVClientStructs.FFXIV.Client.Game;
+
+namespace AllaganMarket.Models;
 
 public class Character : IEquatable<Character>
 {
-    public Character(CharacterType characterType, ulong characterId, string name, uint worldId, uint classJobId, byte level)
+    public Character(
+        CharacterType characterType,
+        ulong characterId,
+        string name,
+        uint worldId,
+        uint classJobId,
+        byte level,
+        byte displayOrder)
     {
         this.CharacterType = characterType;
         this.CharacterId = characterId;
@@ -13,6 +21,7 @@ public class Character : IEquatable<Character>
         this.WorldId = worldId;
         this.ClassJobId = classJobId;
         this.Level = level;
+        this.DisplayOrder = displayOrder;
     }
 
     public Character()
@@ -25,7 +34,7 @@ public class Character : IEquatable<Character>
 
     public ulong? OwnerId { get; set; }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public uint WorldId { get; set; }
 
@@ -33,12 +42,13 @@ public class Character : IEquatable<Character>
 
     public byte Level { get; set; }
 
+    public byte DisplayOrder { get; set; }
 
     public RetainerManager.RetainerTown? RetainerTown { get; set; }
 
     public bool Equals(Character? other)
     {
-        if (ReferenceEquals(null, other))
+        if (other is null)
         {
             return false;
         }
@@ -56,7 +66,7 @@ public class Character : IEquatable<Character>
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(null, obj))
+        if (obj is null)
         {
             return false;
         }

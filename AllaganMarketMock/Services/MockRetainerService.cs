@@ -1,4 +1,7 @@
-﻿using AllaganMarket.Services;
+// Copyright (c) PlaceholderCompany. All rights reserved.
+
+using AllaganMarket.Services;
+using AllaganMarket.Services.Interfaces;
 
 namespace AllaganMarketMock.Services;
 
