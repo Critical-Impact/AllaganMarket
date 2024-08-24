@@ -119,7 +119,7 @@ public class RetainerListOverlayWindow : OverlayWindow
                 "Open the Allagan Market main window.",
                 true))
         {
-            this.MediatorService.Publish(new ToggleWindowMessage(typeof(ConfigWindow)));
+            this.MediatorService.Publish(new ToggleWindowMessage(typeof(MainWindow)));
         }
 
         ImGui.SameLine();
