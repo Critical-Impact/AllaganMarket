@@ -12,7 +12,7 @@ namespace AllaganMarket.Services;
 
 public class CommandService(ICommandManager commandManager, MainWindow mainWindow) : IHostedService
 {
-    private const string CommandName = "/allaganmarket";
+    private readonly string[] commandName = { "/allaganmarket" , "/amarket"};
 
     public ICommandManager CommandManager { get; } = commandManager;
 
@@ -20,18 +20,26 @@ public class CommandService(ICommandManager commandManager, MainWindow mainWindo
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.CommandManager.AddHandler(
-            CommandName,
+        for (int i = 0; i < commandName.Length; i++)
+        {
+            this.CommandManager.AddHandler(
+            commandName[i],
             new CommandInfo(this.OnCommand)
             {
-                HelpMessage = "A useful message to display in /xlhelp",
+                HelpMessage = "Shows the Allagan Market main window.",
             });
+        }
+
         return Task.CompletedTask;
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        this.CommandManager.RemoveHandler(CommandName);
+        for (int i = 0; i < commandName.Length; i++)
+        {
+            this.CommandManager.RemoveHandler(commandName[i]);
+        }
+
         return Task.CompletedTask;
     }
 
