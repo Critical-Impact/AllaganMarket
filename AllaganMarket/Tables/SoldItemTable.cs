@@ -34,6 +34,7 @@ public class SoldItemTable : RenderTable<SearchResultConfiguration, SearchResult
         NameColumn nameColumn,
         QuantityColumn quantityColumn,
         UnitPriceColumn unitPriceColumn,
+        TotalColumn totalColumn,
         SearchResultConfiguration searchResultConfiguration,
         SaleFilter saleFilter,
         WorldColumn worldColumn,
@@ -42,7 +43,7 @@ public class SoldItemTable : RenderTable<SearchResultConfiguration, SearchResult
         : base(
             csvLoaderService,
             searchResultConfiguration,
-            [nameColumn, quantityColumn, unitPriceColumn, worldColumn, retainerColumn, soldAtColumn],
+            [nameColumn, quantityColumn, unitPriceColumn, totalColumn, worldColumn, retainerColumn, soldAtColumn],
             None | Resizable | Hideable | Sortable | RowBg | BordersInnerH | BordersOuterH | BordersInnerV | BordersOuterV | BordersH | BordersV | BordersInner | BordersOuter | Borders | ScrollX | ScrollY,
             "Sold Item Table",
             "SoldItemTable")
