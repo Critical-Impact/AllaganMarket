@@ -1,8 +1,12 @@
+using System.Globalization;
+
 using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Services;
 
 using DalaMock.Host.Mediator;
+
+using Dalamud.Game.Text;
 
 using ImGuiNET;
 
@@ -19,7 +23,7 @@ public class AverageSalePriceColumn(ImGuiService imGuiService, StringColumnFilte
 
     public override string HelpText { get; set; } = "The average sale price of this item.";
 
-    public override string Version { get; } = "1.0.0";
+    public override string Version { get; } = "1.0.1";
 
     public override string? RenderName { get; set; } = null;
 
@@ -33,9 +37,11 @@ public class AverageSalePriceColumn(ImGuiService imGuiService, StringColumnFilte
 
     public override string? CurrentValue(SearchResult item)
     {
+        NumberFormatInfo numberFormatInfo = new CultureInfo("en-US", false).NumberFormat;
+        numberFormatInfo.NumberDecimalDigits = 0;
         if (item.SaleSummaryItem != null)
         {
-            return ((int)(item.SaleSummaryItem.Earned / item.SaleSummaryItem.Quantity)).ToString();
+            return SeIconChar.Gil.ToIconString() + ((int)(item.SaleSummaryItem.Earned / item.SaleSummaryItem.Quantity)).ToString("n", numberFormatInfo);
         }
 
         return null;
