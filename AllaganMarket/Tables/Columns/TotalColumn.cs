@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Services;
@@ -31,23 +33,25 @@ public class TotalColumn(ImGuiService imGuiService, StringColumnFilter stringCol
 
     public override string HelpText { get; set; } = "The total amount of the sale item/sold item";
 
-    public override string Version { get; } = "1.0.0";
+    public override string Version { get; } = "1.0.1";
 
     public override string? CurrentValue(SearchResult item)
     {
+        NumberFormatInfo numberFormatInfo = new CultureInfo("en-US", false).NumberFormat;
+        numberFormatInfo.NumberDecimalDigits = 0;
         if (item.SaleItem != null)
         {
-            return item.SaleItem.Total.ToString();
+            return SeIconChar.Gil.ToIconString() + item.SaleItem.Total.ToString("n", numberFormatInfo);
         }
 
         if (item.SoldItem != null)
         {
-            return item.SoldItem.Total.ToString();
+            return SeIconChar.Gil.ToIconString() + item.SoldItem.Total.ToString("n", numberFormatInfo);
         }
 
         if (item.SaleSummaryItem != null)
         {
-            return item.SaleSummaryItem.Earned.ToString();
+            return SeIconChar.Gil.ToIconString() + item.SaleSummaryItem.Earned.ToString("n", numberFormatInfo);
         }
 
         return null;

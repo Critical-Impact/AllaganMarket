@@ -1,8 +1,11 @@
+using System.Globalization;
+
 using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Services;
 
 using DalaMock.Host.Mediator;
+using Dalamud.Game.Text;
 
 using ImGuiNET;
 
@@ -29,10 +32,12 @@ public class UnitPriceColumn(ImGuiService imGuiService, StringColumnFilter strin
 
     public override string HelpText { get; set; } = "The unit price of the item being sold.";
 
-    public override string Version { get; } = "1.0.0";
+    public override string Version { get; } = "1.0.1";
 
     public override string? CurrentValue(SearchResult item)
     {
-        return item.SoldItem?.UnitPrice.ToString() ?? item.SaleItem?.UnitPrice.ToString() ?? null;
+        NumberFormatInfo numberFormatInfo = new CultureInfo("en-US", false).NumberFormat;
+        numberFormatInfo.NumberDecimalDigits = 0;
+        return SeIconChar.Gil.ToIconString() + (item.SoldItem?.UnitPrice.ToString("n", numberFormatInfo) ?? item.SaleItem?.UnitPrice.ToString("n", numberFormatInfo) ?? null);
     }
 }

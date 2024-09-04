@@ -1,8 +1,12 @@
+using System.Globalization;
+
 using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Services;
 
 using DalaMock.Host.Mediator;
+
+using Dalamud.Game.Text;
 
 using ImGuiNET;
 
@@ -29,10 +33,15 @@ public class UndercutByColumn(ImGuiService imGuiService, StringColumnFilter stri
 
     public override string HelpText { get; set; } = "How much the item was undercut by.";
 
-    public override string Version { get; } = "1.0.0";
+    public override string Version { get; } = "1.0.1";
 
     public override string? CurrentValue(SearchResult item)
     {
-        return item.SaleItem?.UndercutBy.ToString() ?? string.Empty;
+        NumberFormatInfo numberFormatInfo = new CultureInfo("en-US", false).NumberFormat;
+        numberFormatInfo.NumberDecimalDigits = 0;
+        if (item.SaleItem?.UndercutBy != null)
+        {
+            return SeIconChar.Gil.ToIconString() + item.SaleItem?.UndercutBy?.ToString("n", numberFormatInfo);
+        } else { return string.Empty; }
     }
-}
+ }
