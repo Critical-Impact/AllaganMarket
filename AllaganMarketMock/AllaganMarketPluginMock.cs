@@ -1,5 +1,3 @@
-// Copyright (c) PlaceholderCompany. All rights reserved.
-
 using AllaganMarket;
 using AllaganMarket.Services;
 using AllaganMarket.Services.Interfaces;

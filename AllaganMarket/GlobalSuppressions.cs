@@ -1,5 +1,3 @@
-// Copyright (c) PlaceholderCompany. All rights reserved.
-
 using System.Diagnostics.CodeAnalysis;
 
 // General

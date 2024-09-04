@@ -40,7 +40,7 @@ public class CharacterMonitorService(
 
     public List<Character> GetRetainers(ulong character)
     {
-        return this.Characters.Where(c => c.Value.CharacterType == CharacterType.Retainer).Select(c => c.Value)
+        return this.Characters.Where(c => c.Value.CharacterType == CharacterType.Retainer && c.Value.OwnerId == character).Select(c => c.Value)
                    .ToList();
     }
 

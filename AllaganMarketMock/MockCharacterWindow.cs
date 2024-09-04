@@ -1,5 +1,3 @@
-// Copyright (c) PlaceholderCompany. All rights reserved.
-
 using AllaganMarket.Models;
 using AllaganMarket.Services;
 using AllaganMarket.Services.Interfaces;
@@ -40,7 +38,7 @@ public class MockCharacterWindow(
                              null))
                 {
                     if (ImGui.Selectable(
-                            character.Name,
+                            character.Name + "##" + character.CharacterId,
                             characterMonitorService.ActiveCharacterId == character.CharacterId))
                     {
                         mockClientState.LocalContentId = character.CharacterId;

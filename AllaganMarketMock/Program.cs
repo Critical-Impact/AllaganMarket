@@ -1,5 +1,3 @@
-// Copyright (c) PlaceholderCompany. All rights reserved.
-
 using Autofac;
 
 using DalaMock.Core.DI;

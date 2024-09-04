@@ -590,7 +590,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                         ImGui.SameLine();
                         var style = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
                         if (ImGui.ArrowButton(
-                                "world",
+                                "world_" + worldId,
                                 this.IsWorldExpanded(worldId) ? ImGuiDir.Down : ImGuiDir.Right))
                         {
                             this.ToggleWorldExpanded(worldId);
