@@ -50,6 +50,7 @@ public class MarketPriceUpdaterService(IGameInteropProvider gameInteropProvider,
     public void Dispose()
     {
         this.itemMarketBoardInfoHook?.Dispose();
+        this.itemRequestStartPacketDetourHook?.Dispose();
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -71,7 +72,7 @@ public class MarketPriceUpdaterService(IGameInteropProvider gameInteropProvider,
     {
         try
         {
-            this.MarketBoardItemRequestReceived?.Invoke(MarketBoardItemRequest.Read(a1));
+            this.MarketBoardItemRequestReceived?.Invoke(MarketBoardItemRequest.Read(packetRef));
         }
         catch (Exception ex)
         {

@@ -96,8 +96,6 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
 
     public uint UnitPrice { get; set; }
 
-    public uint? UndercutBy { get; set; }
-
     public DateTime ListedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
@@ -123,31 +121,6 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
     public bool IsEmpty()
     {
         return this.ItemId == 0;
-    }
-
-    public uint RecommendedUnitPrice(uint undercutBy = 5)
-    {
-        if (this.UndercutBy is null or 0)
-        {
-            return this.UnitPrice;
-        }
-
-        return this.UnitPrice - (this.UndercutBy ?? 0) - undercutBy;
-    }
-
-    public bool NeedsUpdate(int updatePeriodMinutes)
-    {
-        return DateTime.Now > this.UpdatedAt + TimeSpan.FromMinutes(updatePeriodMinutes);
-    }
-
-    public DateTime NextUpdateDate(int updatePeriodMinutes)
-    {
-        if (this.NeedsUpdate(updatePeriodMinutes))
-        {
-            return DateTime.Now;
-        }
-
-        return this.UpdatedAt + TimeSpan.FromMinutes(updatePeriodMinutes);
     }
 
     public string AsDebugString()
@@ -206,9 +179,6 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.IsHq = lineData[3] == "1";
         this.Quantity = Convert.ToUInt32(lineData[4], CultureInfo.InvariantCulture);
         this.UnitPrice = Convert.ToUInt32(lineData[5], CultureInfo.InvariantCulture);
-        this.UndercutBy = lineData[6] == string.Empty
-                              ? null
-                              : Convert.ToUInt32(lineData[6], CultureInfo.InvariantCulture);
         this.ListedAt = DateTime.Parse(lineData[7], CultureInfo.InvariantCulture);
         this.UpdatedAt = DateTime.Parse(lineData[8], CultureInfo.InvariantCulture);
     }
@@ -223,7 +193,7 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
             this.IsHq ? "1" : "0",
             this.Quantity.ToString(CultureInfo.InvariantCulture),
             this.UnitPrice.ToString(CultureInfo.InvariantCulture),
-            this.UndercutBy?.ToString(CultureInfo.InvariantCulture) ?? string.Empty,
+            string.Empty,
             this.ListedAt.ToString(CultureInfo.InvariantCulture),
             this.UpdatedAt.ToString(CultureInfo.InvariantCulture)
         ];

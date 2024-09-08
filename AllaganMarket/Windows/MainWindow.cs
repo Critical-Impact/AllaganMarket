@@ -30,12 +30,12 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 
-using Humanizer;
-
 using ImGuiNET;
 
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
+
+using TimeUnit = Humanizer.Localisation.TimeUnit;
 
 namespace AllaganMarket.Windows;
 
@@ -61,6 +61,8 @@ public class MainWindow : ExtendedWindow, IDisposable
     private readonly SaleSummaryGroupFormField saleSummaryGroupFormField;
     private readonly SaleSummaryDateRangeFormField saleSummaryDateRangeFormField;
     private readonly SaleSummaryTimeSpanFormField saleSummaryTimeSpanFormField;
+    private readonly UndercutService undercutService;
+    private readonly TimeSpanHumanizerCache humanizerCache;
     private readonly ExcelSheet<World> worldSheet;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> saleQuickSearchWidget;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> soldQuickSearchWidget;
@@ -95,7 +97,9 @@ public class MainWindow : ExtendedWindow, IDisposable
         ViewModeSetting viewModeSetting,
         SaleSummaryGroupFormField saleSummaryGroupFormField,
         SaleSummaryDateRangeFormField saleSummaryDateRangeFormField,
-        SaleSummaryTimeSpanFormField saleSummaryTimeSpanFormField)
+        SaleSummaryTimeSpanFormField saleSummaryTimeSpanFormField,
+        UndercutService undercutService,
+        TimeSpanHumanizerCache humanizerCache)
         : base(mediatorService, imGuiService, "Allagan Market##AllaganMarkets")
     {
         this.pluginLog = pluginLog;
@@ -116,6 +120,8 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.saleSummaryGroupFormField = saleSummaryGroupFormField;
         this.saleSummaryDateRangeFormField = saleSummaryDateRangeFormField;
         this.saleSummaryTimeSpanFormField = saleSummaryTimeSpanFormField;
+        this.undercutService = undercutService;
+        this.humanizerCache = humanizerCache;
         this.Configuration = configuration;
         this.TextureProvider = textureProvider;
         this.ConfigWindow = configWindow;
@@ -220,7 +226,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                     var saleItems = this.saleItemTable.GetFilteredItems(this.saleItemSearchConfiguration);
                     foreach (var saleItem in saleItems)
                     {
-                        saleItem.SaleItem!.UpdatedAt = DateTime.Now;
+                        this.undercutService.InsertFakeMarketPriceCache(saleItem.SaleItem!);
                     }
                 }
 
@@ -911,7 +917,7 @@ public class MainWindow : ExtendedWindow, IDisposable
             var total = 0;
             if (retainerItems.Count == 0)
             {
-                ImGui.Text("No sales yet, get out there and make some gil!");
+                ImGui.Text("No sales tracked yet, please visit a retainer to perform an initial scan on their sales.");
             }
 
             for (var index = 0; index < retainerItems.Count; index++)
@@ -1007,6 +1013,12 @@ public class MainWindow : ExtendedWindow, IDisposable
                         return;
                     }
 
+                    var lastUpdated = DateTime.Now - (this.undercutService.GetLastUpdateTime(saleItem) ?? saleItem.UpdatedAt);
+                    var lastUpdatedHumanized = this.humanizerCache.GetHumanizedTimeSpan(lastUpdated);
+
+                    var listedAt = DateTime.Now - saleItem.ListedAt;
+                    var listedAtHumanized = this.humanizerCache.GetHumanizedTimeSpan(listedAt);
+
                     var retainerWorld = this.worldSheet.GetRow(character.WorldId)!;
                     using (var iconChild = ImRaii.Child(
                                $"icon_{index}",
@@ -1033,7 +1045,8 @@ public class MainWindow : ExtendedWindow, IDisposable
                     {
                         if (infoChild)
                         {
-                            if (saleItem.UndercutBy != null && saleItem.UndercutBy != 0)
+                            var undercutBy = this.undercutService.GetUndercutBy(saleItem);
+                            if (undercutBy != null && undercutBy != 0)
                             {
                                 var startPosition = ImGui.GetCursorPos();
                                 ImGui.SetCursorPosX(ImGui.GetWindowContentRegionMax().X - 16);
@@ -1044,7 +1057,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                                     new Vector2(16, 16));
                                 undercutHovered = ImGui.IsItemHovered();
                                 ImGuiService.HoverTooltip(
-                                    $"You have been undercut on this item by {SeIconChar.Gil.ToIconString()} {saleItem.UndercutBy}");
+                                    $"You have been undercut on this item by {SeIconChar.Gil.ToIconString()} {undercutBy}");
                                 ImGui.SetCursorPos(startPosition);
                             }
 
@@ -1052,15 +1065,16 @@ public class MainWindow : ExtendedWindow, IDisposable
                             ImGui.PushTextWrapPos();
                             ImGui.Text(
                                 $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
-                            ImGui.Text($"Listed: {saleItem.ListedAt.Humanize(false)}");
+                            ImGui.Text($"Listed: {listedAtHumanized}");
 
                             using (ImRaii.PushColor(
                                        ImGuiCol.Text,
                                        ImGuiColors.DalamudYellow,
-                                       saleItem.NeedsUpdate(
+                                       this.undercutService.NeedsUpdate(
+                                           saleItem,
                                            this.itemUpdatePeriodSetting.CurrentValue(this.Configuration))))
                             {
-                                ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize(false)}");
+                                ImGui.Text($"Updated: {lastUpdatedHumanized}");
                             }
 
                             ImGui.PopTextWrapPos();
@@ -1077,8 +1091,25 @@ public class MainWindow : ExtendedWindow, IDisposable
                             ImGui.Text($"{retainerWorld.Name.AsReadOnly().ExtractText()}");
                             ImGui.Text(
                                 $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
-                            ImGui.Text($"Listed: {saleItem.ListedAt.Humanize(false)}");
-                            ImGui.Text($"Updated: {saleItem.UpdatedAt.Humanize(false)}");
+                            ImGui.Text($"Listed: {listedAtHumanized}");
+                            ImGui.Text($"Updated: {lastUpdatedHumanized}");
+                            var marketPriceNq = this.undercutService.GetMarketPriceCache(retainerWorld.RowId, saleItem.ItemId, false);
+                            var marketPriceHq = this.undercutService.GetMarketPriceCache(retainerWorld.RowId, saleItem.ItemId, true);
+                            if (marketPriceNq != null || marketPriceHq != null)
+                            {
+                                ImGui.Separator();
+                                ImGui.Text("Latest Data:");
+                                ImGui.Text($"Source: {marketPriceNq?.GetFormattedType() ?? marketPriceHq?.GetFormattedType()}");
+                                if (marketPriceNq != null)
+                                {
+                                    ImGui.Text($"Unit Price NQ: {marketPriceNq?.UnitCost}");
+                                }
+
+                                if (marketPriceHq != null)
+                                {
+                                    ImGui.Text($"Unit Price HQ: {marketPriceHq?.UnitCost}");
+                                }
+                            }
                         }
                     }
                 }
@@ -1100,7 +1131,37 @@ public class MainWindow : ExtendedWindow, IDisposable
 
                 if (ImGui.Selectable("Mark as Updated"))
                 {
-                    saleItem.UpdatedAt = DateTime.Now;
+                    this.undercutService.InsertFakeMarketPriceCache(saleItem);
+                }
+
+                ImGui.NewLine();
+                ImGui.Text("Undercut Settings:");
+                ImGui.Separator();
+
+
+                if (ImGui.Selectable("Use Default", this.Configuration.GetUndercutComparison(saleItem.ItemId) == null))
+                {
+                    this.Configuration.RemoveUndercutComparison(saleItem.ItemId);
+                }
+
+                if (ImGui.Selectable("Any", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.Any))
+                {
+                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.Any);
+                }
+
+                if (ImGui.Selectable("NQ Only", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.NqOnly))
+                {
+                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.NqOnly);
+                }
+
+                if (ImGui.Selectable("HQ Only", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.HqOnly))
+                {
+                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.HqOnly);
+                }
+
+                if (ImGui.Selectable("Matching Quality", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.MatchingQuality))
+                {
+                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.MatchingQuality);
                 }
             }
         }

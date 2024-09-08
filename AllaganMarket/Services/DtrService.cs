@@ -21,10 +21,12 @@ public class DtrService(
     SaleTrackerService saleTrackerService,
     MediatorService mediatorService,
     AddDtrBarEntrySetting addDtrBarEntrySetting,
+    UndercutService undercutService,
     Configuration configuration,
     IPluginLog pluginLog) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
 {
     private readonly MediatorService mediatorService = mediatorService;
+    private readonly UndercutService undercutService = undercutService;
     private readonly string barTitle = "Allagan Market(Undercuts)";
     private IDtrBarEntry? dtrBarEntry;
 
@@ -74,7 +76,7 @@ public class DtrService(
     {
         if (this.dtrBarEntry != null)
         {
-            var underCuts = saleTrackerService.GetSales(null, null).Count(c => c.UndercutBy != null);
+            var underCuts = saleTrackerService.GetSales(null, null).Count(c => this.undercutService.IsItemUndercut(c) ?? false);
             this.dtrBarEntry.Shown = underCuts != 0;
             var text = "undercuts";
             if (underCuts == 1)

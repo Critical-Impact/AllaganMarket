@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 
 using AllaganMarket.Mediator;
@@ -14,6 +15,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Common.Math;
 
 using ImGuiNET;
 
@@ -34,6 +36,8 @@ public class RetainerSellOverlayWindow : OverlayWindow
     private readonly IInventoryService inventoryService;
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
     private readonly RetainerMarketService retainerMarketService;
+    private readonly UndercutService undercutService;
+    private readonly UndercutBySetting undercutBySetting;
 
     public RetainerSellOverlayWindow(
         IAddonLifecycle addonLifecycle,
@@ -50,7 +54,9 @@ public class RetainerSellOverlayWindow : OverlayWindow
         RetainerOverlayCollapsedSetting overlayCollapsedSetting,
         IInventoryService inventoryService,
         ShowRetainerOverlaySetting retainerOverlaySetting,
-        RetainerMarketService retainerMarketService)
+        RetainerMarketService retainerMarketService,
+        UndercutService undercutService,
+        UndercutBySetting undercutBySetting)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer Sell Overlay")
     {
         this.characterMonitorService = characterMonitorService;
@@ -63,6 +69,8 @@ public class RetainerSellOverlayWindow : OverlayWindow
         this.inventoryService = inventoryService;
         this.retainerOverlaySetting = retainerOverlaySetting;
         this.retainerMarketService = retainerMarketService;
+        this.undercutService = undercutService;
+        this.undercutBySetting = undercutBySetting;
         this.AttachAddon("RetainerSell", AttachPosition.Right);
         this.Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
         this.RespectCloseHotkey = false;
@@ -83,6 +91,16 @@ public class RetainerSellOverlayWindow : OverlayWindow
             return selectedItem == null ? 0 : selectedItem->ItemId;
         }
     }
+
+    public unsafe InventoryItem.ItemFlags? CurrentItemFlags
+    {
+        get
+        {
+            var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.DamagedGear, 0);
+            return selectedItem == null ? null : selectedItem->Flags;
+        }
+    }
+
 
     public Item? CurrentItem => this.itemSheet.GetRow(this.CurrentItemId);
 
@@ -109,6 +127,11 @@ public class RetainerSellOverlayWindow : OverlayWindow
         var collapsed = this.IsCollapsed;
 
         var currentCursorPosX = ImGui.GetCursorPosX();
+
+        this.SizeConstraints = new WindowSizeConstraints()
+        {
+            MaximumSize = new Vector2(340, 800) * ImGui.GetIO().FontGlobalScale,
+        };
 
         if (collapsed && ImGuiService.DrawIconButton(this.font, FontAwesomeIcon.ChevronRight, ref currentCursorPosX))
         {
@@ -170,10 +193,25 @@ public class RetainerSellOverlayWindow : OverlayWindow
         var currentSaleItem = this.CurrentSaleItem;
         if (this.clientState.IsLoggedIn && activeRetainer != null && currentItem != null)
         {
+            bool? isHq = null;
+            switch (this.CurrentItemFlags)
+            {
+                case InventoryItem.ItemFlags.None:
+                    isHq = false;
+                    break;
+                case InventoryItem.ItemFlags.HighQuality:
+                    isHq = true;
+                    break;
+                case null:
+                    break;
+            }
+
+            var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.RowId, isHq ?? false);
+            var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.RowId);
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))
             {
-                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 120);
-                ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.None, 150);
+                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, 120 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthFixed, 200 * ImGui.GetIO().FontGlobalScale);
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
@@ -185,19 +223,20 @@ public class RetainerSellOverlayWindow : OverlayWindow
                 ImGui.TableNextColumn();
                 ImGui.Text("Rec. Unit Price: ");
                 ImGui.TableNextColumn();
-                ImGui.Text($"{currentSaleItem?.RecommendedUnitPrice().ToString() ?? "Unknown"}");
+                var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
+                ImGui.Text($"{recommendedUnitPrice?.ToString() ?? "No Data"}");
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 ImGui.Text("Updated At: ");
                 ImGui.TableNextColumn();
-                ImGui.Text($"{currentSaleItem?.UpdatedAt.ToString(CultureInfo.CurrentCulture) ?? "Unknown"}");
+                ImGui.Text($"{lastUpdated?.ToString(CultureInfo.CurrentCulture) ?? "No Data"}");
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 ImGui.Text("Listed At: ");
                 ImGui.TableNextColumn();
-                ImGui.Text($"{currentSaleItem?.ListedAt.ToString(CultureInfo.CurrentCulture) ?? "Unknown"}");
+                ImGui.Text($"{currentSaleItem?.ListedAt.ToString(CultureInfo.CurrentCulture) ?? "N/A"}");
             }
         }
         else

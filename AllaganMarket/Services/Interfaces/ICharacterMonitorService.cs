@@ -58,4 +58,12 @@ public interface ICharacterMonitorService : IHostedService
     /// <param name="characterId">the id of the retainer/character.</param>
     /// <returns>if the character is known.</returns>
     public bool IsCharacterKnown(ulong characterId);
+
+    /// <summary>
+    /// Is the character known to the character monitor service.
+    /// </summary>
+    /// <param name="characterName">The name of the character</param>
+    /// <param name="worldId">The world the character is from</param>
+    /// <returns>if the character is known.</returns>
+    public bool IsCharacterKnown(string characterName, uint worldId);
 }

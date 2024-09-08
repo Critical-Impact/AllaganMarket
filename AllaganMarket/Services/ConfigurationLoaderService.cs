@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 using AllaganLib.Data.Service;
 
+using AllaganMarket.Extensions;
 using AllaganMarket.Models;
 
 using Dalamud.Plugin;
@@ -71,7 +72,7 @@ public class ConfigurationLoaderService(
             var saleItems = csvLoaderService.LoadCsv<SaleItem>(
                 Path.Combine(pluginInterface.GetPluginConfigDirectory(), "SaleItems.csv"),
                 out var failedLines);
-            configuration.SaleItems = saleItems.GroupBy(c => c.RetainerId).ToDictionary(c => c.Key, c => c.ToArray());
+            configuration.SaleItems = saleItems.GroupBy(c => c.RetainerId).ToDictionary(c => c.Key, c => c.ToArray().FillList(c.Key));
             foreach (var failedLine in failedLines)
             {
                 pluginLog.Error($"Failed to parse line {failedLine}");
@@ -93,6 +94,19 @@ public class ConfigurationLoaderService(
         catch (FileNotFoundException)
         {
         }
+
+        try
+        {
+            configuration.MarketPriceCache = csvLoaderService
+                                      .LoadCsv<MarketPriceCache>(
+                                          Path.Combine(
+                                              pluginInterface.GetPluginConfigDirectory(),
+                                              "MarketPriceCache.csv"),
+                                          out _).GroupBy(c => c.WorldId).ToDictionary(c => c.Key, c => c.ToDictionary(d => (d.ItemId, d.IsHq), e => e));
+        }
+        catch (FileNotFoundException)
+        {
+        }
     }
 
     private void SaveCsvs()
@@ -104,5 +118,8 @@ public class ConfigurationLoaderService(
         csvLoaderService.ToCsv(
             loadedConfiguration.Sales.SelectMany(c => c.Value).ToList(),
             Path.Combine(pluginInterface.GetPluginConfigDirectory(), "SoldItems.csv"));
+        csvLoaderService.ToCsv(
+            loadedConfiguration.MarketPriceCache.SelectMany(c => c.Value.Select(d => d.Value)).ToList(),
+            Path.Combine(pluginInterface.GetPluginConfigDirectory(), "MarketPriceCache.csv"));
     }
 }

@@ -51,7 +51,11 @@ public class SaleTrackerService(
 
     public delegate void SnapshotCreatedDelegate();
 
+    public delegate void ItemSoldDelegate(SaleItem saleItem, SoldItem soldItem);
+
     public event SnapshotCreatedDelegate? SnapshotCreated;
+
+    public event ItemSoldDelegate? ItemSold;
 
     public IClientState ClientState { get; } = clientState;
 
@@ -345,12 +349,10 @@ public class SaleTrackerService(
 
                         value.Add(newSale);
 
-                        // TODO: make message optional
                         var item = this.itemSheet.GetRow(newSale.ItemId);
                         if (item != null)
                         {
-                            chatGui.Print(
-                                $"You sold {newSale.Quantity} {item.Name.AsReadOnly().ExtractText()} for {newSale.TotalIncTax.ToString("C", gilNumberFormat)}");
+                            this.ItemSold?.Invoke(previousItem, newSale);
                         }
 
                         this.PluginLog.Verbose("Sale created!");

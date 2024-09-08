@@ -6,6 +6,7 @@ using AllaganLib.Interface.Grid;
 
 using AllaganMarket.Filtering;
 using AllaganMarket.Mediator;
+using AllaganMarket.Services;
 using AllaganMarket.Tables.Columns;
 
 using DalaMock.Host.Mediator;
@@ -24,6 +25,7 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
     private readonly ICommandManager commandManager;
     private readonly ExcelSheet<Item> itemSheet;
     private readonly SaleFilter saleFilter;
+    private readonly UndercutService undercutService;
 
     public SaleItemTable(
         CsvLoaderService csvLoaderService,
@@ -38,7 +40,8 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
         RetainerColumn retainerColumn,
         UndercutByColumn undercutByColumn,
         ListedAtColumn listedAtColumn,
-        UpdatedAtColumn updatedAtColumn)
+        UpdatedAtColumn updatedAtColumn,
+        UndercutService undercutService)
         : base(
             csvLoaderService,
             searchResultConfiguration,
@@ -59,6 +62,7 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
         this.commandManager = commandManager;
         this.itemSheet = itemSheet;
         this.saleFilter = saleFilter;
+        this.undercutService = undercutService;
         this.ShowFilterRow = true;
     }
 
@@ -81,7 +85,7 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
 
         if (ImGui.Selectable("Mark as Updated"))
         {
-            arg.SaleItem!.UpdatedAt = DateTime.Now;
+            this.undercutService.InsertFakeMarketPriceCache(arg.SaleItem!);
         }
 
         return messages;

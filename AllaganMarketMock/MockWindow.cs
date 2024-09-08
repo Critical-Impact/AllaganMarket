@@ -2,6 +2,7 @@ using AllaganMarket.Mediator;
 using AllaganMarket.Services;
 using AllaganMarket.Windows;
 
+using DalaMock.Core.Mocks;
 using DalaMock.Host.Mediator;
 
 using ImGuiNET;
@@ -10,9 +11,12 @@ namespace AllaganMarketMock;
 
 public class MockWindow : ExtendedWindow
 {
-    public MockWindow(MediatorService mediatorService, ImGuiService imGuiService)
+    private readonly MockClientState mockClientState;
+
+    public MockWindow(MediatorService mediatorService, ImGuiService imGuiService, MockClientState mockClientState)
         : base(mediatorService, imGuiService, "Mock Window")
     {
+        this.mockClientState = mockClientState;
         this.IsOpen = true;
     }
 

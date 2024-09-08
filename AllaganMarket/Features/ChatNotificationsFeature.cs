@@ -11,7 +11,9 @@ public class ChatNotificationsFeature(IEnumerable<IFormField<Configuration>> set
     [
         typeof(ChatNotifyUndercutSetting),
         typeof(ChatNotifyUndercutLoginSetting),
-        typeof(ChatNotifyUndercutLoginCharacterSetting)
+        typeof(ChatNotifySoldItemSetting),
+        typeof(ChatNotifyUndercutCharacterSetting),
+        typeof(ChatNotifyUndercutGroupingSetting),
     ],
     settings)
 {

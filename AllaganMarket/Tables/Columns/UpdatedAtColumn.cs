@@ -2,17 +2,22 @@ using System.Globalization;
 
 using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
-using AllaganLib.Interface.Services;
+
+using AllaganMarket.Services;
 
 using DalaMock.Host.Mediator;
 
 using ImGuiNET;
 
+using ImGuiService = AllaganLib.Interface.Services.ImGuiService;
+
 namespace AllaganMarket.Tables.Columns;
 
-public class UpdatedAtColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+public class UpdatedAtColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter, UndercutService undercutService)
     : DateTimeColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
 {
+    private readonly UndercutService undercutService = undercutService;
+
     public override string? DefaultValue { get; set; } = null;
 
     public override string Key { get; set; } = "UpdatedAt";
@@ -41,6 +46,6 @@ public class UpdatedAtColumn(ImGuiService imGuiService, StringColumnFilter strin
             return null;
         }
 
-        return item.SaleItem?.UpdatedAt.ToString(CultureInfo.CurrentCulture) ?? null;
+        return item.SaleItem != null ? this.undercutService.GetLastUpdateTime(item.SaleItem)?.ToString(CultureInfo.CurrentCulture) ?? null : null;
     }
 }

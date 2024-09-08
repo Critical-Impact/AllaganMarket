@@ -14,6 +14,7 @@ public class SettingTypeConfiguration
         {
             Chat => "Chat",
             General => "General",
+            Undercutting => "Undercutting",
             SettingType.Features => "Features",
             Overlays => "Overlays",
             _ => settingType.ToString(),
@@ -22,6 +23,6 @@ public class SettingTypeConfiguration
 
     public List<SettingType> GetCategoryOrder()
     {
-        return this.settingTypes ??= [General, SettingType.Features, Overlays, Chat];
+        return this.settingTypes ??= [General, Undercutting, SettingType.Features, Overlays, Chat];
     }
 }

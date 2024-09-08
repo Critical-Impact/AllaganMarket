@@ -44,7 +44,7 @@ public class MarketBoardItemRequest
     /// <returns>An object representing the data read.</returns>
     public static unsafe MarketBoardItemRequest Read(nint dataPtr)
     {
-        using var stream = new UnmanagedMemoryStream((byte*)dataPtr.ToPointer(), 1544);
+        using var stream = new UnmanagedMemoryStream((byte*)dataPtr, 1544);
         using var reader = new BinaryReader(stream);
 
         var output = new MarketBoardItemRequest

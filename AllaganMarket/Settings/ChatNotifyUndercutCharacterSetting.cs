@@ -6,7 +6,7 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class ChatNotifyUndercutLoginCharacterSetting(ImGuiService imGuiService)
+public class ChatNotifyUndercutCharacterSetting(ImGuiService imGuiService)
     : EnumFormField<ChatNotifyCharacterEnum, Configuration>(imGuiService), ISetting
 {
     public override Enum DefaultValue { get; set; } = ChatNotifyCharacterEnum.AllCharacters;

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Numerics;
 
 using AllaganMarket.Mediator;
 using AllaganMarket.Services;
@@ -30,6 +31,7 @@ public class RetainerListOverlayWindow : OverlayWindow
     private readonly IFont font;
     private readonly RetainerOverlayCollapsedSetting overlayCollapsedSetting;
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
+    private readonly UndercutService undercutService;
     private bool showAllRetainers;
 
     public RetainerListOverlayWindow(
@@ -45,7 +47,8 @@ public class RetainerListOverlayWindow : OverlayWindow
         ItemUpdatePeriodSetting updatePeriodSetting,
         IFont font,
         RetainerOverlayCollapsedSetting overlayCollapsedSetting,
-        ShowRetainerOverlaySetting retainerOverlaySetting)
+        ShowRetainerOverlaySetting retainerOverlaySetting,
+        UndercutService undercutService)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer List Overlay")
     {
         this.characterMonitorService = characterMonitorService;
@@ -56,6 +59,7 @@ public class RetainerListOverlayWindow : OverlayWindow
         this.font = font;
         this.overlayCollapsedSetting = overlayCollapsedSetting;
         this.retainerOverlaySetting = retainerOverlaySetting;
+        this.undercutService = undercutService;
         this.AttachAddon("RetainerList", AttachPosition.Right);
         this.Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize |
                      ImGuiWindowFlags.NoSavedSettings;
@@ -89,6 +93,11 @@ public class RetainerListOverlayWindow : OverlayWindow
         var collapsed = this.IsCollapsed;
 
         var currentCursorPosX = ImGui.GetCursorPosX();
+
+        this.SizeConstraints = new WindowSizeConstraints()
+        {
+            MaximumSize = new Vector2(360, 800) * ImGui.GetIO().FontGlobalScale,
+        };
 
         if (collapsed && ImGuiService.DrawIconButton(this.font, FontAwesomeIcon.ChevronRight, ref currentCursorPosX))
         {
@@ -159,10 +168,10 @@ public class RetainerListOverlayWindow : OverlayWindow
 
             using (ImRaii.Table("RetainerList", 4, ImGuiTableFlags.SizingFixedFit))
             {
-                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.None, 100 * ImGui.GetIO().FontGlobalScale);
-                ImGui.TableSetupColumn("Selling", ImGuiTableColumnFlags.None, 50 * ImGui.GetIO().FontGlobalScale);
-                ImGui.TableSetupColumn("Undercut", ImGuiTableColumnFlags.None, 70 * ImGui.GetIO().FontGlobalScale);
-                ImGui.TableSetupColumn("Last Update", ImGuiTableColumnFlags.None, 120 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, 100 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Selling", ImGuiTableColumnFlags.WidthFixed, 50 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Undercut", ImGuiTableColumnFlags.WidthFixed, 70 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Last Update", ImGuiTableColumnFlags.WidthFixed, 130 * ImGui.GetIO().FontGlobalScale);
                 ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
                 ImGui.TableNextColumn();
                 ImGui.Text("Name");
@@ -171,16 +180,16 @@ public class RetainerListOverlayWindow : OverlayWindow
                 ImGui.TableNextColumn();
                 ImGui.Text("Undercut?");
                 ImGui.TableNextColumn();
-                ImGui.Text("Needs Update?");
+                ImGui.Text("Stale Pricing?");
                 foreach (var retainer in retainers)
                 {
                     var isUnderCut = this.saleTrackerService.SaleItems[retainer.CharacterId]
-                                         .Any(c => c.UndercutBy != null);
+                                         .Any(c => this.undercutService.IsItemUndercut(c) ?? false);
                     var needsUpdate = this.saleTrackerService.SaleItems[retainer.CharacterId]
-                                          .Any(c => !c.IsEmpty() && c.NeedsUpdate(interval));
+                                          .Any(c => !c.IsEmpty() && this.undercutService.NeedsUpdate(c, interval));
                     var nextUpdate = this.saleTrackerService.SaleItems[retainer.CharacterId]
                                          .Where(c => !c.IsEmpty()).DefaultIfEmpty()
-                                         .Min(c => c?.NextUpdateDate(interval));
+                                         .Min(c => c == null ? null : (DateTime?)this.undercutService.NextUpdateDate(c, interval));
                     var sellingCount = this.saleTrackerService.SaleItems[retainer.CharacterId].Count(c => !c.IsEmpty());
                     if (!isUnderCut && !needsUpdate && !this.showAllRetainers)
                     {

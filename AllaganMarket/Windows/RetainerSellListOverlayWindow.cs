@@ -14,6 +14,8 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 
+using FFXIVClientStructs.FFXIV.Common.Math;
+
 using ImGuiNET;
 
 using Lumina.Excel;
@@ -33,6 +35,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
     private readonly RetainerOverlayCollapsedSetting overlayCollapsedSetting;
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
     private readonly RetainerMarketService retainerMarketService;
+    private readonly UndercutService undercutService;
     private bool showAllItems;
 
     public RetainerSellListOverlayWindow(
@@ -50,7 +53,8 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         ExcelSheet<Item> itemSheet,
         RetainerOverlayCollapsedSetting overlayCollapsedSetting,
         ShowRetainerOverlaySetting retainerOverlaySetting,
-        RetainerMarketService retainerMarketService)
+        RetainerMarketService retainerMarketService,
+        UndercutService undercutService)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer Sell List Overlay")
     {
         this.characterMonitorService = characterMonitorService;
@@ -63,6 +67,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         this.overlayCollapsedSetting = overlayCollapsedSetting;
         this.retainerOverlaySetting = retainerOverlaySetting;
         this.retainerMarketService = retainerMarketService;
+        this.undercutService = undercutService;
         this.AttachAddon("RetainerSellList", AttachPosition.Right);
         this.Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
         this.RespectCloseHotkey = false;
@@ -94,6 +99,11 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         var collapsed = this.IsCollapsed;
 
         var currentCursorPosX = ImGui.GetCursorPosX();
+
+        this.SizeConstraints = new WindowSizeConstraints()
+        {
+            MaximumSize = new Vector2(450, 800) * ImGui.GetIO().FontGlobalScale,
+        };
 
         if (collapsed && ImGuiService.DrawIconButton(this.font, FontAwesomeIcon.ChevronRight, ref currentCursorPosX))
         {
@@ -173,11 +183,11 @@ public class RetainerSellListOverlayWindow : OverlayWindow
 
             using (ImRaii.Table("ItemList", 5, ImGuiTableFlags.SizingFixedFit))
             {
-                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 100);
-                ImGui.TableSetupColumn("Slot", ImGuiTableColumnFlags.None, 40);
-                ImGui.TableSetupColumn("Rec. Price", ImGuiTableColumnFlags.None, 80);
-                ImGui.TableSetupColumn("Undercut", ImGuiTableColumnFlags.None, 70);
-                ImGui.TableSetupColumn("Needs Update?", ImGuiTableColumnFlags.None, 100);
+                ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthStretch, 140 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Slot", ImGuiTableColumnFlags.WidthFixed, 40 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Rec. Price", ImGuiTableColumnFlags.WidthFixed, 80 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Undercut", ImGuiTableColumnFlags.WidthFixed, 70 * ImGui.GetIO().FontGlobalScale);
+                ImGui.TableSetupColumn("Stale Pricing?", ImGuiTableColumnFlags.WidthFixed, 110 * ImGui.GetIO().FontGlobalScale);
                 ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
                 ImGui.TableNextColumn();
                 ImGui.Text("Name");
@@ -188,18 +198,20 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                 ImGui.TableNextColumn();
                 ImGui.Text("Undercut?");
                 ImGui.TableNextColumn();
-                ImGui.Text("Needs Update?");
+                ImGui.Text("Stale Pricing?");
                 if (saleItems != null)
                 {
                     for (var index = 0; index < saleItems.Count; index++)
                     {
                         var saleItem = saleItems[index];
-                        var isUnderCut = saleItem.UndercutBy != null;
-                        var needsUpdate = saleItem.NeedsUpdate(interval);
+                        var isUnderCut = this.undercutService.IsItemUndercut(saleItem) ?? false;
+                        var needsUpdate = this.undercutService.NeedsUpdate(saleItem, interval);
                         if (!isUnderCut && !needsUpdate && !this.showAllItems)
                         {
                             continue;
                         }
+
+                        var marketPriceCache = this.undercutService.GetRecommendedUnitPrice(saleItem);
 
                         itemsToCheck = true;
                         ImGui.TableNextRow();
@@ -224,7 +236,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                         ImGui.PopTextWrapPos();
 
                         ImGui.TableNextColumn();
-                        ImGui.Text(saleItem.RecommendedUnitPrice().ToString());
+                        ImGui.Text(marketPriceCache?.ToString() ?? "No Data");
 
                         ImGui.TableNextColumn();
                         ImGui.Text(saleItem.IsEmpty() ? "N/A" : isUnderCut ? "Yes" : "No");

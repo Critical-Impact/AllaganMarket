@@ -69,16 +69,6 @@ public class SaleFilter(
         }
     }
 
-    public bool? NeedUpdating
-    {
-        get => this.needUpdating;
-        set
-        {
-            this.needsRefresh = true;
-            this.needUpdating = value;
-        }
-    }
-
     public void Clear()
     {
         this.characterId = null;
@@ -162,16 +152,6 @@ public class SaleFilter(
         if (this.ShowEmpty != true)
         {
             sales = sales.Where(c => !c.IsEmpty());
-        }
-
-        if (this.NeedUpdating != null)
-        {
-            sales = sales.Where(
-                c =>
-                {
-                    var needsUpdate = c.NeedsUpdate(itemUpdatePeriodSetting.CurrentValue(configuration));
-                    return (needsUpdate && this.NeedUpdating.Value) || (!needsUpdate && this.NeedUpdating.Value);
-                });
         }
 
         sales = sales.Where(c => characterMonitorService.IsCharacterKnown(c.RetainerId));

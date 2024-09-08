@@ -10,6 +10,7 @@ using AllaganLib.Shared.Extensions;
 using AllaganMarket.Mediator;
 using AllaganMarket.Services;
 using AllaganMarket.Settings;
+using AllaganMarket.Settings.Layout;
 
 using DalaMock.Host.Mediator;
 
@@ -28,6 +29,7 @@ public class ConfigWindow : ExtendedWindow, IDisposable
     private readonly VerticalSplitter verticalSplitter;
     private readonly List<IGrouping<SettingType, ISetting>> settings;
     private SettingType currentSettingType;
+    private readonly Dictionary<SettingType, SettingPage> settingPages;
 
     public ConfigWindow(
         MediatorService mediatorService,
@@ -35,7 +37,8 @@ public class ConfigWindow : ExtendedWindow, IDisposable
         Configuration configuration,
         IEnumerable<ISetting> settings,
         IConfigurationWizardService<Configuration> configurationWizardService,
-        SettingTypeConfiguration settingTypeConfiguration)
+        SettingTypeConfiguration settingTypeConfiguration,
+        IEnumerable<SettingPage> settingPages)
         : base(mediatorService, imGuiService, "Allagan Market - Configuration")
     {
         this.SizeConstraints = new WindowSizeConstraints
@@ -49,6 +52,7 @@ public class ConfigWindow : ExtendedWindow, IDisposable
         this.configuration = configuration;
         this.configurationWizardService = configurationWizardService;
         this.settingTypeConfiguration = settingTypeConfiguration;
+        this.settingPages = settingPages.ToDictionary(c => c.SettingType, c => c);
         this.settings =
             [.. settings.GroupBy(c => c.Type).OrderBy(c => settingTypeConfiguration.GetCategoryOrder().IndexOf(c.Key))];
         this.Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.MenuBar;
@@ -140,9 +144,16 @@ public class ConfigWindow : ExtendedWindow, IDisposable
                 {
                     if (group.Key == this.currentSettingType)
                     {
-                        foreach (var setting in group)
+                        if (this.settingPages.ContainsKey(group.Key))
                         {
-                            setting.Draw(this.configuration);
+                            this.settingPages[group.Key].Draw(this.configuration);
+                        }
+                        else
+                        {
+                            foreach (var setting in group)
+                            {
+                                setting.Draw(this.configuration);
+                            }
                         }
                     }
                 }

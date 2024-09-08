@@ -14,6 +14,7 @@ using AllaganMarket.Models;
 using AllaganMarket.Services;
 using AllaganMarket.Services.Interfaces;
 using AllaganMarket.Settings;
+using AllaganMarket.Settings.Layout;
 using AllaganMarket.Tables;
 using AllaganMarket.Tables.Fields;
 using AllaganMarket.Windows;
@@ -110,6 +111,11 @@ public class AllaganMarketPlugin : HostedPlugin
                         .AsSelf()
                         .AsImplementedInterfaces();
 
+        containerBuilder.RegisterAssemblyTypes(dataAccess)
+                        .Where(t => t.Name.EndsWith("SettingLayout"))
+                        .AsSelf()
+                        .As<SettingPage>();
+
         var interfacesAssembly = typeof(StringColumnFilter).Assembly;
 
         containerBuilder.RegisterAssemblyTypes(interfacesAssembly)
@@ -134,6 +140,7 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<UndercutService>().SingleInstance();
         containerBuilder.RegisterType<CsvLoaderService>().SingleInstance();
         containerBuilder.RegisterType<AutoSaveService>().SingleInstance();
+        containerBuilder.RegisterType<NotificationService>().SingleInstance();
         containerBuilder.RegisterType<CharacterMonitorService>().As<ICharacterMonitorService>()
                         .SingleInstance();
         containerBuilder.RegisterType<PluginBootService>().SingleInstance();
@@ -178,6 +185,7 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<ConfigurationWizardService<Configuration>>().AsSelf().AsImplementedInterfaces()
                         .SingleInstance();
         containerBuilder.RegisterType<Font>().As<IFont>().SingleInstance();
+        containerBuilder.RegisterType<TimeSpanHumanizerCache>();
 
         // Sheets
         containerBuilder.Register<ExcelSheet<Item>>(
@@ -230,5 +238,6 @@ public class AllaganMarketPlugin : HostedPlugin
         serviceCollection.AddHostedService(p => p.GetRequiredService<ConfigurationLoaderService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<AutoSaveService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<ATService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<NotificationService>());
     }
 }

@@ -45,17 +45,18 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     private readonly UniversalisApiService universalisApiService;
     private readonly SaleTrackerService saleTrackerService;
     private readonly IPluginLog pluginLog;
-    private readonly IChatGui chatGui;
     private readonly IClientState clientState;
     private readonly ExcelSheet<Item> itemSheet;
-    private readonly NumberFormatInfo gilNumberFormat;
     private readonly Configuration configuration;
-    private readonly ChatNotifyUndercutSetting chatNotifyUndercutSetting;
-    private readonly ChatNotifyUndercutLoginCharacterSetting chatNotifyUndercutLoginSetting;
     private readonly MarketPriceUpdaterService marketPriceUpdaterService;
     private readonly IInventoryService inventoryService;
-    private readonly Dictionary<ulong, Dictionary<uint, uint>> queuedUndercuts = [];
+    private readonly RetainerMarketService retainerMarketService;
+    private readonly UndercutComparisonSetting undercutComparisonSetting;
     private uint activeHomeWorld;
+
+    public delegate void ItemUndercutDelegate(ulong retainerId, uint itemId);
+
+    public event ItemUndercutDelegate? ItemUndercut;
 
     public UndercutService(
         UniversalisWebsocketService websocketService,
@@ -65,15 +66,13 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         UniversalisApiService universalisApiService,
         SaleTrackerService saleTrackerService,
         IPluginLog pluginLog,
-        IChatGui chatGui,
         IClientState clientState,
         ExcelSheet<Item> itemSheet,
-        NumberFormatInfo gilNumberFormat,
         Configuration configuration,
-        ChatNotifyUndercutSetting chatNotifyUndercutSetting,
-        ChatNotifyUndercutLoginCharacterSetting chatNotifyUndercutLoginSetting,
         MarketPriceUpdaterService marketPriceUpdaterService,
-        IInventoryService inventoryService)
+        IInventoryService inventoryService,
+        RetainerMarketService retainerMarketService,
+        UndercutComparisonSetting undercutComparisonSetting)
     {
         this.websocketService = websocketService;
         this.mediatorService = mediatorService;
@@ -82,15 +81,13 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.universalisApiService = universalisApiService;
         this.saleTrackerService = saleTrackerService;
         this.pluginLog = pluginLog;
-        this.chatGui = chatGui;
         this.clientState = clientState;
         this.itemSheet = itemSheet;
-        this.gilNumberFormat = gilNumberFormat;
         this.configuration = configuration;
-        this.chatNotifyUndercutSetting = chatNotifyUndercutSetting;
-        this.chatNotifyUndercutLoginSetting = chatNotifyUndercutLoginSetting;
         this.marketPriceUpdaterService = marketPriceUpdaterService;
         this.inventoryService = inventoryService;
+        this.retainerMarketService = retainerMarketService;
+        this.undercutComparisonSetting = undercutComparisonSetting;
         this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
     }
 
@@ -104,10 +101,24 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.marketBoard.OfferingsReceived += this.OfferingsReceived;
         this.universalisApiService.PriceRetrieved += this.UniversalisApiPriceRetrieved;
         this.marketPriceUpdaterService.MarketBoardItemRequestReceived += this.MarketBoardItemRequestReceived;
+        this.retainerMarketService.OnItemUpdated += this.LocalRetainerMarketUpdated;
 
         // Check to see if they are logged in already
         this.OnLogin();
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Monitors for when a price is updated locally by the player and caches the result.
+    /// </summary>
+    /// <param name="listEvent">The event from the retainer market service.</param>
+    private void LocalRetainerMarketUpdated(RetainerMarketListEvent listEvent)
+    {
+        if (listEvent.SaleItem != null && listEvent.EventType == RetainerMarketListEventType.Updated) // Doesn't hurt to double-check
+        {
+            var saleItem = listEvent.SaleItem;
+            this.UpdateMarketPriceCache(saleItem.ItemId, listEvent.SaleItem.IsHq, listEvent.SaleItem.WorldId, MarketPriceCacheType.Game, DateTime.Now, saleItem.UnitPrice, true);
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -118,7 +129,205 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.marketBoard.OfferingsReceived -= this.OfferingsReceived;
         this.universalisApiService.PriceRetrieved -= this.UniversalisApiPriceRetrieved;
         this.marketPriceUpdaterService.MarketBoardItemRequestReceived -= this.MarketBoardItemRequestReceived;
+        this.retainerMarketService.OnItemUpdated -= this.LocalRetainerMarketUpdated;
         return Task.CompletedTask;
+    }
+
+    public bool? IsItemUndercut(SaleItem saleItem)
+    {
+        return this.IsItemUndercut(saleItem.WorldId, saleItem.ItemId, saleItem.UnitPrice, saleItem.IsHq);
+    }
+
+    public bool? IsItemUndercut(uint worldId, uint itemId, uint currentPrice, bool isHq)
+    {
+        return this.GetUndercutBy(worldId, itemId, currentPrice, isHq) != null;
+    }
+
+    public uint? GetRecommendedUnitPrice(SaleItem saleItem)
+    {
+        return this.GetRecommendedUnitPrice(saleItem.WorldId, saleItem.ItemId, saleItem.IsHq);
+    }
+
+    public uint? GetRecommendedUnitPrice(uint worldId, uint itemId, bool isHq)
+    {
+        var undercutComparison = this.undercutComparisonSetting.CurrentValue(this.configuration);
+
+        undercutComparison = this.configuration.GetUndercutComparison(itemId) ?? undercutComparison;
+
+        bool? requestedQuality = null;
+        if (undercutComparison == UndercutComparison.MatchingQuality)
+        {
+            requestedQuality = isHq;
+        }
+        else if (undercutComparison == UndercutComparison.NqOnly)
+        {
+            requestedQuality = false;
+        }
+        else if (undercutComparison == UndercutComparison.HqOnly)
+        {
+            requestedQuality = true;
+        }
+
+        if (!this.itemSheet.GetRow(itemId)?.CanBeHq ?? true)
+        {
+            requestedQuality = null;
+        }
+
+        var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, requestedQuality) ?? this.GetMarketPriceCache(worldId, itemId, null);
+
+        return marketPriceCache?.UnitCost;
+    }
+
+    public uint? GetUndercutBy(SaleItem saleItem)
+    {
+        return this.GetUndercutBy(saleItem.WorldId, saleItem.ItemId, saleItem.UnitPrice, saleItem.IsHq);
+    }
+
+    public uint? GetUndercutBy(uint worldId, uint itemId, uint currentPrice, bool isHq)
+    {
+        var undercutComparison = this.undercutComparisonSetting.CurrentValue(this.configuration);
+
+        undercutComparison = this.configuration.GetUndercutComparison(itemId) ?? undercutComparison;
+
+        bool? requestedQuality = null;
+        if (undercutComparison == UndercutComparison.MatchingQuality)
+        {
+            requestedQuality = isHq;
+        }
+        else if (undercutComparison == UndercutComparison.NqOnly)
+        {
+            requestedQuality = false;
+        }
+        else if (undercutComparison == UndercutComparison.HqOnly)
+        {
+            requestedQuality = true;
+        }
+
+        if (!this.itemSheet.GetRow(itemId)?.CanBeHq ?? true)
+        {
+            requestedQuality = null;
+        }
+
+        var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, requestedQuality);
+        if (marketPriceCache != null)
+        {
+            if (marketPriceCache.OwnPrice)
+            {
+                return null;
+            }
+
+            if (marketPriceCache.UnitCost < currentPrice)
+            {
+                return currentPrice - marketPriceCache.UnitCost;
+            }
+        }
+
+        return null;
+    }
+
+    public DateTime? GetLastUpdateTime(SaleItem saleItem)
+    {
+        var undercutComparison = this.undercutComparisonSetting.CurrentValue(this.configuration);
+
+        undercutComparison = this.configuration.GetUndercutComparison(saleItem.ItemId) ?? undercutComparison;
+
+        bool? requestedQuality = null;
+        if (undercutComparison == UndercutComparison.MatchingQuality)
+        {
+            requestedQuality = saleItem.IsHq;
+        }
+        else if (undercutComparison == UndercutComparison.NqOnly)
+        {
+            requestedQuality = false;
+        }
+        else if (undercutComparison == UndercutComparison.HqOnly)
+        {
+            requestedQuality = true;
+        }
+
+        if (!this.itemSheet.GetRow(saleItem.ItemId)?.CanBeHq ?? true)
+        {
+            requestedQuality = null;
+        }
+
+        return this.GetLastUpdateTime(saleItem.WorldId, saleItem.ItemId, requestedQuality);
+    }
+
+    public DateTime? GetLastUpdateTime(uint worldId, uint itemId, bool? isHq = null)
+    {
+        // We only care about getting a market cache entry as either should be updated with the date we need
+        var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, isHq);
+        return marketPriceCache?.LastUpdated;
+    }
+
+    public bool NeedsUpdate(SaleItem saleItem, int updatePeriodMinutes)
+    {
+        return this.NeedsUpdate(saleItem.WorldId, saleItem.ItemId, saleItem.IsHq, updatePeriodMinutes);
+    }
+
+    public bool NeedsUpdate(uint worldId, uint itemId, bool? isHq, int updatePeriodMinutes)
+    {
+        var lastUpdateTime = this.GetLastUpdateTime(worldId, itemId, isHq);
+        if (lastUpdateTime == null)
+        {
+            lastUpdateTime = this.GetLastUpdateTime(worldId, itemId, null);
+            if (lastUpdateTime == null)
+            {
+                return true;
+            }
+        }
+
+        return DateTime.Now > lastUpdateTime + TimeSpan.FromMinutes(updatePeriodMinutes);
+    }
+
+    public DateTime NextUpdateDate(SaleItem saleItem, int updatePeriodMinutes)
+    {
+        var lastUpdateTime = this.GetLastUpdateTime(saleItem);
+
+        if (lastUpdateTime == null)
+        {
+            return DateTime.Now;
+        }
+
+        return lastUpdateTime.Value + TimeSpan.FromMinutes(updatePeriodMinutes);
+    }
+
+    public void InsertFakeMarketPriceCache(SaleItem saleItem)
+    {
+        this.UpdateMarketPriceCache(saleItem.ItemId, saleItem.IsHq, saleItem.WorldId, MarketPriceCacheType.Override, DateTime.Now, saleItem.UnitPrice, true);
+    }
+
+    public MarketPriceCache? GetMarketPriceCache(uint worldId, uint itemId, bool? isHq)
+    {
+        if (this.configuration.MarketPriceCache.TryGetValue(worldId, out var itemCache))
+        {
+            MarketPriceCache? hqPrice = null;
+            MarketPriceCache? nqPrice = null;
+            if (isHq is false or null && itemCache.TryGetValue((itemId, false), out nqPrice))
+            {
+            }
+
+            if (isHq is true or null && itemCache.TryGetValue((itemId, true), out hqPrice))
+            {
+            }
+
+            if (isHq == null && nqPrice != null && hqPrice != null)
+            {
+                return nqPrice.UnitCost > hqPrice.UnitCost ? hqPrice : nqPrice;
+            }
+
+            if (isHq is false or null && nqPrice != null)
+            {
+                return nqPrice;
+            }
+
+            if (isHq is true or null && hqPrice != null)
+            {
+                return hqPrice;
+            }
+        }
+
+        return null;
     }
 
     private void PluginLoaded(PluginLoadedMessage obj)
@@ -142,107 +351,25 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
     private void UniversalisApiPriceRetrieved(uint itemId, uint worldId, UniversalisPricing response)
     {
-        var lastUpdate = response.LastUpdate;
-        var salesByItem = this.saleTrackerService.GetSales(null, worldId).GroupBy(c => c.ItemId)
-                              .ToDictionary(c => c.Key, c => c.ToList());
-        if (salesByItem.TryGetValue(itemId, out var currentSales))
+        if (response.listings != null && response.listings.Any())
         {
-            foreach (var saleItem in currentSales)
+            var minNqListing = response.listings.Where(c => !c.hq).DefaultIfEmpty().MinBy(c => c?.pricePerUnit);
+            var minHqListing = response.listings.Where(c => c.hq).DefaultIfEmpty().MinBy(c => c?.pricePerUnit);
+            if (minNqListing != null)
             {
-                uint lowestPrice;
-                if (saleItem.IsHq)
-                {
-                    lowestPrice = (uint)response.MinPriceHq;
-                }
-                else
-                {
-                    lowestPrice = (uint)response.MinPriceNq;
-                }
+                var listingDate =
+                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(minNqListing.lastReviewTime);
 
-                if (lowestPrice == 0)
-                {
-                    this.pluginLog.Verbose("Received a price that was 0, skipping.");
-                    continue;
-                }
-
-                var latestUpdateDate = saleItem.UpdatedAt;
-
-                if (response.listings != null)
-                {
-                    foreach (var listing in response.listings)
-                    {
-                        var listingDate =
-                            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(listing.lastReviewTime);
-                        if (listingDate > latestUpdateDate)
-                        {
-                            latestUpdateDate = listingDate;
-                        }
-                    }
-                }
-
-                if (saleItem.UpdatedAt != latestUpdateDate)
-                {
-                    saleItem.UpdatedAt = latestUpdateDate;
-                }
-
-                if (lowestPrice < saleItem.UnitPrice)
-                {
-                    var undercutAmount = (uint?)(saleItem.UnitPrice - lowestPrice);
-                    saleItem.UndercutBy = undercutAmount;
-                    this.configuration.IsDirty = true;
-
-                    if (this.clientState.IsLoggedIn)
-                    {
-                        this.PrintUndercutMessage(itemId, undercutAmount.Value);
-                    }
-                    else
-                    {
-                        this.QueueUndercutMessage(saleItem.RetainerId, itemId, undercutAmount.Value);
-                    }
-                }
+                this.UpdateMarketPriceCache(itemId, false, worldId, MarketPriceCacheType.UniversalisReq, listingDate, (uint)minNqListing.pricePerUnit, this.characterMonitorService.IsCharacterKnown(minNqListing.retainerName, worldId));
             }
-        }
-    }
 
-    private void SendQueuedUndercutMessages(ulong characterId)
-    {
-        var loginSetting = this.chatNotifyUndercutLoginSetting.CurrentValue(this.configuration);
-        var ownedRetainers = this.characterMonitorService.GetOwnedCharacters(characterId, CharacterType.Retainer)
-                                 .ToDictionary(c => c.CharacterId);
-
-        foreach (var retainer in this.queuedUndercuts)
-        {
-            if (loginSetting == ChatNotifyCharacterEnum.AllCharacters || ownedRetainers.ContainsKey(retainer.Key))
+            if (minHqListing != null)
             {
-                var messages = retainer.Value;
-                foreach (var message in messages)
-                {
-                    this.PrintUndercutMessage(message.Key, message.Value);
-                }
+                var listingDate =
+                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(minHqListing.lastReviewTime);
 
-                retainer.Value.Clear();
+                this.UpdateMarketPriceCache(itemId, true, worldId, MarketPriceCacheType.UniversalisReq, listingDate, (uint)minHqListing.pricePerUnit, this.characterMonitorService.IsCharacterKnown(minHqListing.retainerName, worldId));
             }
-        }
-    }
-
-    private void QueueUndercutMessage(ulong retainerId, uint itemId, uint undercutAmount)
-    {
-        this.queuedUndercuts.TryAdd(retainerId, []);
-        this.queuedUndercuts[retainerId].TryAdd(itemId, undercutAmount);
-    }
-
-    private void PrintUndercutMessage(uint itemId, uint undercutAmount)
-    {
-        if (!this.chatNotifyUndercutSetting.CurrentValue(this.configuration))
-        {
-            return;
-        }
-
-        var item = this.itemSheet.GetRow(itemId);
-        if (item != null)
-        {
-            this.chatGui.Print(
-                $"You have been undercut by {undercutAmount.ToString("C", this.gilNumberFormat)} for {item.Singular.AsReadOnly().ExtractText()}");
         }
     }
 
@@ -255,6 +382,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         var currentPlayer = this.clientState.LocalPlayer;
         if (currentPlayer != null)
         {
+            var offeringDate = DateTime.Now;
             if (offerings.ItemListings.Count == 0)
             {
                 this.pluginLog.Verbose(
@@ -266,41 +394,37 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                                           .GroupBy(c => c.ItemId).ToDictionary(c => c.Key, c => c.ToList());
                     if (activeSales.TryGetValue(selectedItem->ItemId, out var currentSales))
                     {
-                        foreach (var saleItem in currentSales)
-                        {
-                            saleItem.UpdatedAt = DateTime.Now;
-                        }
+                        this.UpdateMarketPriceCache(selectedItem->ItemId, selectedItem->Flags != InventoryItem.ItemFlags.None, currentPlayer.HomeWorld.Id, MarketPriceCacheType.Game, offeringDate, currentSales.Min(c => c.UnitPrice), true);
                     }
                 }
             }
             else
             {
-                var lowestOffering = offerings
-                                     .ItemListings.Where(
-                                         c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
-                                     .Min(c => c.PricePerUnit);
                 var itemId = offerings.ItemListings[0].ItemId;
-                var item = this.itemSheet.GetRow(itemId);
                 var salesByItem = this.saleTrackerService.GetSales(null, currentPlayer.HomeWorld.Id)
                                       .GroupBy(c => c.ItemId).ToDictionary(c => c.Key, c => c.ToList());
-                if (salesByItem.TryGetValue(itemId, out var currentSales))
-                {
-                    foreach (var saleItem in currentSales)
-                    {
-                        saleItem.UpdatedAt = DateTime.Now;
-                        if (lowestOffering < saleItem.UnitPrice)
-                        {
-                            var undercutAmount = (uint?)(saleItem.UnitPrice - lowestOffering);
-                            saleItem.UndercutBy = undercutAmount;
-                            this.configuration.IsDirty = true;
 
-                            if (item != null)
-                            {
-                                this.chatGui.Print(
-                                    $"You have been undercut by {undercutAmount.Value.ToString("C", this.gilNumberFormat)} for {item.Singular.AsReadOnly().ExtractText()}");
-                            }
-                        }
-                    }
+                var lowestOfferingNq = offerings
+                                     .ItemListings.Where(
+                                         c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                     .Where(c => c.IsHq == false)
+                                     .DefaultIfEmpty()
+                                     .Min(c => c?.PricePerUnit);
+
+                if (lowestOfferingNq != null)
+                {
+                    this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.Id, MarketPriceCacheType.Game, offeringDate, lowestOfferingNq.Value, false);
+                }
+
+                var lowestOfferingHq = offerings
+                                     .ItemListings.Where(
+                                         c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                     .Where(c => c.IsHq == true)
+                                     .DefaultIfEmpty()
+                                     .Min(c => c?.PricePerUnit);
+                if (lowestOfferingHq != null)
+                {
+                    this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.Id, MarketPriceCacheType.Game, offeringDate, lowestOfferingHq.Value, false);
                 }
             }
         }
@@ -326,8 +450,64 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 this.clientState.LocalPlayer.HomeWorld.Id);
             this.activeHomeWorld = this.clientState.LocalPlayer.HomeWorld.Id;
         }
+    }
 
-        this.SendQueuedUndercutMessages(this.clientState.LocalContentId);
+    /// <summary>
+    /// Takes data from the game, universalis's websocket or unviersalis's API. Updates the cache if an entry is newer. Fires of an event that other services can subscribe to.
+    /// </summary>
+    /// <param name="itemId"></param>
+    /// <param name="isHq"></param>
+    /// <param name="worldId"></param>
+    /// <param name="type"></param>
+    /// <param name="lastUpdated"></param>
+    /// <param name="newUnitCost"></param>
+    /// <param name="ownPrice"></param>
+    private void UpdateMarketPriceCache(uint itemId, bool isHq, uint worldId, MarketPriceCacheType type, DateTime lastUpdated, uint newUnitCost, bool ownPrice)
+    {
+        var wasUpdated = false;
+        this.configuration.MarketPriceCache.TryAdd(worldId, []);
+        var itemKey = (itemId, isHq);
+        if (this.configuration.MarketPriceCache[worldId].TryGetValue(itemKey, out var oldMarketPrice))
+        {
+            var newMarketPrice = new MarketPriceCache(itemId, isHq, worldId, type, lastUpdated, newUnitCost, ownPrice);
+            var isBatchUpdate = Math.Truncate((newMarketPrice.LastUpdated - oldMarketPrice.LastUpdated).TotalSeconds) < 2;
+
+            if ((oldMarketPrice.LastUpdated < newMarketPrice.LastUpdated && !isBatchUpdate) || (isBatchUpdate && oldMarketPrice.UnitCost > newMarketPrice.UnitCost))
+            {
+                this.configuration.MarketPriceCache[worldId][itemKey] = newMarketPrice;
+                wasUpdated = true;
+            }
+        }
+        else
+        {
+            this.configuration.MarketPriceCache[worldId][itemKey] = new MarketPriceCache(itemId, isHq, worldId, type, lastUpdated, newUnitCost, ownPrice);
+            wasUpdated = true;
+        }
+
+        if (!this.configuration.MarketPriceCache[worldId][itemKey].OwnPrice && wasUpdated)
+        {
+            if (this.saleTrackerService.SaleItemsByItemId.TryGetValue(itemId, out var currentSales))
+            {
+                var ourCheapestPrice = currentSales.Where(saleItem => worldId == saleItem.WorldId).DefaultIfEmpty(null)
+                                                   .Min(c => c?.UnitPrice ?? 0);
+                var currentCheapestPrice = this.configuration.MarketPriceCache[worldId][itemKey];
+
+                if (currentCheapestPrice.UnitCost < ourCheapestPrice || (currentCheapestPrice.UnitCost == ourCheapestPrice && currentCheapestPrice.OwnPrice))
+                {
+                    var undercutAmount = (uint?)(ourCheapestPrice - currentCheapestPrice.UnitCost);
+
+                    foreach (var saleItem in currentSales.Where(c => c.WorldId == worldId))
+                    {
+                        if (!currentCheapestPrice.OwnPrice)
+                        {
+                            this.ItemUndercut?.Invoke(saleItem.RetainerId, saleItem.ItemId);
+                        }
+                    }
+
+                    this.configuration.IsDirty = true;
+                }
+            }
+        }
     }
 
     private void OnUniversalisMessage(SubscriptionReceivedMessage message)
@@ -338,43 +518,28 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             var itemId = message.Item;
             if (this.saleTrackerService.SaleItemsByItemId.TryGetValue(itemId, out var value))
             {
-                // TODO: Compare against known retainer names per world so you don't get a message saying you've undercut yourself
-                HashSet<string> retainerNames = [];
-                var ourCheapestPrice = value.Where(saleItem => message.World == saleItem.WorldId).DefaultIfEmpty(null)
-                                            .Min(c => c?.UnitPrice ?? 0);
-                var theirCheapestPrice = message.Listings.Where(c => !retainerNames.Contains(c.RetainerName))
-                                                .DefaultIfEmpty(null).Min(c => c?.PricePerUnit ?? 0);
-                var oldestReviewTime = message.Listings.DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
-                if (oldestReviewTime != null)
+                var cheapestNqListing = message.Listings.DefaultIfEmpty(null).MinBy(c => c?.PricePerUnit ?? 0);
+                var oldestReviewTimeNq = message.Listings.DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
+                if (oldestReviewTimeNq != null && cheapestNqListing != null)
                 {
+                    var ownsListing = this.characterMonitorService.Characters.Any(
+                        c => c.Value.Name == cheapestNqListing.RetainerName &&
+                             c.Value.WorldId == message.World);
                     var listingDate =
-                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTime.Value);
-                    foreach (var saleItem in value)
-                    {
-                        if (listingDate > saleItem.UpdatedAt)
-                        {
-                            saleItem.UpdatedAt = DateTime.Now;
-                        }
-                    }
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeNq.Value);
+                    this.UpdateMarketPriceCache(itemId, false, message.World, MarketPriceCacheType.UniversalisWS, listingDate, (uint)cheapestNqListing.PricePerUnit, ownsListing);
                 }
 
-                if (theirCheapestPrice < ourCheapestPrice)
+                var cheapestHqListing = message.Listings.DefaultIfEmpty(null).MinBy(c => c?.PricePerUnit ?? 0);
+                var oldestReviewTimeHq = message.Listings.DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
+                if (oldestReviewTimeHq != null && cheapestHqListing != null)
                 {
-                    var undercutAmount = (uint?)(theirCheapestPrice - ourCheapestPrice);
-                    var item = this.itemSheet.GetRow(itemId);
-
-                    foreach (var saleItem in value)
-                    {
-                        saleItem.UndercutBy = undercutAmount;
-                    }
-
-                    this.configuration.IsDirty = true;
-
-                    if (item != null)
-                    {
-                        this.chatGui.Print(
-                            $"You have been undercut by {undercutAmount.Value.ToString("C", this.gilNumberFormat)} for {item.Singular.AsReadOnly().ExtractText()}");
-                    }
+                    var ownsListing = this.characterMonitorService.Characters.Any(
+                        c => c.Value.Name == cheapestHqListing.RetainerName &&
+                             c.Value.WorldId == message.World);
+                    var listingDate =
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeHq.Value);
+                    this.UpdateMarketPriceCache(itemId, true, message.World, MarketPriceCacheType.UniversalisWS, listingDate, (uint)cheapestHqListing.PricePerUnit, ownsListing);
                 }
             }
         }

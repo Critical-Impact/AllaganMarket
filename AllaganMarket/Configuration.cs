@@ -7,8 +7,10 @@ using AllaganLib.Interface.FormFields;
 using AllaganLib.Interface.Wizard;
 
 using AllaganMarket.Models;
+using AllaganMarket.Settings;
 
 using Dalamud.Configuration;
+using Dalamud.Game.Text;
 
 using Newtonsoft.Json;
 
@@ -20,10 +22,11 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
 {
     private HashSet<string>? wizardVersionsSeen1;
     private bool isConfigWindowMovable = true;
-    private bool somePropertyToBeSavedAndWithADefault = true;
     private Dictionary<ulong, Character> characters = [];
     private Dictionary<ulong, SaleItem[]> saleItems = [];
     private Dictionary<ulong, List<SoldItem>> sales = [];
+    private Dictionary<uint, Dictionary<(uint, bool), MarketPriceCache>> marketPriceCache = [];
+    private Dictionary<uint, UndercutComparison> undercutComparisonSettings = [];
     private Dictionary<ulong, uint> gil = [];
     private Dictionary<string, int> integerSettings = [];
     private Dictionary<string, bool> booleanSettings = [];
@@ -36,12 +39,6 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
     {
         get => this.isConfigWindowMovable;
         set => this.isConfigWindowMovable = value;
-    }
-
-    public bool SomePropertyToBeSavedAndWithADefault
-    {
-        get => this.somePropertyToBeSavedAndWithADefault;
-        set => this.somePropertyToBeSavedAndWithADefault = value;
     }
 
     public Dictionary<ulong, Character> Characters
@@ -62,6 +59,13 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
     {
         get => this.sales;
         set => this.sales = value;
+    }
+
+    [JsonIgnore]
+    public Dictionary<uint, Dictionary<(uint ItemId, bool IsHq), MarketPriceCache>> MarketPriceCache
+    {
+        get => this.marketPriceCache;
+        set => this.marketPriceCache = value;
     }
 
     public Dictionary<ulong, uint> Gil
@@ -190,5 +194,24 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
     Enum? IConfigurable<Enum?>.Get(string key)
     {
         return this.EnumSettings.GetValueOrDefault(key);
+    }
+
+    public void SetUndercutComparison(uint itemId, UndercutComparison newSetting)
+    {
+        this.undercutComparisonSettings[itemId] = newSetting;
+        this.IsDirty = true;
+    }
+
+    public void RemoveUndercutComparison(uint itemId)
+    {
+        if (this.undercutComparisonSettings.Remove(itemId))
+        {
+            this.IsDirty = true;
+        }
+    }
+
+    public UndercutComparison? GetUndercutComparison(uint itemId)
+    {
+        return this.undercutComparisonSettings.TryGetValue(itemId, out var value) ? value : null;
     }
 }

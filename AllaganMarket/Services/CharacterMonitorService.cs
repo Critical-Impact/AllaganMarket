@@ -102,6 +102,11 @@ public class CharacterMonitorService(
         return this.Characters.ContainsKey(characterId);
     }
 
+    public bool IsCharacterKnown(string characterName, uint worldId)
+    {
+        return this.Characters.Any(c => c.Value.Name == characterName && c.Value.WorldId == worldId);
+    }
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         clientState.Login += this.ClientStateOnLogin;
