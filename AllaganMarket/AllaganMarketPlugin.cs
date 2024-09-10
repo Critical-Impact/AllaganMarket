@@ -150,6 +150,8 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
         containerBuilder.RegisterType<LaunchButtonService>().SingleInstance();
         containerBuilder.RegisterType<DtrService>().SingleInstance();
+        containerBuilder.RegisterType<HighlightingService>().SingleInstance();
+        containerBuilder.RegisterType<ImGuiMenus>().SingleInstance();
 
         containerBuilder.RegisterType<SaleItemTable>().SingleInstance();
         containerBuilder.RegisterType<SoldItemTable>().SingleInstance();
@@ -239,5 +241,6 @@ public class AllaganMarketPlugin : HostedPlugin
         serviceCollection.AddHostedService(p => p.GetRequiredService<AutoSaveService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<ATService>());
         serviceCollection.AddHostedService(p => p.GetRequiredService<NotificationService>());
+        serviceCollection.AddHostedService(p => p.GetRequiredService<HighlightingService>());
     }
 }

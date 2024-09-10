@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
 
@@ -11,11 +13,9 @@ using ImGuiService = AllaganLib.Interface.Services.ImGuiService;
 
 namespace AllaganMarket.Tables.Columns;
 
-public class UndercutByColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter, UndercutService undercutService)
-    : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
+public class UndercutByColumn(NumberFormatInfo gilFormat, ImGuiService imGuiService, StringColumnFilter stringColumnFilter, UndercutService undercutService)
+    : GilColumn(gilFormat, imGuiService, stringColumnFilter)
 {
-    private readonly UndercutService undercutService = undercutService;
-
     public override string DefaultValue { get; set; } = string.Empty;
 
     public override string Key { get; set; } = "UndercutBy";
@@ -38,6 +38,6 @@ public class UndercutByColumn(ImGuiService imGuiService, StringColumnFilter stri
 
     public override string? CurrentValue(SearchResult item)
     {
-        return item.SaleItem != null ? this.undercutService.GetUndercutBy(item.SaleItem)?.ToString() ?? string.Empty : string.Empty;
+        return item.SaleItem != null ? undercutService.GetUndercutBy(item.SaleItem)?.ToString() ?? string.Empty : string.Empty;
     }
 }

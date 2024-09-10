@@ -17,12 +17,13 @@ public class SettingTypeConfiguration
             Undercutting => "Undercutting",
             SettingType.Features => "Features",
             Overlays => "Overlays",
+            Highlighting => "Highlighting",
             _ => settingType.ToString(),
         };
     }
 
     public List<SettingType> GetCategoryOrder()
     {
-        return this.settingTypes ??= [General, Undercutting, SettingType.Features, Overlays, Chat];
+        return this.settingTypes ??= [General, Undercutting, SettingType.Features, Overlays, Highlighting, Chat];
     }
 }

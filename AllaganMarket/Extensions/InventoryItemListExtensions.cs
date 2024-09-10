@@ -42,4 +42,9 @@ public static class InventoryItemListExtensions
     {
         return itemSheet.GetRow(saleItem.ItemId);
     }
+
+    public static Item? GetItem(this SoldItem soldItem, ExcelSheet<Item> itemSheet)
+    {
+        return itemSheet.GetRow(soldItem.ItemId);
+    }
 }

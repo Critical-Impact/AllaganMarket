@@ -216,7 +216,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 return null;
             }
 
-            if (marketPriceCache.UnitCost < currentPrice)
+            if (marketPriceCache.UnitCost <= currentPrice)
             {
                 return currentPrice - marketPriceCache.UnitCost;
             }

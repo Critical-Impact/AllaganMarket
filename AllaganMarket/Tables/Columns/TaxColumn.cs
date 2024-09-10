@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AllaganLib.Interface.Grid;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Services;
@@ -10,8 +12,8 @@ using ImGuiNET;
 
 namespace AllaganMarket.Tables.Columns;
 
-public class TaxColumn(ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
-    : IntegerColumn<SearchResultConfiguration, SearchResult, MessageBase>(imGuiService, stringColumnFilter)
+public class TaxColumn(NumberFormatInfo gilFormat, ImGuiService imGuiService, StringColumnFilter stringColumnFilter)
+    : GilColumn(gilFormat, imGuiService, stringColumnFilter)
 {
     public override string DefaultValue { get; set; } = string.Empty;
 

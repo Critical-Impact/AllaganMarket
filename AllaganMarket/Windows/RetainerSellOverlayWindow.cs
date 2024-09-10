@@ -208,6 +208,9 @@ public class RetainerSellOverlayWindow : OverlayWindow
 
             var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.RowId, isHq ?? false);
             var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.RowId);
+            var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
+            var recommendedPrice = recommendedUnitPrice == null ? "No Data" : Math.Max(1, recommendedUnitPrice.Value - undercutAmount).ToString();
+
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))
             {
                 ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.WidthFixed, 120 * ImGui.GetIO().FontGlobalScale);
@@ -223,8 +226,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
                 ImGui.TableNextColumn();
                 ImGui.Text("Rec. Unit Price: ");
                 ImGui.TableNextColumn();
-                var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
-                ImGui.Text($"{recommendedUnitPrice?.ToString() ?? "No Data"}");
+                ImGui.Text($"{recommendedPrice}");
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();

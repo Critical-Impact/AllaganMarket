@@ -26,6 +26,7 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
     private readonly ExcelSheet<Item> itemSheet;
     private readonly SaleFilter saleFilter;
     private readonly UndercutService undercutService;
+    private readonly ImGuiMenus imGuiMenus;
 
     public SaleItemTable(
         CsvLoaderService csvLoaderService,
@@ -41,11 +42,14 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
         UndercutByColumn undercutByColumn,
         ListedAtColumn listedAtColumn,
         UpdatedAtColumn updatedAtColumn,
-        UndercutService undercutService)
+        UndercutService undercutService,
+        ItemIconColumn itemIconColumn,
+        ImGuiMenus imGuiMenus)
         : base(
             csvLoaderService,
             searchResultConfiguration,
             [
+                itemIconColumn,
                 nameColumn,
                 quantityColumn,
                 unitPriceColumn,
@@ -63,6 +67,7 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
         this.itemSheet = itemSheet;
         this.saleFilter = saleFilter;
         this.undercutService = undercutService;
+        this.imGuiMenus = imGuiMenus;
         this.ShowFilterRow = true;
     }
 
@@ -78,14 +83,10 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
     {
         var messages = new List<MessageBase>();
 
-        if (ImGui.Selectable("More Information"))
+        var result = this.imGuiMenus.DrawSaleItemMenu(arg.SaleItem!);
+        if (result != null)
         {
-            messages.Add(new OpenMoreInformation(arg.SaleItem!.ItemId));
-        }
-
-        if (ImGui.Selectable("Mark as Updated"))
-        {
-            this.undercutService.InsertFakeMarketPriceCache(arg.SaleItem!);
+            messages.Add(result);
         }
 
         return messages;

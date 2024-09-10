@@ -6,6 +6,7 @@ using AllaganLib.Interface.Grid;
 
 using AllaganMarket.Filtering;
 using AllaganMarket.Mediator;
+using AllaganMarket.Services;
 using AllaganMarket.Tables.Columns;
 
 using DalaMock.Host.Mediator;
@@ -26,6 +27,7 @@ public class SoldItemTable : RenderTable<SearchResultConfiguration, SearchResult
     private readonly ICommandManager commandManager;
     private readonly ExcelSheet<Item> itemSheet;
     private readonly SaleFilter saleFilter;
+    private readonly ImGuiMenus imGuiMenus;
 
     public SoldItemTable(
         CsvLoaderService csvLoaderService,
@@ -38,11 +40,13 @@ public class SoldItemTable : RenderTable<SearchResultConfiguration, SearchResult
         SaleFilter saleFilter,
         WorldColumn worldColumn,
         RetainerColumn retainerColumn,
-        SoldAtColumn soldAtColumn)
+        SoldAtColumn soldAtColumn,
+        ItemIconColumn iconColumn,
+        ImGuiMenus imGuiMenus)
         : base(
             csvLoaderService,
             searchResultConfiguration,
-            [nameColumn, quantityColumn, unitPriceColumn, worldColumn, retainerColumn, soldAtColumn],
+            [iconColumn, nameColumn, quantityColumn, unitPriceColumn, worldColumn, retainerColumn, soldAtColumn],
             None | Resizable | Hideable | Sortable | RowBg | BordersInnerH | BordersOuterH | BordersInnerV | BordersOuterV | BordersH | BordersV | BordersInner | BordersOuter | Borders | ScrollX | ScrollY,
             "Sold Item Table",
             "SoldItemTable")
@@ -50,6 +54,7 @@ public class SoldItemTable : RenderTable<SearchResultConfiguration, SearchResult
         this.commandManager = commandManager;
         this.itemSheet = itemSheet;
         this.saleFilter = saleFilter;
+        this.imGuiMenus = imGuiMenus;
         this.ShowFilterRow = true;
     }
 
@@ -64,14 +69,10 @@ public class SoldItemTable : RenderTable<SearchResultConfiguration, SearchResult
     {
         var messages = new List<MessageBase>();
 
-        if (ImGui.Selectable("More Information"))
+        var result = this.imGuiMenus.DrawSoldItemMenu(arg.SoldItem!);
+        if (result != null)
         {
-            messages.Add(new OpenMoreInformation(arg.SoldItem!.ItemId));
-        }
-
-        if (ImGui.Selectable("Delete Sold Item"))
-        {
-            messages.Add(new DeleteSoldItem(arg.SoldItem!));
+            messages.Add(result);
         }
 
         return messages;

@@ -7,4 +7,5 @@ public enum SettingType
     Features,
     Chat,
     Overlays,
+    Highlighting,
 }

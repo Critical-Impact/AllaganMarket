@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 
 using AllaganMarket.Extensions;
@@ -36,6 +37,8 @@ public class RetainerSellListOverlayWindow : OverlayWindow
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
     private readonly RetainerMarketService retainerMarketService;
     private readonly UndercutService undercutService;
+    private readonly UndercutBySetting undercutBySetting;
+    private readonly HighlightingRetainerSellListSetting retainerSellListSetting;
     private bool showAllItems;
 
     public RetainerSellListOverlayWindow(
@@ -54,7 +57,9 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         RetainerOverlayCollapsedSetting overlayCollapsedSetting,
         ShowRetainerOverlaySetting retainerOverlaySetting,
         RetainerMarketService retainerMarketService,
-        UndercutService undercutService)
+        UndercutService undercutService,
+        UndercutBySetting undercutBySetting,
+        HighlightingRetainerSellListSetting retainerSellListSetting)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer Sell List Overlay")
     {
         this.characterMonitorService = characterMonitorService;
@@ -68,6 +73,8 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         this.retainerOverlaySetting = retainerOverlaySetting;
         this.retainerMarketService = retainerMarketService;
         this.undercutService = undercutService;
+        this.undercutBySetting = undercutBySetting;
+        this.retainerSellListSetting = retainerSellListSetting;
         this.AttachAddon("RetainerSellList", AttachPosition.Right);
         this.Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
         this.RespectCloseHotkey = false;
@@ -162,6 +169,21 @@ public class RetainerSellListOverlayWindow : OverlayWindow
             this.showAllItems = !this.showAllItems;
         }
 
+        ImGui.SameLine();
+
+        var retainerHighlighting = this.retainerSellListSetting.CurrentValue(this.configuration);
+        if (ImGuiService.DrawIconButton(
+                this.font,
+                FontAwesomeIcon.Lightbulb,
+                ref currentCursorPosX,
+                "Toggle highlighting on the retainer list.",
+                true,
+                retainerHighlighting ? null : ImGuiColors.ParsedGrey))
+        {
+            this.retainerSellListSetting.UpdateFilterConfiguration(this.configuration, !retainerHighlighting);
+        }
+
+
         ImGui.Separator();
 
         if (this.retainerMarketService.InBadState)
@@ -211,7 +233,9 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                             continue;
                         }
 
-                        var marketPriceCache = this.undercutService.GetRecommendedUnitPrice(saleItem);
+                        var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
+                        var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(saleItem);
+                        var recommendedPrice = recommendedUnitPrice == null ? "No Data" : Math.Max(1, recommendedUnitPrice.Value - undercutAmount).ToString();
 
                         itemsToCheck = true;
                         ImGui.TableNextRow();
@@ -236,7 +260,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                         ImGui.PopTextWrapPos();
 
                         ImGui.TableNextColumn();
-                        ImGui.Text(marketPriceCache?.ToString() ?? "No Data");
+                        ImGui.Text(recommendedPrice.ToString());
 
                         ImGui.TableNextColumn();
                         ImGui.Text(saleItem.IsEmpty() ? "N/A" : isUnderCut ? "Yes" : "No");

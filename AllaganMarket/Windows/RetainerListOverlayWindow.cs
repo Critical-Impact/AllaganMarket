@@ -32,6 +32,7 @@ public class RetainerListOverlayWindow : OverlayWindow
     private readonly RetainerOverlayCollapsedSetting overlayCollapsedSetting;
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
     private readonly UndercutService undercutService;
+    private readonly HighlightingRetainerListSetting retainerListSetting;
     private bool showAllRetainers;
 
     public RetainerListOverlayWindow(
@@ -48,7 +49,8 @@ public class RetainerListOverlayWindow : OverlayWindow
         IFont font,
         RetainerOverlayCollapsedSetting overlayCollapsedSetting,
         ShowRetainerOverlaySetting retainerOverlaySetting,
-        UndercutService undercutService)
+        UndercutService undercutService,
+        HighlightingRetainerListSetting retainerListSetting)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer List Overlay")
     {
         this.characterMonitorService = characterMonitorService;
@@ -60,6 +62,7 @@ public class RetainerListOverlayWindow : OverlayWindow
         this.overlayCollapsedSetting = overlayCollapsedSetting;
         this.retainerOverlaySetting = retainerOverlaySetting;
         this.undercutService = undercutService;
+        this.retainerListSetting = retainerListSetting;
         this.AttachAddon("RetainerList", AttachPosition.Right);
         this.Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize |
                      ImGuiWindowFlags.NoSavedSettings;
@@ -154,6 +157,20 @@ public class RetainerListOverlayWindow : OverlayWindow
                 this.showAllRetainers ? null : ImGuiColors.ParsedGrey))
         {
             this.showAllRetainers = !this.showAllRetainers;
+        }
+
+        ImGui.SameLine();
+
+        var retainerHighlighting = this.retainerListSetting.CurrentValue(this.configuration);
+        if (ImGuiService.DrawIconButton(
+                this.font,
+                FontAwesomeIcon.Lightbulb,
+                ref currentCursorPosX,
+                "Toggle highlighting on the retainer list.",
+                true,
+                retainerHighlighting ? null : ImGuiColors.ParsedGrey))
+        {
+            this.retainerListSetting.UpdateFilterConfiguration(this.configuration, !retainerHighlighting);
         }
 
         ImGui.Separator();

@@ -63,6 +63,7 @@ public class MainWindow : ExtendedWindow, IDisposable
     private readonly SaleSummaryTimeSpanFormField saleSummaryTimeSpanFormField;
     private readonly UndercutService undercutService;
     private readonly TimeSpanHumanizerCache humanizerCache;
+    private readonly ImGuiMenus imGuiMenus;
     private readonly ExcelSheet<World> worldSheet;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> saleQuickSearchWidget;
     private readonly GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase> soldQuickSearchWidget;
@@ -99,7 +100,8 @@ public class MainWindow : ExtendedWindow, IDisposable
         SaleSummaryDateRangeFormField saleSummaryDateRangeFormField,
         SaleSummaryTimeSpanFormField saleSummaryTimeSpanFormField,
         UndercutService undercutService,
-        TimeSpanHumanizerCache humanizerCache)
+        TimeSpanHumanizerCache humanizerCache,
+        ImGuiMenus imGuiMenus)
         : base(mediatorService, imGuiService, "Allagan Market##AllaganMarkets")
     {
         this.pluginLog = pluginLog;
@@ -122,6 +124,7 @@ public class MainWindow : ExtendedWindow, IDisposable
         this.saleSummaryTimeSpanFormField = saleSummaryTimeSpanFormField;
         this.undercutService = undercutService;
         this.humanizerCache = humanizerCache;
+        this.imGuiMenus = imGuiMenus;
         this.Configuration = configuration;
         this.TextureProvider = textureProvider;
         this.ConfigWindow = configWindow;
@@ -682,7 +685,7 @@ public class MainWindow : ExtendedWindow, IDisposable
 
                                         ImGui.SameLine();
                                         var icon = this.TextureProvider.GetFromGameIcon(
-                                            new GameIconLookup(retainer.ClassJobId + 62000));
+                                            new GameIconLookup(retainer.ClassJobId == 0 ? 62045 : retainer.ClassJobId + 62000));
                                         ImGui.Image(
                                             icon.GetWrapOrEmpty().ImGuiHandle,
                                             new Vector2(16, 16) * ImGui.GetIO().FontGlobalScale);
@@ -972,6 +975,21 @@ public class MainWindow : ExtendedWindow, IDisposable
                         ImGui.PopTextWrapPos();
                     }
                 }
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenOverlapped) &&
+                    ImGui.IsMouseClicked(ImGuiMouseButton.Right))
+                {
+                    ImGui.OpenPopup("RightClick");
+                }
+
+                using var popup = ImRaii.Popup("RightClick");
+                if (popup)
+                {
+                    var result = this.imGuiMenus.DrawSoldItemMenu(saleItem);
+                    if (result != null)
+                    {
+                        this.MediatorService.Publish(result);
+                    }
+                }
             }
         }
         else
@@ -1124,44 +1142,10 @@ public class MainWindow : ExtendedWindow, IDisposable
             using var popup = ImRaii.Popup("RightClick");
             if (popup)
             {
-                if (ImGui.Selectable("More Information"))
+                var result = this.imGuiMenus.DrawSaleItemMenu(saleItem);
+                if (result != null)
                 {
-                    this.MediatorService.Publish(new OpenMoreInformation(saleItem.ItemId));
-                }
-
-                if (ImGui.Selectable("Mark as Updated"))
-                {
-                    this.undercutService.InsertFakeMarketPriceCache(saleItem);
-                }
-
-                ImGui.NewLine();
-                ImGui.Text("Undercut Settings:");
-                ImGui.Separator();
-
-
-                if (ImGui.Selectable("Use Default", this.Configuration.GetUndercutComparison(saleItem.ItemId) == null))
-                {
-                    this.Configuration.RemoveUndercutComparison(saleItem.ItemId);
-                }
-
-                if (ImGui.Selectable("Any", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.Any))
-                {
-                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.Any);
-                }
-
-                if (ImGui.Selectable("NQ Only", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.NqOnly))
-                {
-                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.NqOnly);
-                }
-
-                if (ImGui.Selectable("HQ Only", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.HqOnly))
-                {
-                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.HqOnly);
-                }
-
-                if (ImGui.Selectable("Matching Quality", this.Configuration.GetUndercutComparison(saleItem.ItemId) == UndercutComparison.MatchingQuality))
-                {
-                    this.Configuration.SetUndercutComparison(saleItem.ItemId, UndercutComparison.MatchingQuality);
+                    this.MediatorService.Publish(result);
                 }
             }
         }
