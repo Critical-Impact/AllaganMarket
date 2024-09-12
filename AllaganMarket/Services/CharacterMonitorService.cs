@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -111,6 +112,7 @@ public class CharacterMonitorService(
     {
         clientState.Login += this.ClientStateOnLogin;
         addonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
+        addonLifecycle.RegisterListener(AddonEvent.PostRefresh, "RetainerList", this.RetainerListUpdate);
         framework.Update += this.FrameworkOnUpdate;
         framework.RunOnFrameworkThread(this.UpdatePlayerCharacter);
         return Task.CompletedTask;
@@ -120,6 +122,7 @@ public class CharacterMonitorService(
     {
         clientState.Login -= this.ClientStateOnLogin;
         addonLifecycle.UnregisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
+        addonLifecycle.UnregisterListener(AddonEvent.PostRefresh, "RetainerList", this.RetainerListUpdate);
         framework.Update -= this.FrameworkOnUpdate;
         return Task.CompletedTask;
     }
@@ -150,12 +153,13 @@ public class CharacterMonitorService(
         var retainerId = this.cachedRetainerId;
         if (retainerId != 0 && clientState.LocalPlayer != null)
         {
-            pluginLog.Verbose($"Updating retainer: {retainerId}");
+            pluginLog.Verbose($"Updating retainers: {retainerId}");
             var span = RetainerManager.Instance()->Retainers;
             for (var index = 0; index < span.Length; index++)
             {
                 var retainer = span[index];
-                var displayOrder = RetainerManager.Instance()->DisplayOrder[index];
+                var displayOrder = RetainerManager.Instance()->DisplayOrder.IndexOf((byte)index);
+                displayOrder = displayOrder == -1 ? 0 : displayOrder;
                 if (retainer.RetainerId == retainerId)
                 {
                     var retainerName = retainer.NameString.Trim();
@@ -167,13 +171,38 @@ public class CharacterMonitorService(
                         clientState.LocalPlayer.HomeWorld.Id,
                         retainer.ClassJob,
                         retainer.Level,
-                        displayOrder);
+                        (byte)displayOrder);
                     newRetainer.RetainerTown = retainer.Town;
                     newRetainer.OwnerId = clientState.LocalContentId;
                     this.Characters[retainerId] = newRetainer;
                 }
             }
         }
+    }
+
+    private unsafe void UpdateRetainerDisplayOrders()
+    {
+        if (RetainerManager.Instance()->Ready == 1)
+        {
+            var span = RetainerManager.Instance()->Retainers;
+            for (var index = 0; index < span.Length; index++)
+            {
+                var retainer = span[index];
+                var displayOrder = RetainerManager.Instance()->DisplayOrder.IndexOf((byte)index);
+                displayOrder = displayOrder == -1 ? 0 : displayOrder;
+                var asByte = (byte)displayOrder;
+                if (this.Characters.ContainsKey(retainer.RetainerId) &&
+                    this.Characters[retainer.RetainerId].DisplayOrder != asByte)
+                {
+                    this.Characters[retainer.RetainerId].DisplayOrder = asByte;
+                }
+            }
+        }
+    }
+
+    private void RetainerListUpdate(AddonEvent type, AddonArgs args)
+    {
+        this.UpdateRetainerDisplayOrders();
     }
 
     private void FrameworkOnUpdate(IFramework framework1)

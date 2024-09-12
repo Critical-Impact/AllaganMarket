@@ -52,6 +52,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     private readonly IInventoryService inventoryService;
     private readonly RetainerMarketService retainerMarketService;
     private readonly UndercutComparisonSetting undercutComparisonSetting;
+    private readonly UndercutBySetting undercutBySetting;
     private uint activeHomeWorld;
 
     public delegate void ItemUndercutDelegate(ulong retainerId, uint itemId);
@@ -72,7 +73,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         MarketPriceUpdaterService marketPriceUpdaterService,
         IInventoryService inventoryService,
         RetainerMarketService retainerMarketService,
-        UndercutComparisonSetting undercutComparisonSetting)
+        UndercutComparisonSetting undercutComparisonSetting,
+        UndercutBySetting undercutBySetting)
     {
         this.websocketService = websocketService;
         this.mediatorService = mediatorService;
@@ -88,6 +90,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.inventoryService = inventoryService;
         this.retainerMarketService = retainerMarketService;
         this.undercutComparisonSetting = undercutComparisonSetting;
+        this.undercutBySetting = undercutBySetting;
         this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
     }
 
@@ -140,7 +143,13 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
     public bool? IsItemUndercut(uint worldId, uint itemId, uint currentPrice, bool isHq)
     {
-        return this.GetUndercutBy(worldId, itemId, currentPrice, isHq) != null;
+        var recommendedUnitPrice = this.GetRecommendedUnitPrice(worldId, itemId, isHq);
+        if (recommendedUnitPrice != null)
+        {
+            return recommendedUnitPrice < currentPrice;
+        }
+
+        return null;
     }
 
     public uint? GetRecommendedUnitPrice(SaleItem saleItem)
@@ -151,6 +160,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     public uint? GetRecommendedUnitPrice(uint worldId, uint itemId, bool isHq)
     {
         var undercutComparison = this.undercutComparisonSetting.CurrentValue(this.configuration);
+        var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
 
         undercutComparison = this.configuration.GetUndercutComparison(itemId) ?? undercutComparison;
 
@@ -174,8 +184,17 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         }
 
         var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, requestedQuality) ?? this.GetMarketPriceCache(worldId, itemId, null);
+        if (marketPriceCache != null)
+        {
+            if (marketPriceCache.OwnPrice)
+            {
+                return marketPriceCache.UnitCost;
+            }
 
-        return marketPriceCache?.UnitCost;
+            return (uint?)Math.Max(1, marketPriceCache.UnitCost - undercutAmount);
+        }
+
+        return null;
     }
 
     public uint? GetUndercutBy(SaleItem saleItem)
@@ -267,14 +286,26 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
     public bool NeedsUpdate(uint worldId, uint itemId, bool? isHq, int updatePeriodMinutes)
     {
-        var lastUpdateTime = this.GetLastUpdateTime(worldId, itemId, isHq);
-        if (lastUpdateTime == null)
+        var lastUpdateTimeNq = this.GetLastUpdateTime(worldId, itemId, false);
+        var lastUpdateTimeHq = this.GetLastUpdateTime(worldId, itemId, true);
+        if (lastUpdateTimeNq == null && lastUpdateTimeHq == null)
         {
-            lastUpdateTime = this.GetLastUpdateTime(worldId, itemId, null);
-            if (lastUpdateTime == null)
-            {
-                return true;
-            }
+            return true;
+        }
+
+        var lastUpdateTime = DateTime.Now;
+
+        if (lastUpdateTimeNq != null && lastUpdateTimeHq != null)
+        {
+            lastUpdateTime = lastUpdateTimeNq.Value > lastUpdateTimeHq.Value ? lastUpdateTimeNq.Value : lastUpdateTimeHq.Value;
+        }
+        else if (lastUpdateTimeNq != null)
+        {
+            lastUpdateTime = lastUpdateTimeNq.Value;
+        }
+        else if(lastUpdateTimeHq != null)
+        {
+            lastUpdateTime = lastUpdateTimeHq.Value;
         }
 
         return DateTime.Now > lastUpdateTime + TimeSpan.FromMinutes(updatePeriodMinutes);
@@ -501,6 +532,11 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                         if (!currentCheapestPrice.OwnPrice)
                         {
                             this.ItemUndercut?.Invoke(saleItem.RetainerId, saleItem.ItemId);
+                        }
+
+                        if (saleItem.UpdatedAt < lastUpdated)
+                        {
+                            saleItem.UpdatedAt = lastUpdated;
                         }
                     }
 

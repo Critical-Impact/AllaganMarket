@@ -43,6 +43,7 @@ public class HighlightingService : IHostedService
     private readonly ExcelSheet<Item> itemSheet;
     private readonly HighlightingRetainerListSetting retainerListSetting;
     private readonly HighlightingRetainerSellListSetting retainerSellListSetting;
+    private readonly IGameGui gameGui;
     private bool retainerListModified;
     private bool retainerSellListModified;
     private ByteColor? originalRetainerListColor;
@@ -59,7 +60,8 @@ public class HighlightingService : IHostedService
         Configuration configuration,
         ExcelSheet<Item> itemSheet,
         HighlightingRetainerListSetting retainerListSetting,
-        HighlightingRetainerSellListSetting retainerSellListSetting)
+        HighlightingRetainerSellListSetting retainerSellListSetting,
+        IGameGui gameGui)
     {
         this.addonLifecycle = addonLifecycle;
         this.retainerService = retainerService;
@@ -72,6 +74,7 @@ public class HighlightingService : IHostedService
         this.itemSheet = itemSheet;
         this.retainerListSetting = retainerListSetting;
         this.retainerSellListSetting = retainerSellListSetting;
+        this.gameGui = gameGui;
     }
 
     public static ByteColor ColorFromVector4(Vector4 hexString)
@@ -87,6 +90,7 @@ public class HighlightingService : IHostedService
         this.addonLifecycle.RegisterListener(AddonEvent.PreFinalize, "RetainerList", this.RetainerListFinalize);
         this.addonLifecycle.RegisterListener(AddonEvent.PostDraw, "SelectString", this.SelectStringDraw);
         this.addonLifecycle.RegisterListener(AddonEvent.PostDraw, "RetainerSell", this.RetainerSellDraw);
+        this.addonLifecycle.RegisterListener(AddonEvent.PreFinalize, "ItemSearchResult", this.ItemSearchClosed);
         return Task.CompletedTask;
     }
 
@@ -193,13 +197,25 @@ public class HighlightingService : IHostedService
         }
     }
 
+    private void ItemSearchClosed(AddonEvent type, AddonArgs args)
+    {
+        var retainerSellList = this.gameGui.GetAddonByName("RetainerSellList");
+        this.DrawRetainerSellList(retainerSellList);
+    }
+
     private unsafe void RetainerSellListDraw(AddonEvent type, AddonArgs args)
+    {
+        var addonPtr = args.Addon;
+        this.DrawRetainerSellList(addonPtr);
+    }
+
+    private unsafe void DrawRetainerSellList(IntPtr addonPtr)
     {
         if (this.retainerService.RetainerId != 0)
         {
-            if (args.Addon != IntPtr.Zero)
+            if (addonPtr != IntPtr.Zero)
             {
-                var addon = (AtkUnitBase*)args.Addon;
+                var addon = (AtkUnitBase*)addonPtr;
                 if (addon != null)
                 {
                     var isEnabled = this.retainerSellListSetting.CurrentValue(this.configuration);
@@ -241,7 +257,8 @@ public class HighlightingService : IHostedService
 
                             var saleItem = saleItems[index];
 
-                            var isUndercut = this.undercutService.IsItemUndercut(saleItem) ?? false;
+                            var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(saleItem);
+                            var isUndercut = recommendedUnitPrice != null && recommendedUnitPrice < saleItem.UnitPrice;
 
                             var needsUpdate = !saleItem.IsEmpty() && this.undercutService.NeedsUpdate(saleItem, interval);
 
@@ -274,6 +291,11 @@ public class HighlightingService : IHostedService
                                 {
                                     sellingTextNode->TextColor = ColorFromVector4(ImGuiColors.DalamudYellow);
                                 }
+                                else
+                                {
+                                    sellingTextNode->SetText(sellingTextNode->OriginalTextPointer);
+                                    sellingTextNode->TextColor = this.originalRetainerSellListColor.Value;
+                                }
                             }
                         }
                     }
@@ -290,6 +312,7 @@ public class HighlightingService : IHostedService
         this.addonLifecycle.UnregisterListener(AddonEvent.PostDraw, "RetainerSell", this.RetainerSellDraw);
         this.addonLifecycle.UnregisterListener(AddonEvent.PostDraw, "RetainerList", this.RetainerListDraw);
         this.addonLifecycle.UnregisterListener(AddonEvent.PreFinalize, "RetainerList", this.RetainerListFinalize);
+        this.addonLifecycle.UnregisterListener(AddonEvent.PreFinalize, "ItemSearchResult", this.ItemSearchClosed);
         return Task.CompletedTask;
     }
 }

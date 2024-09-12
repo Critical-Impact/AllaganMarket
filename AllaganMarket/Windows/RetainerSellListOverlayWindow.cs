@@ -37,7 +37,6 @@ public class RetainerSellListOverlayWindow : OverlayWindow
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
     private readonly RetainerMarketService retainerMarketService;
     private readonly UndercutService undercutService;
-    private readonly UndercutBySetting undercutBySetting;
     private readonly HighlightingRetainerSellListSetting retainerSellListSetting;
     private bool showAllItems;
 
@@ -58,7 +57,6 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         ShowRetainerOverlaySetting retainerOverlaySetting,
         RetainerMarketService retainerMarketService,
         UndercutService undercutService,
-        UndercutBySetting undercutBySetting,
         HighlightingRetainerSellListSetting retainerSellListSetting)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer Sell List Overlay")
     {
@@ -73,7 +71,6 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         this.retainerOverlaySetting = retainerOverlaySetting;
         this.retainerMarketService = retainerMarketService;
         this.undercutService = undercutService;
-        this.undercutBySetting = undercutBySetting;
         this.retainerSellListSetting = retainerSellListSetting;
         this.AttachAddon("RetainerSellList", AttachPosition.Right);
         this.Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
@@ -233,9 +230,8 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                             continue;
                         }
 
-                        var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
                         var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(saleItem);
-                        var recommendedPrice = recommendedUnitPrice == null ? "No Data" : Math.Max(1, recommendedUnitPrice.Value - undercutAmount).ToString();
+                        var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
 
                         itemsToCheck = true;
                         ImGui.TableNextRow();

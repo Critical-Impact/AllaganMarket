@@ -37,7 +37,6 @@ public class RetainerSellOverlayWindow : OverlayWindow
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
     private readonly RetainerMarketService retainerMarketService;
     private readonly UndercutService undercutService;
-    private readonly UndercutBySetting undercutBySetting;
 
     public RetainerSellOverlayWindow(
         IAddonLifecycle addonLifecycle,
@@ -55,8 +54,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
         IInventoryService inventoryService,
         ShowRetainerOverlaySetting retainerOverlaySetting,
         RetainerMarketService retainerMarketService,
-        UndercutService undercutService,
-        UndercutBySetting undercutBySetting)
+        UndercutService undercutService)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer Sell Overlay")
     {
         this.characterMonitorService = characterMonitorService;
@@ -70,7 +68,6 @@ public class RetainerSellOverlayWindow : OverlayWindow
         this.retainerOverlaySetting = retainerOverlaySetting;
         this.retainerMarketService = retainerMarketService;
         this.undercutService = undercutService;
-        this.undercutBySetting = undercutBySetting;
         this.AttachAddon("RetainerSell", AttachPosition.Right);
         this.Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoResize;
         this.RespectCloseHotkey = false;
@@ -208,8 +205,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
 
             var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.RowId, isHq ?? false);
             var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.RowId);
-            var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
-            var recommendedPrice = recommendedUnitPrice == null ? "No Data" : Math.Max(1, recommendedUnitPrice.Value - undercutAmount).ToString();
+            var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
 
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))
             {
