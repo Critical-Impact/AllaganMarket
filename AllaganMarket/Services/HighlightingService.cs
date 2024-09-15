@@ -88,8 +88,6 @@ public class HighlightingService : IHostedService
         this.addonLifecycle.RegisterListener(AddonEvent.PreFinalize, "RetainerSellList", this.RetainerSellListFinalize);
         this.addonLifecycle.RegisterListener(AddonEvent.PostDraw, "RetainerList", this.RetainerListDraw);
         this.addonLifecycle.RegisterListener(AddonEvent.PreFinalize, "RetainerList", this.RetainerListFinalize);
-        this.addonLifecycle.RegisterListener(AddonEvent.PostDraw, "SelectString", this.SelectStringDraw);
-        this.addonLifecycle.RegisterListener(AddonEvent.PostDraw, "RetainerSell", this.RetainerSellDraw);
         this.addonLifecycle.RegisterListener(AddonEvent.PreFinalize, "ItemSearchResult", this.ItemSearchClosed);
         return Task.CompletedTask;
     }
@@ -139,12 +137,12 @@ public class HighlightingService : IHostedService
                             continue;
                         }
 
-                        if (index < 0 || index >= retainers.Length)
+                        if (listItemRenderer->ListItemIndex < 0 || listItemRenderer->ListItemIndex >= retainers.Length)
                         {
                             continue;
                         }
 
-                        var retainer = retainers[index];
+                        var retainer = retainers[listItemRenderer->ListItemIndex];
 
                         var undercutItems = this.saleTrackerService.SaleItems[retainer.CharacterId]
                                                 .Where(c => this.undercutService.IsItemUndercut(c) ?? false).ToList();
@@ -183,20 +181,6 @@ public class HighlightingService : IHostedService
         }
     }
 
-    private void RetainerSellDraw(AddonEvent type, AddonArgs args)
-    {
-        if (this.retainerService.RetainerId != 0)
-        {
-        }
-    }
-
-    private void SelectStringDraw(AddonEvent type, AddonArgs args)
-    {
-        if (this.retainerService.RetainerId != 0)
-        {
-        }
-    }
-
     private void ItemSearchClosed(AddonEvent type, AddonArgs args)
     {
         var retainerSellList = this.gameGui.GetAddonByName("RetainerSellList");
@@ -229,16 +213,18 @@ public class HighlightingService : IHostedService
                     var componentList = addon->GetComponentListById(11);
                     if (componentList != null)
                     {
-                        if (!this.saleTrackerService.SaleItems.TryGetValue(this.retainerService.RetainerId, out var value))
+                        var retainerSales = this.saleTrackerService.GetRetainerSales(this.retainerService.RetainerId);
+                        if (retainerSales == null)
                         {
                             return;
                         }
 
-                        var saleItems = value.SortByRetainerMarketOrder(this.itemSheet).ToArray();
+                        var saleItems = retainerSales.Where(c => !c.IsEmpty()).SortByRetainerMarketOrder(this.itemSheet).ToArray();
 
                         foreach (var index in Enumerable.Range(0, componentList->ListLength))
                         {
                             var listItemRenderer = componentList->ItemRendererList[index].AtkComponentListItemRenderer;
+
                             if (listItemRenderer is null)
                             {
                                 continue;
@@ -250,15 +236,14 @@ public class HighlightingService : IHostedService
                                 continue;
                             }
 
-                            if (index < 0 || index >= saleItems.Length)
+                            if (listItemRenderer->ListItemIndex < 0 || listItemRenderer->ListItemIndex >= saleItems.Length)
                             {
                                 continue;
                             }
 
-                            var saleItem = saleItems[index];
+                            var saleItem = saleItems[listItemRenderer->ListItemIndex];
 
-                            var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(saleItem);
-                            var isUndercut = recommendedUnitPrice != null && recommendedUnitPrice < saleItem.UnitPrice;
+                            var isUndercut = this.undercutService.IsItemUndercut(saleItem) ?? false;
 
                             var needsUpdate = !saleItem.IsEmpty() && this.undercutService.NeedsUpdate(saleItem, interval);
 
@@ -308,8 +293,6 @@ public class HighlightingService : IHostedService
     {
         this.addonLifecycle.UnregisterListener(AddonEvent.PostDraw, "RetainerSellList", this.RetainerSellListDraw);
         this.addonLifecycle.UnregisterListener(AddonEvent.PreFinalize, "RetainerSellList", this.RetainerSellListFinalize);
-        this.addonLifecycle.UnregisterListener(AddonEvent.PostDraw, "SelectString", this.SelectStringDraw);
-        this.addonLifecycle.UnregisterListener(AddonEvent.PostDraw, "RetainerSell", this.RetainerSellDraw);
         this.addonLifecycle.UnregisterListener(AddonEvent.PostDraw, "RetainerList", this.RetainerListDraw);
         this.addonLifecycle.UnregisterListener(AddonEvent.PreFinalize, "RetainerList", this.RetainerListFinalize);
         this.addonLifecycle.UnregisterListener(AddonEvent.PreFinalize, "ItemSearchResult", this.ItemSearchClosed);
