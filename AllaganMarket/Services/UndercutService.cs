@@ -388,18 +388,38 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             var minHqListing = response.listings.Where(c => c.hq).DefaultIfEmpty().MinBy(c => c?.pricePerUnit);
             if (minNqListing != null)
             {
-                var listingDate =
-                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(minNqListing.lastReviewTime);
+                if (minNqListing.lastReviewTime != 0)
+                {
+                    var listingDate =
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(minNqListing.lastReviewTime);
 
-                this.UpdateMarketPriceCache(itemId, false, worldId, MarketPriceCacheType.UniversalisReq, listingDate, (uint)minNqListing.pricePerUnit, this.characterMonitorService.IsCharacterKnown(minNqListing.retainerName, worldId));
+                    this.UpdateMarketPriceCache(
+                        itemId,
+                        false,
+                        worldId,
+                        MarketPriceCacheType.UniversalisReq,
+                        listingDate,
+                        (uint)minNqListing.pricePerUnit,
+                        this.characterMonitorService.IsCharacterKnown(minNqListing.retainerName, worldId));
+                }
             }
 
             if (minHqListing != null)
             {
-                var listingDate =
-                    new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(minHqListing.lastReviewTime);
+                if (minHqListing.lastReviewTime != 0)
+                {
+                    var listingDate =
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(minHqListing.lastReviewTime);
 
-                this.UpdateMarketPriceCache(itemId, true, worldId, MarketPriceCacheType.UniversalisReq, listingDate, (uint)minHqListing.pricePerUnit, this.characterMonitorService.IsCharacterKnown(minHqListing.retainerName, worldId));
+                    this.UpdateMarketPriceCache(
+                        itemId,
+                        true,
+                        worldId,
+                        MarketPriceCacheType.UniversalisReq,
+                        listingDate,
+                        (uint)minHqListing.pricePerUnit,
+                        this.characterMonitorService.IsCharacterKnown(minHqListing.retainerName, worldId));
+                }
             }
         }
     }

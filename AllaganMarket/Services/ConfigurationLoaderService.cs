@@ -102,7 +102,7 @@ public class ConfigurationLoaderService(
                                           Path.Combine(
                                               pluginInterface.GetPluginConfigDirectory(),
                                               "MarketPriceCache.csv"),
-                                          out _).GroupBy(c => c.WorldId).ToDictionary(c => c.Key, c => c.ToDictionary(d => (d.ItemId, d.IsHq), e => e));
+                                          out _).Where(c => c.LastUpdated != DateTime.UnixEpoch).GroupBy(c => c.WorldId).ToDictionary(c => c.Key, c => c.ToDictionary(d => (d.ItemId, d.IsHq), e => e));
         }
         catch (FileNotFoundException)
         {
