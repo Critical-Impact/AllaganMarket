@@ -4,9 +4,9 @@
     "net8.0-windows7.0": {
       "AllaganLib.Data": {
         "type": "Direct",
-        "requested": "[1.0.9, )",
-        "resolved": "1.0.9",
-        "contentHash": "+q2MCQTjVJ/C+8regL5ycWYffMkGNvEe/86KuK7r8f+gy8ONuCCfCYO6Y1S1iwJdMW2xbteTJ8HU4+ZfIE0xfA==",
+        "requested": "[1.0.10, )",
+        "resolved": "1.0.10",
+        "contentHash": "/mlZ1A3tXR3IqjiGL6cre3v5+0//Xu45wH6jpU7odtZmJKnHTEBs+OvMpf9NeAagMlahKIVQf/TuOM4s7M5Oug==",
         "dependencies": {
           "CSVFile": "3.1.0",
           "CsvHelper": "30.0.1"
@@ -14,20 +14,20 @@
       },
       "AllaganLib.Interface": {
         "type": "Direct",
-        "requested": "[1.0.9, )",
-        "resolved": "1.0.9",
-        "contentHash": "dmSnUY40F+/DyDqEirn179YLO4Z7TzJWihlNsTx/6DPYHaFJBnqGXDDXqBQfJhnJwrR1VNnz8y6LXV0FXz9p1A==",
+        "requested": "[1.0.10, )",
+        "resolved": "1.0.10",
+        "contentHash": "pyouFNHIOlK/9oDvIcScEDUa4L9I+0PZxvOjt6/4tPNRC96uKtMHMeD9gbG1G48cnt6IRyIXHwwMHtPCu3OfAg==",
         "dependencies": {
-          "AllaganLib.Data": "1.0.9",
-          "AllaganLib.Shared": "1.0.9",
+          "AllaganLib.Data": "1.0.10",
+          "AllaganLib.Shared": "1.0.10",
           "NaturalSort.Extension": "4.3.0"
         }
       },
       "AllaganLib.Shared": {
         "type": "Direct",
-        "requested": "[1.0.9, )",
-        "resolved": "1.0.9",
-        "contentHash": "hcTpDyplJHNjwGvnglKvVbRvGNUduzQ5Q+fKIsjCeToBUjJR4O1z+lhR4YGJtVTCLAEV3beHjhuaZDId5ZgvhQ==",
+        "requested": "[1.0.10, )",
+        "resolved": "1.0.10",
+        "contentHash": "9/nO6hhgIWV2RSyFl20uv6qR5R0yIeOjxQ29ehQkzz6ZUSmZSEzG8KU10yvzMGKAWqLR/Sh0aEXxwpOQlo9Kcg==",
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0"
@@ -35,11 +35,11 @@
       },
       "AllaganLib.Universalis": {
         "type": "Direct",
-        "requested": "[1.0.9, )",
-        "resolved": "1.0.9",
-        "contentHash": "pdAyhqL8ouBwMIdwRk8/U63n6icU6U6CD2jGeDwDXEA1mxIPAP2QfVDBFqZTtAHT2pXof55FZqoncTotWEJyfw==",
+        "requested": "[1.0.10, )",
+        "resolved": "1.0.10",
+        "contentHash": "0J7jJP32FbamovCCMdRmjyc80xvAkieknFuARRMewLyge1520KWRTbm6agLRstEcwlTwXP1CG5zocHFboHJzog==",
         "dependencies": {
-          "AllaganLib.Shared": "1.0.9",
+          "AllaganLib.Shared": "1.0.10",
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
           "MongoDB.Bson": "2.25.0"

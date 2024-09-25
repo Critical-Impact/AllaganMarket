@@ -148,6 +148,8 @@ public class NotificationService : IHostedService
 
     private void PrintUndercuts(List<SaleItem> undercutItems)
     {
+        undercutItems = undercutItems.Where(c => this.undercutService.IsItemUndercut(c) ?? false).ToList();
+
         if (undercutItems.Count != 0)
         {
             var groupingSetting = this.notifyUndercutGroupingSetting.CurrentValue(this.configuration);
@@ -158,7 +160,7 @@ public class NotificationService : IHostedService
                 {
                     var item = this.itemSheet.GetRow(undercutItem.ItemId);
                     var undercutAmount = this.undercutService.GetUndercutBy(undercutItem);
-                    if (undercutAmount != null && item != null)
+                    if (undercutAmount != null && undercutAmount != 0 && item != null)
                     {
                         this.SendMessage(
                             chatType,
@@ -180,7 +182,7 @@ public class NotificationService : IHostedService
                     foreach (var undercutItem in itemGroup)
                     {
                         var undercutAmount = this.undercutService.GetUndercutBy(undercutItem);
-                        if (undercutAmount != null)
+                        if (undercutAmount != null && undercutAmount != 0)
                         {
                             totalUndercutAmount = undercutAmount.Value;
                             break;
@@ -188,7 +190,7 @@ public class NotificationService : IHostedService
                     }
 
                     var item = this.itemSheet.GetRow(itemGroup.Key);
-                    if (item != null)
+                    if (item != null && totalUndercutAmount != 0)
                     {
                         this.SendMessage(
                             chatType,

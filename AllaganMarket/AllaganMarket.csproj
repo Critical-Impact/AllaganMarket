@@ -27,10 +27,10 @@
         <PackageReference Include="System.Reactive" Version="6.0.1" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AllaganLib.Data" Version="1.0.9" />
-        <PackageReference Include="AllaganLib.Interface" Version="1.0.9" />
-        <PackageReference Include="AllaganLib.Shared" Version="1.0.9" />
-        <PackageReference Include="AllaganLib.Universalis" Version="1.0.9" />
+        <PackageReference Include="AllaganLib.Data" Version="1.0.10" />
+        <PackageReference Include="AllaganLib.Interface" Version="1.0.10" />
+        <PackageReference Include="AllaganLib.Shared" Version="1.0.10" />
+        <PackageReference Include="AllaganLib.Universalis" Version="1.0.10" />
     </ItemGroup>
 
 
