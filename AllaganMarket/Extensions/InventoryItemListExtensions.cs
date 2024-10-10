@@ -18,6 +18,7 @@ public static class InventoryItemListExtensions
     {
         return item.OrderBy(c => c.GetItem(itemSheet)?.ItemUICategory.Value?.OrderMajor ?? 0)
                    .ThenBy(c => c.GetItem(itemSheet)?.ItemUICategory.Value?.OrderMinor ?? 0)
+                   .ThenBy(c => c.Flags == InventoryItem.ItemFlags.None ? 0 : 1)
                    .ThenBy(c => c.GetItem(itemSheet)?.Unknown19)
                    .ThenBy(c => c.GetItem(itemSheet)?.RowId);
     }
@@ -29,6 +30,7 @@ public static class InventoryItemListExtensions
         return saleItem.OrderBy(c => c.ItemId == 0 ? 0 : -1)
                        .ThenBy(c => c.GetItem(itemSheet)?.ItemUICategory.Value?.OrderMajor ?? 0)
                        .ThenBy(c => c.GetItem(itemSheet)?.ItemUICategory.Value?.OrderMinor ?? 0)
+                       .ThenBy(c => !c.IsHq ? 0 : 1)
                        .ThenBy(c => c.GetItem(itemSheet)?.Unknown19)
                        .ThenBy(c => c.GetItem(itemSheet)?.RowId);
     }
