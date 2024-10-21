@@ -20,7 +20,7 @@ using FFXIVClientStructs.FFXIV.Common.Math;
 using ImGuiNET;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace AllaganMarket.Windows;
 
@@ -245,7 +245,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                         ImGui.Text(
                             saleItem.IsEmpty()
                                 ? "Empty"
-                                : this.itemSheet.GetRow(saleItem.ItemId)?.Name ?? "Unknown Item");
+                                : this.itemSheet.GetRowOrDefault(saleItem.ItemId)?.Name.ExtractText() ?? "Unknown Item");
                         green.Pop();
                         yellow.Pop();
                         red.Pop();

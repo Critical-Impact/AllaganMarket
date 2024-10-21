@@ -12,7 +12,7 @@ using Dalamud.Plugin.Services;
 using ImGuiNET;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace AllaganMarket.Tables.Columns;
 
@@ -45,7 +45,7 @@ public class ItemIconColumn : IconColumn<SearchResultConfiguration, SearchResult
 
     public override int? CurrentValue(SearchResult item)
     {
-        return item.SaleItem?.GetItem(this.itemSheet)!.Icon ?? item.SoldItem?.GetItem(this.itemSheet)!.Icon ?? null;
+        return item.SaleItem?.GetItem(this.itemSheet)!.Value.Icon ?? item.SoldItem?.GetItem(this.itemSheet)!.Value.Icon ?? null;
     }
 
     public override string HelpText { get; set; } = "The icon of the item";

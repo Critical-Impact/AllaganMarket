@@ -10,7 +10,7 @@ using AllaganMarket.Tables;
 using Dalamud.Plugin.Services;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace AllaganMarket.Filtering;
 

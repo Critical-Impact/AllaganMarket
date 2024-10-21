@@ -24,7 +24,7 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 using Microsoft.Extensions.Hosting;
 
@@ -178,7 +178,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             requestedQuality = true;
         }
 
-        if (!this.itemSheet.GetRow(itemId)?.CanBeHq ?? true)
+        if (!this.itemSheet.GetRowOrDefault(itemId)?.CanBeHq ?? true)
         {
             requestedQuality = null;
         }
@@ -222,7 +222,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             requestedQuality = true;
         }
 
-        if (!this.itemSheet.GetRow(itemId)?.CanBeHq ?? true)
+        if (!this.itemSheet.GetRowOrDefault(itemId)?.CanBeHq ?? true)
         {
             requestedQuality = null;
         }
@@ -264,7 +264,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             requestedQuality = true;
         }
 
-        if (!this.itemSheet.GetRow(saleItem.ItemId)?.CanBeHq ?? true)
+        if (!this.itemSheet.GetRowOrDefault(saleItem.ItemId)?.CanBeHq ?? true)
         {
             requestedQuality = null;
         }
@@ -480,12 +480,13 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                     var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.DamagedGear, 0);
                     if (selectedItem != null && selectedItem->ItemId != 0)
                     {
-                        var activeSales = this.saleTrackerService.GetSales(null, currentPlayer.HomeWorld.Id)
+                        var activeSales = this.saleTrackerService.GetSales(null, currentPlayer.HomeWorld.RowId)
                                               .GroupBy(c => c.ItemId).ToDictionary(c => c.Key, c => c.ToList());
                         if (activeSales.TryGetValue(selectedItem->ItemId, out var currentSales))
                         {
-                            this.UpdateMarketPriceCache(selectedItem->ItemId, selectedItem->Flags != InventoryItem.ItemFlags.None, currentPlayer.HomeWorld.Id, MarketPriceCacheType.Game, offeringDate, currentSales.Min(c => c.UnitPrice), true);
+                            this.UpdateMarketPriceCache(selectedItem->ItemId, selectedItem->Flags != InventoryItem.ItemFlags.None, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, currentSales.Min(c => c.UnitPrice), true);
                         }
+                        //TODO: Remove both cached entries
                     }
                 }
                 else
@@ -500,11 +501,11 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
                     if (lowestOfferingNq != null)
                     {
-                        this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.Id, MarketPriceCacheType.Game, offeringDate, lowestOfferingNq.Value, false);
+                        this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingNq.Value, false);
                     }
                     else
                     {
-                        this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.Id, offeringDate);
+                        this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
                     }
 
                     var lowestOfferingHq = listings.Where(
@@ -514,11 +515,11 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                                                    .Min(c => c?.PricePerUnit);
                     if (lowestOfferingHq != null)
                     {
-                        this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.Id, MarketPriceCacheType.Game, offeringDate, lowestOfferingHq.Value, false);
+                        this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingHq.Value, false);
                     }
                     else
                     {
-                        this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.Id, offeringDate);
+                        this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
                     }
                 }
             }
@@ -546,8 +547,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         {
             this.websocketService.SubscribeToChannel(
                 UniversalisWebsocketService.EventType.ListingsAdd,
-                this.clientState.LocalPlayer.HomeWorld.Id);
-            this.activeHomeWorld = this.clientState.LocalPlayer.HomeWorld.Id;
+                this.clientState.LocalPlayer.HomeWorld.RowId);
+            this.activeHomeWorld = this.clientState.LocalPlayer.HomeWorld.RowId;
         }
     }
 

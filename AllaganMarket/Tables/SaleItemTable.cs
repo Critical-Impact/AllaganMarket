@@ -16,7 +16,7 @@ using Dalamud.Plugin.Services;
 using ImGuiNET;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace AllaganMarket.Tables;
 

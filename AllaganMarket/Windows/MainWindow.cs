@@ -30,10 +30,13 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 
+using FFXIVClientStructs.FFXIV.Client.Game.Event;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+
 using ImGuiNET;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 using TimeUnit = Humanizer.Localisation.TimeUnit;
 
@@ -579,7 +582,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                     {
                         var world = this.worldSheet.GetRow(worldId)!;
                         if (ImGui.Selectable(
-                                world.Name.AsReadOnly().ExtractText(),
+                                world.Name.ExtractText(),
                                 this.saleFilter.WorldId == worldId,
                                 ImGuiSelectableFlags.AllowItemOverlap))
                         {
@@ -699,7 +702,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                                                     ImGui.Text(retainer.Name);
                                                     ImGui.Separator();
                                                     ImGui.Text(
-                                                        $"Class: {this.classJobSheet.GetRow(retainer.ClassJobId)?.Abbreviation.AsReadOnly().ExtractText() ?? "Unknown Class"}");
+                                                        $"Class: {this.classJobSheet.GetRowOrDefault(retainer.ClassJobId)?.Abbreviation.ExtractText() ?? "Unknown Class"}");
                                                     ImGui.Text($"Level: {retainer.Level}");
                                                     ImGui.Text("Left Click: Select/Unselect");
                                                     ImGui.Text("Right Click: Menu");
@@ -967,7 +970,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                         ImGuiWindowFlags.NoScrollbar);
                     if (infoChild)
                     {
-                        ImGui.Text(item.Name.AsReadOnly().ExtractText());
+                        ImGui.Text(item.Name.ExtractText());
                         ImGui.PushTextWrapPos();
                         ImGui.Text(
                             $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.TotalIncTax.ToString("C", this.gilNumberFormat)})");
@@ -1079,7 +1082,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                                 ImGui.SetCursorPos(startPosition);
                             }
 
-                            ImGui.Text(item.Name.AsReadOnly().ExtractText());
+                            ImGui.Text(item.Name.ExtractText());
                             ImGui.PushTextWrapPos();
                             ImGui.Text(
                                 $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
@@ -1104,9 +1107,9 @@ public class MainWindow : ExtendedWindow, IDisposable
                         using var tooltip = ImRaii.Tooltip();
                         if (tooltip)
                         {
-                            ImGui.Text($"{item.Name.AsReadOnly().ExtractText()}");
+                            ImGui.Text($"{item.Name.ExtractText()}");
                             ImGui.Text($"{character?.Name ?? "Unknown"}");
-                            ImGui.Text($"{retainerWorld.Name.AsReadOnly().ExtractText()}");
+                            ImGui.Text($"{retainerWorld.Name.ExtractText()}");
                             ImGui.Text(
                                 $"{saleItem.Quantity} at {saleItem.UnitPrice.ToString("C", this.gilNumberFormat)} ({saleItem.Total.ToString("C", this.gilNumberFormat)})");
                             ImGui.Text($"Listed: {listedAtHumanized}");
@@ -1318,7 +1321,7 @@ public class MainWindow : ExtendedWindow, IDisposable
 
         if (this.saleFilter.WorldId != null)
         {
-            return this.worldSheet.GetRow((uint)this.saleFilter.WorldId)?.Name.AsReadOnly().ExtractText() ??
+            return this.worldSheet.GetRowOrDefault((uint)this.saleFilter.WorldId)?.Name.ExtractText() ??
                    "Unknown World";
         }
 
