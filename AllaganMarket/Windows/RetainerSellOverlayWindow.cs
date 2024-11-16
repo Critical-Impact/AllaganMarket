@@ -20,7 +20,7 @@ using FFXIVClientStructs.FFXIV.Common.Math;
 using ImGuiNET;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace AllaganMarket.Windows;
 
@@ -203,8 +203,8 @@ public class RetainerSellOverlayWindow : OverlayWindow
                     break;
             }
 
-            var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.RowId, isHq ?? false);
-            var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.RowId);
+            var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.Value.RowId, isHq ?? false);
+            var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.Value.RowId);
             var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
 
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))
@@ -216,7 +216,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
                 ImGui.TableNextColumn();
                 ImGui.Text("Name: ");
                 ImGui.TableNextColumn();
-                ImGui.Text($"{currentItem.Name}");
+                ImGui.Text($"{currentItem.Value.Name}");
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();

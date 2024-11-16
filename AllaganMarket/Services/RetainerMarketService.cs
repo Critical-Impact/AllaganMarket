@@ -255,7 +255,7 @@ public class RetainerMarketService(
 
             if (eventType == RetainerMarketListEventType.Added && this.MarketListEvent?.SaleItem != null)
             {
-                this.MarketListEvent.SaleItem.Quantity = originalQuantity - selectedItem->Quantity;
+                this.MarketListEvent.SaleItem.Quantity = (uint)(originalQuantity - selectedItem->Quantity);
             }
 
             return retainerItemCommandDetour;

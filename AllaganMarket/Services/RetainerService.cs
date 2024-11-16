@@ -12,7 +12,7 @@ namespace AllaganMarket.Services;
 /// </summary>
 public class RetainerService(IClientState clientState) : IRetainerService
 {
-    public uint RetainerWorldId => clientState.LocalPlayer?.HomeWorld.Id ?? 0;
+    public uint RetainerWorldId => clientState.LocalPlayer?.HomeWorld.RowId ?? 0;
 
     public ulong RetainerId
     {

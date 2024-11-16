@@ -25,7 +25,7 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.WorldId = worldId;
         this.ItemId = inventoryItem.ItemId;
         this.IsHq = inventoryItem.Flags.HasFlag(InventoryItem.ItemFlags.HighQuality);
-        this.Quantity = inventoryItem.Quantity;
+        this.Quantity = (uint)inventoryItem.Quantity;
         this.UnitPrice = retainerMarketItemPrice?.UnitPrice ?? 0;
         this.ListedAt = DateTime.Now;
         this.UpdatedAt = DateTime.Now;
@@ -37,7 +37,7 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.WorldId = worldId;
         this.ItemId = inventoryItem.ItemId;
         this.IsHq = inventoryItem.Flags.HasFlag(InventoryItem.ItemFlags.HighQuality);
-        this.Quantity = inventoryItem.Quantity;
+        this.Quantity = (uint)inventoryItem.Quantity;
         this.UnitPrice = unitPrice;
         this.ListedAt = DateTime.Now;
         this.UpdatedAt = DateTime.Now;

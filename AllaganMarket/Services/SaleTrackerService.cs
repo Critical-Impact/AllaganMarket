@@ -17,7 +17,7 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 using Microsoft.Extensions.Hosting;
 
@@ -349,7 +349,7 @@ public class SaleTrackerService(
 
                         value.Add(newSale);
 
-                        var item = this.itemSheet.GetRow(newSale.ItemId);
+                        var item = this.itemSheet.GetRowOrDefault(newSale.ItemId);
                         if (item != null)
                         {
                             this.ItemSold?.Invoke(previousItem, newSale);

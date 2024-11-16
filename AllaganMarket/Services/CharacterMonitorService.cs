@@ -140,8 +140,8 @@ public class CharacterMonitorService(
                 CharacterType.Character,
                 clientState.LocalContentId,
                 clientState.LocalPlayer.Name.ToString(),
-                clientState.LocalPlayer.HomeWorld.Id,
-                clientState.LocalPlayer.ClassJob.Id,
+                clientState.LocalPlayer.HomeWorld.RowId,
+                clientState.LocalPlayer.ClassJob.RowId,
                 clientState.LocalPlayer.Level,
                 0);
             this.Characters[clientState.LocalContentId] = newCharacter;
@@ -168,7 +168,7 @@ public class CharacterMonitorService(
                         CharacterType.Retainer,
                         retainerId,
                         retainerName,
-                        clientState.LocalPlayer.HomeWorld.Id,
+                        clientState.LocalPlayer.HomeWorld.RowId,
                         retainer.ClassJob,
                         retainer.Level,
                         (byte)displayOrder);

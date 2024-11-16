@@ -16,7 +16,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Plugin.Services;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 using Microsoft.Extensions.Hosting;
 
@@ -158,13 +158,13 @@ public class NotificationService : IHostedService
             {
                 foreach (var undercutItem in undercutItems)
                 {
-                    var item = this.itemSheet.GetRow(undercutItem.ItemId);
+                    var item = this.itemSheet.GetRowOrDefault(undercutItem.ItemId);
                     var undercutAmount = this.undercutService.GetUndercutBy(undercutItem);
                     if (undercutAmount != null && undercutAmount != 0 && item != null)
                     {
                         this.SendMessage(
                             chatType,
-                            $"You have been undercut by {undercutAmount.Value.ToString("C", this.gilNumberFormat)} for {item.Singular.AsReadOnly().ExtractText()}");
+                            $"You have been undercut by {undercutAmount.Value.ToString("C", this.gilNumberFormat)} for {item.Value.Singular.ExtractText()}");
                     }
                 }
             }
@@ -189,12 +189,12 @@ public class NotificationService : IHostedService
                         }
                     }
 
-                    var item = this.itemSheet.GetRow(itemGroup.Key);
+                    var item = this.itemSheet.GetRowOrDefault(itemGroup.Key);
                     if (item != null && totalUndercutAmount != 0)
                     {
                         this.SendMessage(
                             chatType,
-                            $"You have been undercut by {totalUndercutAmount.ToString("C", this.gilNumberFormat)} on {itemGroup.Count()} {item.Singular.AsReadOnly().ExtractText()} you are selling.");
+                            $"You have been undercut by {totalUndercutAmount.ToString("C", this.gilNumberFormat)} on {itemGroup.Count()} {item.Value.Singular.ExtractText()} you are selling.");
                     }
                 }
             }
@@ -227,12 +227,12 @@ public class NotificationService : IHostedService
     {
         if (this.notifySoldItemSetting.CurrentValue(this.configuration))
         {
-            var item = this.itemSheet.GetRow(soldItem.ItemId);
+            var item = this.itemSheet.GetRowOrDefault(soldItem.ItemId);
             if (item != null)
             {
                 var chatEntry = new XivChatEntry();
                 chatEntry.Message = new SeStringBuilder().AddText(
-                                                             $"You sold {soldItem.Quantity} {item.Name.AsReadOnly().ExtractText()} for {soldItem.TotalIncTax.ToString("C", this.gilNumberFormat)}")
+                                                             $"You sold {soldItem.Quantity} {item.Value.Name.ExtractText()} for {soldItem.TotalIncTax.ToString("C", this.gilNumberFormat)}")
                                                          .BuiltString;
                 chatEntry.Type = this.notifySoldItemChatTypeSetting.CurrentValue(this.configuration);
                 this.chatGui.Print(chatEntry);

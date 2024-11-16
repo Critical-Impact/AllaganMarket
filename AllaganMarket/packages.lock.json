@@ -4,9 +4,9 @@
     "net8.0-windows7.0": {
       "AllaganLib.Data": {
         "type": "Direct",
-        "requested": "[1.0.10, )",
-        "resolved": "1.0.10",
-        "contentHash": "/mlZ1A3tXR3IqjiGL6cre3v5+0//Xu45wH6jpU7odtZmJKnHTEBs+OvMpf9NeAagMlahKIVQf/TuOM4s7M5Oug==",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "vJsKJLjSeXbom+8db44B7N3kxkZkQmkpcPI3O6iO0uIG4JlN1jB/r7/Xr3M9HZy5FS16GcqWTzne/GXRUC4Xcw==",
         "dependencies": {
           "CSVFile": "3.1.0",
           "CsvHelper": "30.0.1"
@@ -14,20 +14,20 @@
       },
       "AllaganLib.Interface": {
         "type": "Direct",
-        "requested": "[1.0.10, )",
-        "resolved": "1.0.10",
-        "contentHash": "pyouFNHIOlK/9oDvIcScEDUa4L9I+0PZxvOjt6/4tPNRC96uKtMHMeD9gbG1G48cnt6IRyIXHwwMHtPCu3OfAg==",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "xhmAYewux/kaFkfyd4505Cd2cBAhGhp3V1aJUMN/zGzz3bf2DSzM/KTm1Pv1qj/g5wtAaC+zzhnA3FE/wzglVQ==",
         "dependencies": {
-          "AllaganLib.Data": "1.0.10",
-          "AllaganLib.Shared": "1.0.10",
+          "AllaganLib.Data": "1.1.0",
+          "AllaganLib.Shared": "1.1.0",
           "NaturalSort.Extension": "4.3.0"
         }
       },
       "AllaganLib.Shared": {
         "type": "Direct",
-        "requested": "[1.0.10, )",
-        "resolved": "1.0.10",
-        "contentHash": "9/nO6hhgIWV2RSyFl20uv6qR5R0yIeOjxQ29ehQkzz6ZUSmZSEzG8KU10yvzMGKAWqLR/Sh0aEXxwpOQlo9Kcg==",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "7x0aYdaaKgsWwUVV52/HNYwnxmHMrIdv3CYKNNIYwKpPWoFcbnuvrYUF9efgo1PXTlkqogHiEnllnehpbgGBIQ==",
         "dependencies": {
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0"
@@ -35,11 +35,11 @@
       },
       "AllaganLib.Universalis": {
         "type": "Direct",
-        "requested": "[1.0.10, )",
-        "resolved": "1.0.10",
-        "contentHash": "0J7jJP32FbamovCCMdRmjyc80xvAkieknFuARRMewLyge1520KWRTbm6agLRstEcwlTwXP1CG5zocHFboHJzog==",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "rYgSrrMwyS9zeyrSZuyLdCt7+z7/kPL8l29uz+EUIKgZmbhDzHMzxkR+fyyqJioIcV2E8rNhdkuTk6s43FrHSw==",
         "dependencies": {
-          "AllaganLib.Shared": "1.0.10",
+          "AllaganLib.Shared": "1.1.0",
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
           "MongoDB.Bson": "2.25.0"
@@ -66,12 +66,12 @@
       },
       "DalaMock.Host": {
         "type": "Direct",
-        "requested": "[2.0.26, )",
-        "resolved": "2.0.26",
-        "contentHash": "cfR5TCVwbDTXuoAgZAnGSAaq4hqueTegS9WnKnjyEKxrJXETVxil+h1gQXhSv+TNDYuaGacv7z4rjCpE7u5Tpw==",
+        "requested": "[2.1.1, )",
+        "resolved": "2.1.1",
+        "contentHash": "qgdiiJ/vKRMna3GOzgwJ/GhaMlNI0xfCHND9lEob5u2xfJVSUHpI/g6KbY6Jp9xB4YOt6FGPPJ/qjbmJSrce8w==",
         "dependencies": {
           "Autofac.Extensions.DependencyInjection": "9.0.0",
-          "DalaMock.Shared": "2.0.26",
+          "DalaMock.Shared": "2.1.1",
           "Microsoft.Extensions.Hosting": "8.0.0",
           "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
           "Microsoft.Extensions.ObjectPool": "9.0.0-preview.6.24328.4",
@@ -83,9 +83,9 @@
       },
       "DalaMock.Shared": {
         "type": "Direct",
-        "requested": "[2.0.26, )",
-        "resolved": "2.0.26",
-        "contentHash": "Vnh3UZNDW6a41AtW6H0RjyiVBdWKLGVVhWwPMQE19rzSMfl+jQite94vlZJ87cS+JbUoap2wX12S4tzjeT883A==",
+        "requested": "[2.1.1, )",
+        "resolved": "2.1.1",
+        "contentHash": "atV+mzv6vpepSMTO0IBAMyFDx1gSxVbjsKWAHIesRUVqetvC3BD6wpx4JaVAjS1OIVIRnXueDvyXV9UYMnGYNA==",
         "dependencies": {
           "Autofac.Extensions.DependencyInjection": "9.0.0",
           "Microsoft.Extensions.Hosting": "8.0.0",
@@ -94,9 +94,9 @@
       },
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[2.1.13, )",
-        "resolved": "2.1.13",
-        "contentHash": "rMN1omGe8536f4xLMvx9NwfvpAc9YFFfeXJ1t4P4PE6Gu8WCIoFliR1sh07hM+bfODmesk/dvMbji7vNI+B/pQ=="
+        "requested": "[11.0.0, )",
+        "resolved": "11.0.0",
+        "contentHash": "bjT7XUlhIJSmsE/O76b7weUX+evvGQctbQB8aKXt94o+oPWxHpCepxAGMs7Thow3AzCyqWs7cOpp9/2wcgRRQA=="
       },
       "Humanizer": {
         "type": "Direct",

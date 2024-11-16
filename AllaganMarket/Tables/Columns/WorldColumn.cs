@@ -7,7 +7,7 @@ using DalaMock.Host.Mediator;
 using ImGuiNET;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace AllaganMarket.Tables.Columns;
 
@@ -39,20 +39,20 @@ public class WorldColumn(ExcelSheet<World> worldSheet, ImGuiService imGuiService
         var worldId = item.SaleItem?.WorldId ?? item.SoldItem?.WorldId;
         if (worldId != null && worldId != 0)
         {
-            return worldSheet.GetRow(worldId.Value)?.Name.AsReadOnly().ExtractText() ?? string.Empty;
+            return worldSheet.GetRowOrDefault(worldId.Value)?.Name.ExtractText() ?? string.Empty;
         }
 
         if (item.SaleSummaryItem != null)
         {
             if (item.SaleSummaryItem.Grouping is { IsGrouped: true, WorldId: not null })
             {
-                return worldSheet.GetRow(item.SaleSummaryItem.Grouping.WorldId.Value)?.Name.AsReadOnly()
+                return worldSheet.GetRowOrDefault(item.SaleSummaryItem.Grouping.WorldId.Value)?.Name
                                  .ExtractText() ?? string.Empty;
             }
 
             if (item.SaleSummaryItem.Grouping.IsGrouped == false && item.SaleSummaryItem.WorldId != null)
             {
-                return worldSheet.GetRow(item.SaleSummaryItem.WorldId.Value)?.Name.AsReadOnly().ExtractText() ??
+                return worldSheet.GetRowOrDefault(item.SaleSummaryItem.WorldId.Value)?.Name.ExtractText() ??
                        string.Empty;
             }
 

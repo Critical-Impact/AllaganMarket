@@ -11,7 +11,7 @@ using DalaMock.Host.Mediator;
 using ImGuiNET;
 
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 using ImGuiService = AllaganLib.Interface.Services.ImGuiService;
 
@@ -51,7 +51,7 @@ public class NameColumn(
     {
         if (!saleSummaryItem.Grouping.IsGrouped && saleSummaryItem.ItemId != null)
         {
-            return itemSheet.GetRow(saleSummaryItem.ItemId.Value)?.Name.AsReadOnly().ExtractText() ??
+            return itemSheet.GetRowOrDefault(saleSummaryItem.ItemId.Value)?.Name.ExtractText() ??
                    "Unknown Item";
         }
 
@@ -60,10 +60,10 @@ public class NameColumn(
             List<string> pieces = [];
             if (saleSummaryItem.Grouping.WorldId != null)
             {
-                var world = worldSheet.GetRow(saleSummaryItem.Grouping.WorldId.Value);
+                var world = worldSheet.GetRowOrDefault(saleSummaryItem.Grouping.WorldId.Value);
                 if (world != null)
                 {
-                    pieces.Add(world.Name.AsReadOnly().ExtractText());
+                    pieces.Add(world.Value.Name.ExtractText());
                 }
             }
 
@@ -88,10 +88,10 @@ public class NameColumn(
 
             if (saleSummaryItem.Grouping.ItemId != null)
             {
-                var item = itemSheet.GetRow(saleSummaryItem.Grouping.ItemId.Value);
+                var item = itemSheet.GetRowOrDefault(saleSummaryItem.Grouping.ItemId.Value);
                 if (item != null)
                 {
-                    pieces.Add(item.Name.AsReadOnly().ExtractText());
+                    pieces.Add(item.Value.Name.ExtractText());
                 }
             }
 
@@ -115,11 +115,11 @@ public class NameColumn(
                 return "Empty Slot";
             }
 
-            return itemSheet.GetRow(item.SaleItem.ItemId)?.Name.AsReadOnly().ToString() ?? string.Empty;
+            return itemSheet.GetRowOrDefault(item.SaleItem.ItemId)?.Name.ToString() ?? string.Empty;
         }
         else if (item.SoldItem != null)
         {
-            return itemSheet.GetRow(item.SoldItem.ItemId)?.Name.AsReadOnly().ToString() ?? string.Empty;
+            return itemSheet.GetRowOrDefault(item.SoldItem.ItemId)?.Name.ToString() ?? string.Empty;
         }
         else if (item.SaleSummaryItem != null)
         {
