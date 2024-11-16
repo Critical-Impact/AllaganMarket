@@ -530,7 +530,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         }
     }
 
-    private void OnLogout()
+    private void OnLogout(int type, int code)
     {
         if (this.activeHomeWorld != 0)
         {

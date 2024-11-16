@@ -24,7 +24,7 @@ public class PluginStateService(IClientState clientState) : IHostedService
         return Task.CompletedTask;
     }
 
-    private void ClientStateOnLogout()
+    private void ClientStateOnLogout(int type, int code)
     {
         this.ShowWindows = false;
     }
