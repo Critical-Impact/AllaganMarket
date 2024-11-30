@@ -19,7 +19,7 @@ internal class Program
         var mockDalamudUi = mockContainer.GetMockUi();
         var pluginLoader = mockContainer.GetPluginLoader();
         var mockPlugin = pluginLoader.AddPlugin(typeof(AllaganMarketPluginMock));
-        pluginLoader.StartPlugin(mockPlugin);
+        //pluginLoader.StartPlugin(mockPlugin);
         mockContainer.GetContainer().Resolve<MockMockWindow>().IsOpen = true;
         mockDalamudUi.Run();
     }

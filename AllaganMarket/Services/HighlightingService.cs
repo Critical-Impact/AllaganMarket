@@ -219,7 +219,7 @@ public class HighlightingService : IHostedService
                             return;
                         }
 
-                        var saleItems = retainerSales.Where(c => !c.IsEmpty()).SortByRetainerMarketOrder(this.itemSheet).ToArray();
+                        var saleItems = retainerSales.Where(c => !c.IsEmpty()).SortByRetainerMarketOrder().ToArray();
 
                         foreach (var index in Enumerable.Range(0, componentList->ListLength))
                         {

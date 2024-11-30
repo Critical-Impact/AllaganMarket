@@ -1,10 +1,18 @@
+using System.Collections.Generic;
+using System.Linq;
+
 using AllaganMarket.Mediator;
 using AllaganMarket.Models;
 using AllaganMarket.Settings;
 
 using DalaMock.Host.Mediator;
 
+using Dalamud.Plugin.Services;
+
 using ImGuiNET;
+
+using Lumina.Excel;
+using Lumina.Excel.Sheets;
 
 namespace AllaganMarket.Services;
 
@@ -12,11 +20,17 @@ public class ImGuiMenus
 {
     private readonly UndercutService undercutService;
     private readonly Configuration configuration;
+    private readonly IGameInterfaceService gameInterfaceService;
+    private readonly ExcelSheet<Recipe> recipeSheet;
+    private readonly HashSet<uint> recipeItemIds;
 
-    public ImGuiMenus(UndercutService undercutService, Configuration configuration)
+    public ImGuiMenus(UndercutService undercutService, Configuration configuration, IDataManager dataManager, IGameInterfaceService gameInterfaceService)
     {
         this.undercutService = undercutService;
         this.configuration = configuration;
+        this.gameInterfaceService = gameInterfaceService;
+        this.recipeSheet = dataManager.GetExcelSheet<Recipe>();
+        this.recipeItemIds = this.recipeSheet.Select(c => c.ItemResult.RowId).Distinct().ToHashSet();
     }
 
     public MessageBase? DrawSoldItemMenu(SoldItem soldItem)
@@ -24,6 +38,11 @@ public class ImGuiMenus
         if (ImGui.Selectable("More Information"))
         {
             return new OpenMoreInformation(soldItem.ItemId);
+        }
+
+        if (this.recipeItemIds.Contains(soldItem.ItemId) && ImGui.Selectable("Open Crafting Log"))
+        {
+            this.gameInterfaceService.OpenCraftingLog(soldItem.ItemId);
         }
 
         if (ImGui.Selectable("Delete Sold Item"))
@@ -39,6 +58,11 @@ public class ImGuiMenus
         if (ImGui.Selectable("More Information"))
         {
             return new OpenMoreInformation(saleItem.ItemId);
+        }
+
+        if (this.recipeItemIds.Contains(saleItem.ItemId) && ImGui.Selectable("Open Crafting Log"))
+        {
+            this.gameInterfaceService.OpenCraftingLog(saleItem.ItemId);
         }
 
         if (ImGui.Selectable("Mark as Updated"))

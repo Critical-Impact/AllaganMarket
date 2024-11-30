@@ -196,7 +196,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         if (this.clientState.IsLoggedIn && activeRetainer != null)
         {
             var saleItems = this.saleTrackerService.GetRetainerSales(activeRetainer.CharacterId)
-                                ?.Where(c => !c.IsEmpty()).SortByRetainerMarketOrder(this.itemSheet).ToList();
+                                ?.Where(c => !c.IsEmpty()).SortByRetainerMarketOrder().ToList();
             var interval = this.updatePeriodSetting.CurrentValue(this.configuration);
             var itemsToCheck = false;
 

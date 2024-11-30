@@ -12,25 +12,10 @@ namespace AllaganMarket.Extensions;
 
 public static class InventoryItemListExtensions
 {
-    public static IEnumerable<InventoryItem> SortByRetainerMarketOrder(
-        this IEnumerable<InventoryItem> item,
-        ExcelSheet<Item> itemSheet)
-    {
-        return item.OrderBy(c => c.GetItem(itemSheet)?.ItemUICategory.ValueNullable?.OrderMajor ?? 0)
-                   .ThenBy(c => c.GetItem(itemSheet)?.ItemUICategory.ValueNullable?.OrderMinor ?? 0)
-                   .ThenBy(c => c.Flags == InventoryItem.ItemFlags.None ? 0 : 1)
-                   .ThenBy(c => c.GetItem(itemSheet)?.RowId);
-    }
-
     public static IEnumerable<SaleItem> SortByRetainerMarketOrder(
-        this IEnumerable<SaleItem> saleItem,
-        ExcelSheet<Item> itemSheet)
+        this IEnumerable<SaleItem> saleItem)
     {
-        return saleItem.OrderBy(c => c.ItemId == 0 ? 0 : -1)
-                       .ThenBy(c => c.GetItem(itemSheet)?.ItemUICategory.ValueNullable?.OrderMajor ?? 0)
-                       .ThenBy(c => c.GetItem(itemSheet)?.ItemUICategory.ValueNullable?.OrderMinor ?? 0)
-                       .ThenBy(c => !c.IsHq ? 0 : 1)
-                       .ThenBy(c => c.GetItem(itemSheet)?.RowId);
+        return saleItem.OrderBy(c => c.MenuIndex);
     }
 
     public static Item? GetItem(this InventoryItem inventoryItem, ExcelSheet<Item> itemSheet)

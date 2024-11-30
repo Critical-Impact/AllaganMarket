@@ -31,7 +31,8 @@ public class AllaganMarketPluginMock(
     IMarketBoard marketBoard,
     ITitleScreenMenu titleScreenMenu,
     IDtrBar dtrBar,
-    IGameGui gameGui) : AllaganMarketPlugin(
+    IGameGui gameGui,
+    ICondition condition) : AllaganMarketPlugin(
     pluginInterface,
     pluginLog,
     commandManager,
@@ -46,7 +47,8 @@ public class AllaganMarketPluginMock(
     marketBoard,
     titleScreenMenu,
     dtrBar,
-    gameGui)
+    gameGui,
+    condition)
 {
     public override void ConfigureContainer(ContainerBuilder containerBuilder)
     {
@@ -59,6 +61,7 @@ public class AllaganMarketPluginMock(
         containerBuilder.RegisterType<MockCharacterWindow>().AsSelf().As<Window>().SingleInstance();
         containerBuilder.RegisterType<MockBootService>().AsSelf().SingleInstance();
         containerBuilder.RegisterType<MockInventoryService>().AsSelf().AsImplementedInterfaces().SingleInstance();
+        containerBuilder.RegisterType<MockGameInterfaceService>().AsSelf().AsImplementedInterfaces().SingleInstance();
     }
 
     public override void ConfigureServices(IServiceCollection serviceCollection)
