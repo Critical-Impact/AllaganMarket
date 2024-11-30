@@ -19,7 +19,8 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         InventoryItem inventoryItem,
         RetainerMarketItemPrice? retainerMarketItemPrice,
         ulong retainerId,
-        uint worldId)
+        uint worldId,
+        uint menuIndex)
     {
         this.RetainerId = retainerId;
         this.WorldId = worldId;
@@ -29,9 +30,10 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.UnitPrice = retainerMarketItemPrice?.UnitPrice ?? 0;
         this.ListedAt = DateTime.Now;
         this.UpdatedAt = DateTime.Now;
+        this.MenuIndex = menuIndex;
     }
 
-    public SaleItem(InventoryItem inventoryItem, uint unitPrice, ulong retainerId, uint worldId)
+    public SaleItem(InventoryItem inventoryItem, uint unitPrice, ulong retainerId, uint worldId, uint menuIndex)
     {
         this.RetainerId = retainerId;
         this.WorldId = worldId;
@@ -41,37 +43,39 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.UnitPrice = unitPrice;
         this.ListedAt = DateTime.Now;
         this.UpdatedAt = DateTime.Now;
+        this.MenuIndex = menuIndex;
     }
 
-    public SaleItem(ulong retainerId, uint worldId, uint itemId, bool isHq, uint quantity, uint unitPrice)
-    {
-        this.RetainerId = retainerId;
-        this.WorldId = worldId;
-        this.ItemId = itemId;
-        this.IsHq = isHq;
-        this.Quantity = quantity;
-        this.UnitPrice = unitPrice;
-        this.ListedAt = DateTime.Now;
-        this.UpdatedAt = DateTime.Now;
-    }
-
-    public SaleItem(ulong retainerId, uint worldId)
-    {
-        this.RetainerId = retainerId;
-        this.WorldId = worldId;
-        this.ItemId = 0;
-        this.IsHq = false;
-        this.Quantity = 0;
-        this.UnitPrice = 0;
-        this.ListedAt = DateTime.Now;
-        this.UpdatedAt = DateTime.Now;
-    }
+    // public SaleItem(ulong retainerId, uint worldId, uint itemId, bool isHq, uint quantity, uint unitPrice)
+    // {
+    //     this.RetainerId = retainerId;
+    //     this.WorldId = worldId;
+    //     this.ItemId = itemId;
+    //     this.IsHq = isHq;
+    //     this.Quantity = quantity;
+    //     this.UnitPrice = unitPrice;
+    //     this.ListedAt = DateTime.Now;
+    //     this.UpdatedAt = DateTime.Now;
+    // }
+    //
+    // public SaleItem(ulong retainerId, uint worldId)
+    // {
+    //     this.RetainerId = retainerId;
+    //     this.WorldId = worldId;
+    //     this.ItemId = 0;
+    //     this.IsHq = false;
+    //     this.Quantity = 0;
+    //     this.UnitPrice = 0;
+    //     this.ListedAt = DateTime.Now;
+    //     this.UpdatedAt = DateTime.Now;
+    // }
 
     public SaleItem(ulong retainerId)
     {
         this.RetainerId = retainerId;
         this.ListedAt = DateTime.Now;
         this.UpdatedAt = DateTime.Now;
+        this.MenuIndex = 999;
     }
 
     /// <summary>
@@ -99,6 +103,8 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
     public DateTime ListedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    public uint MenuIndex { get; set; }
 
     public uint Total => this.Quantity * this.UnitPrice;
 
@@ -181,6 +187,10 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.UnitPrice = Convert.ToUInt32(lineData[5], CultureInfo.InvariantCulture);
         this.ListedAt = DateTime.Parse(lineData[7], CultureInfo.InvariantCulture);
         this.UpdatedAt = DateTime.Parse(lineData[8], CultureInfo.InvariantCulture);
+        if (lineData.Length > 9)
+        {
+            this.MenuIndex = Convert.ToUInt32(lineData[9]);
+        }
     }
 
     public string[] ToCsv()
@@ -195,7 +205,8 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
             this.UnitPrice.ToString(CultureInfo.InvariantCulture),
             string.Empty,
             this.ListedAt.ToString(CultureInfo.InvariantCulture),
-            this.UpdatedAt.ToString(CultureInfo.InvariantCulture)
+            this.UpdatedAt.ToString(CultureInfo.InvariantCulture),
+            this.MenuIndex.ToString(),
         ];
     }
 

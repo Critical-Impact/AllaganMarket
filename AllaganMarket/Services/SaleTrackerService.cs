@@ -389,11 +389,17 @@ public class SaleTrackerService(
             var item = newItems[index];
             var oldItem = this.SaleItems[retainerId][index];
 
-            if (item.IsEmpty() || oldItem.IsEmpty() || !item.Equals(oldItem))
+            if (item.IsEmpty() || oldItem.IsEmpty() || !item.Equals(oldItem) || item.MenuIndex != oldItem.MenuIndex)
             {
                 if (!oldItem.IsEmpty() && !item.IsEmpty())
                 {
                     item.ListedAt = oldItem.ListedAt;
+
+                    // We don't know the new menu index yet so copy the old index until we do
+                    if (item.MenuIndex == 1000)
+                    {
+                        item.MenuIndex = oldItem.MenuIndex;
+                    }
                 }
 
                 this.SaleItems[retainerId][index] = item;

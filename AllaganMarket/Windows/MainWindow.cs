@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
@@ -236,6 +237,22 @@ public class MainWindow : ExtendedWindow, IDisposable
                     }
                 }
 
+                ImGui.EndMenu();
+            }
+
+            if (ImGui.BeginMenu("Debug"))
+            {
+                if (ImGui.MenuItem("start"))
+                {
+                    this.fileDialogManager.OpenFileDialog("test", "*.exe",
+                                                          (b, s) =>
+                                                          {
+                                                              if (b)
+                                                              {
+                                                                  Process.Start(s);
+                                                              }
+                                                          });
+                }
                 ImGui.EndMenu();
             }
 
@@ -886,7 +903,7 @@ public class MainWindow : ExtendedWindow, IDisposable
             {
                 var retainerItems = this.saleItemTable.GetFilteredItems(this.saleItemSearchConfiguration)
                                         .Select(c => c.SaleItem!);
-                var iterateList = retainerItems.Select(c => c).SortByRetainerMarketOrder(this.itemSheet).ToList();
+                var iterateList = retainerItems.Select(c => c).SortByRetainerMarketOrder().ToList();
                 var total = 0;
                 for (var index = 0; index < iterateList.Count; index++)
                 {

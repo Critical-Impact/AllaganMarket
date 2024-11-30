@@ -32,6 +32,7 @@ using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 
+using Lumina;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
@@ -58,7 +59,8 @@ public class AllaganMarketPlugin : HostedPlugin
         IMarketBoard marketBoard,
         ITitleScreenMenu titleScreenMenu,
         IDtrBar dtrBar,
-        IGameGui gameGui)
+        IGameGui gameGui,
+        ICondition condition)
         : base(
             pluginInterface,
             pluginLog,
@@ -74,7 +76,8 @@ public class AllaganMarketPlugin : HostedPlugin
             marketBoard,
             titleScreenMenu,
             dtrBar,
-            gameGui)
+            gameGui,
+            condition)
     {
         this.gameGui = gameGui;
         this.CreateHost();
@@ -159,6 +162,8 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<SearchResultConfiguration>();
         containerBuilder.RegisterType<FileDialogManager>().SingleInstance();
         containerBuilder.RegisterType<DalamudFileDialogManager>().As<IFileDialogManager>().SingleInstance();
+        containerBuilder.RegisterType<AtkOrderService>().As<IAtkOrderService>().SingleInstance();
+        containerBuilder.RegisterType<GameInterfaceService>().As<IGameInterfaceService>().SingleInstance();
 
         containerBuilder.RegisterType<ClientWebSocket>();
         containerBuilder.Register(c => new HttpClient()).As<HttpClient>();
@@ -190,26 +195,15 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterType<TimeSpanHumanizerCache>();
 
         // Sheets
-        containerBuilder.Register<ExcelSheet<Item>>(
-            s =>
-            {
-                var dataManger = s.Resolve<IDataManager>();
-                return dataManger.GetExcelSheet<Item>()!;
-            }).SingleInstance();
-
-        containerBuilder.Register<ExcelSheet<ClassJob>>(
-            s =>
-            {
-                var dataManger = s.Resolve<IDataManager>();
-                return dataManger.GetExcelSheet<ClassJob>()!;
-            }).SingleInstance();
-
-        containerBuilder.Register<ExcelSheet<World>>(
-            s =>
-            {
-                var dataManger = s.Resolve<IDataManager>();
-                return dataManger.GetExcelSheet<World>()!;
-            }).SingleInstance();
+        containerBuilder.RegisterGeneric((context, parameters) =>
+                        {
+                            var gameData = context.Resolve<GameData>();
+                            var method = typeof(GameData).GetMethod(nameof(GameData.GetExcelSheet))
+                                                         ?.MakeGenericMethod(parameters);
+                            var sheet = method!.Invoke(gameData, [null, null])!;
+                            return sheet;
+                        })
+                        .As(typeof(ExcelSheet<>));
 
         containerBuilder.Register(
             s =>
