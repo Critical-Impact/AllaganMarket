@@ -53,7 +53,9 @@ public abstract class OverlayWindow : ExtendedWindow, IDisposable
     }
 
     private HashSet<(string AddonName, AttachPosition AttachPosition)> AttachedAddons { get; }
-
+    
+    public IGameGui GameGui => this.gameGui;
+    
     public override void PostDraw()
     {
         base.PostDraw();
@@ -65,7 +67,7 @@ public abstract class OverlayWindow : ExtendedWindow, IDisposable
         var addonKey = (addonName, attachPosition);
         if (!this.AttachedAddons.Contains(addonKey))
         {
-            var addonPtr = this.gameGui.GetAddonByName(addonName);
+            var addonPtr = this.GameGui.GetAddonByName(addonName);
             this.addonVisibility[addonName] = false;
             if (addonPtr != IntPtr.Zero)
             {
@@ -136,7 +138,7 @@ public abstract class OverlayWindow : ExtendedWindow, IDisposable
     {
         foreach (var attachedAddon in this.AttachedAddons)
         {
-            var addon = this.gameGui.GetAddonByName(attachedAddon.AddonName);
+            var addon = this.GameGui.GetAddonByName(attachedAddon.AddonName);
             if (addon != nint.Zero)
             {
                 this.BindToWindow(addon);

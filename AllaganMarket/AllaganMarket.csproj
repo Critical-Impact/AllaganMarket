@@ -28,10 +28,10 @@
         <PackageReference Update="DalamudPackager" Version="11.0.0" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AllaganLib.Data" Version="1.1.10" />
-        <PackageReference Include="AllaganLib.Interface" Version="1.1.0" />
-        <PackageReference Include="AllaganLib.Shared" Version="1.1.0" />
-        <PackageReference Include="AllaganLib.Universalis" Version="1.1.0" />
+        <PackageReference Include="AllaganLib.Data" Version="1.1.12" />
+        <PackageReference Include="AllaganLib.Interface" Version="1.1.12" />
+        <PackageReference Include="AllaganLib.Shared" Version="1.1.12" />
+        <PackageReference Include="AllaganLib.Universalis" Version="1.1.12" />
     </ItemGroup>
 
 

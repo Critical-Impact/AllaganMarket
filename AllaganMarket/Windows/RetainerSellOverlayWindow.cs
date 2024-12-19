@@ -15,6 +15,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
 using ImGuiNET;
@@ -221,8 +222,28 @@ public class RetainerSellOverlayWindow : OverlayWindow
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
                 ImGui.Text("Rec. Unit Price: ");
+
                 ImGui.TableNextColumn();
                 ImGui.Text($"{recommendedPrice}");
+                ImGui.SameLine();
+                using (ImRaii.Disabled(recommendedUnitPrice == null))
+                {
+                    if (ImGui.SmallButton("Copy to Game"))
+                    {
+                        if (recommendedUnitPrice != null)
+                        {
+                            var retainerSellPtr = this.GameGui.GetAddonByName("RetainerSell");
+                            if (retainerSellPtr != IntPtr.Zero)
+                            {
+                                unsafe
+                                {
+                                    var retainerSellAddon = (AddonRetainerSell*)retainerSellPtr;
+                                    retainerSellAddon->AskingPrice->SetValue((int)recommendedUnitPrice.Value);
+                                }
+                            }
+                        }
+                    }
+                }
 
                 ImGui.TableNextRow();
                 ImGui.TableNextColumn();
