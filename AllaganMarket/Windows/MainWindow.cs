@@ -936,7 +936,8 @@ public class MainWindow : ExtendedWindow, IDisposable
             var widthAvailable = ImGui.GetContentRegionAvail().X;
             var totalItems = Math.Floor(widthAvailable / 300);
 
-            var retainerItems = this.saleFilter.GetSoldItems();
+            var retainerItems = this.soldItemTable.GetFilteredItems(this.soldItemSearchConfiguration)
+                                    .Select(c => c.SoldItem!).ToList();
             var total = 0;
             if (retainerItems.Count == 0)
             {

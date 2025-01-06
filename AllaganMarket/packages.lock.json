@@ -14,9 +14,9 @@
       },
       "AllaganLib.Interface": {
         "type": "Direct",
-        "requested": "[1.1.12, )",
-        "resolved": "1.1.12",
-        "contentHash": "7IdMd2QXQew1GVCrACA+54PKyZXtwlvKouoBy7+8NESWGGtbI3q8tX2HAo7P4Dd8YXJoqDyMctHlJ/9BnZDftg==",
+        "requested": "[1.1.16, )",
+        "resolved": "1.1.16",
+        "contentHash": "Xp4IJsm1Fm8RabWmXcgXj7mZ28xzOA0EOFqIrAwrSKTalfrGlX6/bwe3m2LqU7/+HzM+aWchKdht4F8E1QNK7g==",
         "dependencies": {
           "AllaganLib.Data": "1.1.12",
           "AllaganLib.Shared": "1.1.12",
