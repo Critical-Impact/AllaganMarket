@@ -182,7 +182,7 @@ public class CharacterMonitorService(
 
     private unsafe void UpdateRetainerDisplayOrders()
     {
-        if (RetainerManager.Instance()->Ready == 1)
+        if (RetainerManager.Instance()->IsReady)
         {
             var span = RetainerManager.Instance()->Retainers;
             for (var index = 0; index < span.Length; index++)

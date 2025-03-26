@@ -16,6 +16,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Colors;
 using Dalamud.Memory;
 using Dalamud.Plugin.Services;
+using Dalamud.Utility;
 
 using FFXIVClientStructs.FFXIV.Client.Graphics;
 using FFXIVClientStructs.FFXIV.Client.System.String;
@@ -260,8 +261,7 @@ public class HighlightingService : IHostedService
                                 if (isUndercut || needsUpdate)
                                 {
                                     this.retainerSellListModified = true;
-                                    var seString = MemoryHelper.ReadSeStringNullTerminated(
-                                        (IntPtr)sellingTextNode->NodeText.StringPtr);
+                                    var seString = sellingTextNode->NodeText.StringPtr.AsDalamudSeString();
                                     var newText = string.Join(
                                         " ",
                                         seString.Payloads.OfType<TextPayload>().Select(c => c.Text ?? string.Empty));
