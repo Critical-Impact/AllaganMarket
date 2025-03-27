@@ -53,6 +53,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     private readonly RetainerMarketService retainerMarketService;
     private readonly UndercutComparisonSetting undercutComparisonSetting;
     private readonly UndercutBySetting undercutBySetting;
+    private readonly IFramework framework;
     private uint activeHomeWorld;
 
     public delegate void ItemUndercutDelegate(ulong retainerId, uint itemId);
@@ -74,7 +75,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         IInventoryService inventoryService,
         RetainerMarketService retainerMarketService,
         UndercutComparisonSetting undercutComparisonSetting,
-        UndercutBySetting undercutBySetting)
+        UndercutBySetting undercutBySetting,
+        IFramework framework)
     {
         this.websocketService = websocketService;
         this.mediatorService = mediatorService;
@@ -91,6 +93,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.retainerMarketService = retainerMarketService;
         this.undercutComparisonSetting = undercutComparisonSetting;
         this.undercutBySetting = undercutBySetting;
+        this.framework = framework;
         this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
     }
 
@@ -107,7 +110,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.retainerMarketService.OnItemUpdated += this.LocalRetainerMarketUpdated;
 
         // Check to see if they are logged in already
-        this.OnLogin();
+        this.framework.RunOnFrameworkThread(this.OnLogin);
         return Task.CompletedTask;
     }
 

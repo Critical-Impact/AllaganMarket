@@ -28,7 +28,6 @@ public class LaunchButtonService : DisposableMediatorSubscriberBase, IHostedServ
     private readonly AddTitleMenuButtonSetting addTitleMenuButtonSetting;
     private readonly ITextureProvider textureProvider;
     private readonly string fileName;
-    private IDalamudTextureWrap? icon;
     private IReadOnlyTitleScreenMenuEntry? entry;
 
     public LaunchButtonService(
@@ -68,7 +67,6 @@ public class LaunchButtonService : DisposableMediatorSubscriberBase, IHostedServ
 
     protected override void Dispose(bool disposing)
     {
-        this.icon?.Dispose();
         this.RemoveEntry();
     }
 
@@ -82,15 +80,7 @@ public class LaunchButtonService : DisposableMediatorSubscriberBase, IHostedServ
 
         try
         {
-            this.icon = this.textureProvider.GetFromFile(this.fileName).RentAsync().Result;
-            if (this.icon != null)
-            {
-                this.entry = this.titleScreenMenu.AddEntry("Allagan Market", this.icon, this.OnTriggered);
-            }
-            else
-            {
-                this.Logger.Error($"Could not load icon to add to title screen menu.");
-            }
+            this.entry = this.titleScreenMenu.AddEntry("Allagan Market", this.textureProvider.GetFromFile(this.fileName), this.OnTriggered);
 
             this.pluginInterfaceService.UiBuilder.Draw -= this.CreateEntry;
         }

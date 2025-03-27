@@ -240,22 +240,6 @@ public class MainWindow : ExtendedWindow, IDisposable
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Debug"))
-            {
-                if (ImGui.MenuItem("start"))
-                {
-                    this.fileDialogManager.OpenFileDialog("test", "*.exe",
-                                                          (b, s) =>
-                                                          {
-                                                              if (b)
-                                                              {
-                                                                  Process.Start(s);
-                                                              }
-                                                          });
-                }
-                ImGui.EndMenu();
-            }
-
             if (ImGui.BeginMenu("View"))
             {
                 var currentViewMode = this.viewModeSetting.CurrentValue(this.Configuration);
