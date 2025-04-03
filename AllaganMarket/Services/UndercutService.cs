@@ -53,6 +53,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     private readonly RetainerMarketService retainerMarketService;
     private readonly UndercutComparisonSetting undercutComparisonSetting;
     private readonly UndercutBySetting undercutBySetting;
+    private readonly RoundUpDownSetting roundUpDownSetting;
+    private readonly RoundToSetting roundToSetting;
     private readonly IFramework framework;
     private uint activeHomeWorld;
 
@@ -76,6 +78,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         RetainerMarketService retainerMarketService,
         UndercutComparisonSetting undercutComparisonSetting,
         UndercutBySetting undercutBySetting,
+        RoundUpDownSetting roundUpDownSetting,
+        RoundToSetting roundToSetting,
         IFramework framework)
     {
         this.websocketService = websocketService;
@@ -93,10 +97,11 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.retainerMarketService = retainerMarketService;
         this.undercutComparisonSetting = undercutComparisonSetting;
         this.undercutBySetting = undercutBySetting;
+        this.roundUpDownSetting = roundUpDownSetting;
+        this.roundToSetting = roundToSetting;
         this.framework = framework;
         this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
     }
-
     public MediatorService MediatorService => this.mediatorService;
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -141,12 +146,24 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
     public bool? IsItemUndercut(SaleItem saleItem)
     {
-        return this.IsItemUndercut(saleItem.WorldId, saleItem.ItemId, saleItem.UnitPrice, saleItem.IsHq);
+        // Calls a new overload with sanity defaults
+        return this.IsItemUndercut(saleItem, 1, false);
+    }
+    // New overload to accept rounding parameters from the SaleItem context.
+    public bool? IsItemUndercut(SaleItem saleItem, uint roundToVal, bool roundUpDown)
+    {
+        return this.IsItemUndercut(saleItem.WorldId, saleItem.ItemId, saleItem.UnitPrice, saleItem.IsHq, roundToVal, roundUpDown);
     }
 
+    // Original overload calling new method with rounding values just in case something calls it
     public bool? IsItemUndercut(uint worldId, uint itemId, uint currentPrice, bool isHq)
     {
-        var recommendedUnitPrice = this.GetRecommendedUnitPrice(worldId, itemId, isHq);
+        // Calls the overload with default rounding parameters.
+        return this.IsItemUndercut(worldId, itemId, currentPrice, isHq, 1, false);
+    }
+    public bool? IsItemUndercut(uint worldId, uint itemId, uint currentPrice, bool isHq, uint roundToVal, bool roundUpDown)
+    {
+        var recommendedUnitPrice = this.GetRecommendedUnitPrice(worldId, itemId, isHq, roundToVal, roundUpDown);
         if (recommendedUnitPrice != null)
         {
             return recommendedUnitPrice < currentPrice;
@@ -157,13 +174,17 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
     public uint? GetRecommendedUnitPrice(SaleItem saleItem)
     {
-        return this.GetRecommendedUnitPrice(saleItem.WorldId, saleItem.ItemId, saleItem.IsHq);
+        return this.GetRecommendedUnitPrice(saleItem.WorldId, saleItem.ItemId, saleItem.IsHq, 1, false);
     }
 
-    public uint? GetRecommendedUnitPrice(uint worldId, uint itemId, bool isHq)
+    public uint? GetRecommendedUnitPrice(uint worldId, uint itemId, bool isHq, uint roundToVal, bool roundUpDown)
     {
         var undercutComparison = this.undercutComparisonSetting.CurrentValue(this.configuration);
         var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
+
+        // Config details here
+        var roundDir = this.roundUpDownSetting.CurrentValue(this.configuration);
+        var roundTo = this.roundToSetting.CurrentValue(this.configuration);
 
         undercutComparison = this.configuration.GetUndercutComparison(itemId) ?? undercutComparison;
 
@@ -189,12 +210,33 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, requestedQuality) ?? this.GetMarketPriceCache(worldId, itemId, null);
         if (marketPriceCache != null)
         {
+            decimal recommendedPrice = marketPriceCache.UnitCost;
             if (marketPriceCache.OwnPrice)
             {
-                return marketPriceCache.UnitCost;
+                return (uint)recommendedPrice;
             }
 
-            return (uint?)Math.Max(1, marketPriceCache.UnitCost - undercutAmount);
+            // Rounding logic slapped in, make sure we do any undercut adjustment before the rounding happens.
+            recommendedPrice = recommendedPrice - undercutAmount;
+
+            if (roundTo < 1)
+            {
+                roundTo = (int)roundToVal; // sanity check in case somebody decides to put less than 1 in a field, replaces with default of 1
+            }
+
+            if (roundTo > 1)
+            {
+                if (roundUpDown) // False is down and default
+                {
+                    recommendedPrice = Math.Ceiling(recommendedPrice / roundTo) * roundTo;
+                }
+                else
+                {
+                    recommendedPrice = Math.Floor(recommendedPrice / roundTo) * roundTo;
+                }
+            }
+
+            return (uint?)Math.Max(1, (uint)recommendedPrice);
         }
 
         return null;
@@ -306,7 +348,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         {
             lastUpdateTime = lastUpdateTimeNq.Value;
         }
-        else if(lastUpdateTimeHq != null)
+        else if (lastUpdateTimeHq != null)
         {
             lastUpdateTime = lastUpdateTimeHq.Value;
         }
