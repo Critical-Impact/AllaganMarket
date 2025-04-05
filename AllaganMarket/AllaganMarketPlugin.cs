@@ -126,36 +126,35 @@ public class AllaganMarketPlugin : HostedPlugin
                         .AsSelf()
                         .AsImplementedInterfaces();
 
-        // Services
-        containerBuilder.RegisterType<WindowService>().SingleInstance();
-        containerBuilder.RegisterType<InstallerWindowService>().SingleInstance();
-        containerBuilder.RegisterType<MarketPriceUpdaterService>().SingleInstance();
-        containerBuilder.RegisterType<RetainerMarketService>().SingleInstance();
-        containerBuilder.RegisterType<ATService>().SingleInstance();
+        // Hosted Services
+        containerBuilder.RegisterType<WindowService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<InstallerWindowService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<MarketPriceUpdaterService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<RetainerMarketService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<ATService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<MediatorService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<CommandService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<UniversalisWebsocketService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<UniversalisApiService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<InventoryService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<SaleTrackerService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<UndercutService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<AutoSaveService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<NotificationService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<CharacterMonitorService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<PluginBootService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<PluginStateService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<ConfigurationLoaderService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<LaunchButtonService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<DtrService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        containerBuilder.RegisterType<HighlightingService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+
+        containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
+        containerBuilder.RegisterType<ImGuiMenus>().SingleInstance();
+        containerBuilder.RegisterType<RetainerService>().As<IRetainerService>().SingleInstance();
+        containerBuilder.RegisterType<CsvLoaderService>().SingleInstance();
         containerBuilder.RegisterType<ImGuiService>().AsSelf().As<AllaganLib.Interface.Services.ImGuiService>()
                         .SingleInstance();
-        containerBuilder.RegisterType<MediatorService>().SingleInstance();
-        containerBuilder.RegisterType<CommandService>().SingleInstance();
-        containerBuilder.RegisterType<UniversalisWebsocketService>().SingleInstance();
-        containerBuilder.RegisterType<UniversalisApiService>().SingleInstance();
-        containerBuilder.RegisterType<InventoryService>().As<IInventoryService>().SingleInstance();
-        containerBuilder.RegisterType<SaleTrackerService>().SingleInstance();
-        containerBuilder.RegisterType<UndercutService>().SingleInstance();
-        containerBuilder.RegisterType<CsvLoaderService>().SingleInstance();
-        containerBuilder.RegisterType<AutoSaveService>().SingleInstance();
-        containerBuilder.RegisterType<NotificationService>().SingleInstance();
-        containerBuilder.RegisterType<CharacterMonitorService>().As<ICharacterMonitorService>()
-                        .SingleInstance();
-        containerBuilder.RegisterType<PluginBootService>().SingleInstance();
-        containerBuilder.RegisterType<PluginStateService>().SingleInstance();
-        containerBuilder.RegisterType<ConfigurationLoaderService>().SingleInstance();
-        containerBuilder.RegisterType<RetainerService>().As<IRetainerService>().SingleInstance();
-        containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
-        containerBuilder.RegisterType<LaunchButtonService>().SingleInstance();
-        containerBuilder.RegisterType<DtrService>().SingleInstance();
-        containerBuilder.RegisterType<HighlightingService>().SingleInstance();
-        containerBuilder.RegisterType<ImGuiMenus>().SingleInstance();
-
         containerBuilder.RegisterType<SaleItemTable>().SingleInstance();
         containerBuilder.RegisterType<SoldItemTable>().SingleInstance();
         containerBuilder.RegisterType<SaleSummaryTable>().SingleInstance();
@@ -215,26 +214,5 @@ public class AllaganMarketPlugin : HostedPlugin
 
     public override void ConfigureServices(IServiceCollection serviceCollection)
     {
-        serviceCollection.AddHostedService(p => p.GetRequiredService<PluginBootService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<PluginStateService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<WindowService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<CommandService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<InstallerWindowService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<MarketPriceUpdaterService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<IInventoryService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<SaleTrackerService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<RetainerMarketService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<ICharacterMonitorService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisWebsocketService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<UniversalisApiService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<UndercutService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<MediatorService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<LaunchButtonService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<DtrService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<ConfigurationLoaderService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<AutoSaveService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<ATService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<NotificationService>());
-        serviceCollection.AddHostedService(p => p.GetRequiredService<HighlightingService>());
     }
 }

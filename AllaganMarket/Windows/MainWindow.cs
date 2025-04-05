@@ -980,7 +980,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                         ImGui.PopTextWrapPos();
                     }
                 }
-                if (ImGui.IsItemHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenOverlapped) &&
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenOverlapped) &&
                     ImGui.IsMouseClicked(ImGuiMouseButton.Right))
                 {
                     ImGui.OpenPopup("RightClick");
@@ -1104,7 +1104,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                         }
                     }
 
-                    if (!undercutHovered && ImGui.IsWindowHovered(ImGuiHoveredFlags.ChildWindows))
+                    if (!undercutHovered && ImGui.IsWindowHovered())
                     {
                         using var tooltip = ImRaii.Tooltip();
                         if (tooltip)
@@ -1138,7 +1138,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                 }
             }
 
-            if (ImGui.IsItemHovered(ImGuiHoveredFlags.ChildWindows | ImGuiHoveredFlags.AllowWhenOverlapped) &&
+            if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenOverlapped) &&
                 ImGui.IsMouseClicked(ImGuiMouseButton.Right))
             {
                 ImGui.OpenPopup("RightClick");
@@ -1243,6 +1243,8 @@ public class MainWindow : ExtendedWindow, IDisposable
                         (int?)(150 * ImGuiHelpers.GlobalScale));
                 }
 
+                ImGui.SameLine();
+
                 using (ImRaii.PushFont(this.font.IconFont))
                 {
                     if (ImGui.Button($"{FontAwesomeIcon.Calendar.ToIconString()}"))
@@ -1251,16 +1253,19 @@ public class MainWindow : ExtendedWindow, IDisposable
                     }
                 }
 
-                using (ImRaii.Popup("SDMPicker"))
+                using (var popup = ImRaii.Popup("SDMPicker"))
                 {
-                    if (ImGui.Selectable("Date Range", this.summaryDateMode == SummaryDateMode.Range))
+                    if (popup)
                     {
-                        this.summaryDateMode = SummaryDateMode.Range;
-                    }
+                        if (ImGui.Selectable("Date Range", this.summaryDateMode == SummaryDateMode.Range))
+                        {
+                            this.summaryDateMode = SummaryDateMode.Range;
+                        }
 
-                    if (ImGui.Selectable("Since Today", this.summaryDateMode == SummaryDateMode.TimeSpan))
-                    {
-                        this.summaryDateMode = SummaryDateMode.TimeSpan;
+                        if (ImGui.Selectable("Since Today", this.summaryDateMode == SummaryDateMode.TimeSpan))
+                        {
+                            this.summaryDateMode = SummaryDateMode.TimeSpan;
+                        }
                     }
                 }
             }
@@ -1277,7 +1282,6 @@ public class MainWindow : ExtendedWindow, IDisposable
             {
                 this.filterMenuOpen = !this.filterMenuOpen;
             }
-
             ImGui.Separator();
         }
     }

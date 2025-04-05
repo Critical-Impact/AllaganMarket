@@ -537,6 +537,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     {
         if (this.activeHomeWorld != 0)
         {
+            this.pluginLog.Verbose($"Unsubscribing from universalis websocket for world {this.activeHomeWorld}.");
             this.websocketService.UnsubscribeFromChannel(
                 UniversalisWebsocketService.EventType.ListingsAdd,
                 this.activeHomeWorld);
@@ -548,6 +549,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     {
         if (this.clientState.LocalPlayer != null)
         {
+            this.pluginLog.Verbose($"Subscribing to universalis websocket for world {this.clientState.LocalPlayer.HomeWorld.RowId}.");
             this.websocketService.SubscribeToChannel(
                 UniversalisWebsocketService.EventType.ListingsAdd,
                 this.clientState.LocalPlayer.HomeWorld.RowId);
@@ -592,8 +594,11 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
             if ((oldMarketPrice.LastUpdated < newMarketPrice.LastUpdated && !isBatchUpdate) || (isBatchUpdate && oldMarketPrice.UnitCost > newMarketPrice.UnitCost))
             {
+                if (oldMarketPrice.UnitCost > newMarketPrice.UnitCost)
+                {
+                    wasUpdated = true;
+                }
                 this.configuration.MarketPriceCache[worldId][itemKey] = newMarketPrice;
-                wasUpdated = true;
             }
         }
         else

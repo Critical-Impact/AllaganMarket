@@ -53,9 +53,9 @@ public abstract class OverlayWindow : ExtendedWindow, IDisposable
     }
 
     private HashSet<(string AddonName, AttachPosition AttachPosition)> AttachedAddons { get; }
-    
+
     public IGameGui GameGui => this.gameGui;
-    
+
     public override void PostDraw()
     {
         base.PostDraw();
