@@ -204,7 +204,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
                     break;
             }
 
-            var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.Value.RowId, isHq ?? false);
+            var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.Value.RowId, isHq ?? false, 1, false);
             var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.Value.RowId);
             var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
 
