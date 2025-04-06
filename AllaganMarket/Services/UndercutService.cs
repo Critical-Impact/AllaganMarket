@@ -217,7 +217,12 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             }
 
             // Rounding logic slapped in, make sure we do any undercut adjustment before the rounding happens.
-            recommendedPrice = recommendedPrice - undercutAmount;
+            recommendedPrice -= undercutAmount;
+
+            if (recommendedPrice < 0)
+            {
+                recommendedPrice = 0;
+            }
 
             if (roundTo < 1)
             {
@@ -226,7 +231,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
             if (roundTo > 1)
             {
-                if (roundUpDown) // False is down and default
+                // False is down and default.
+                if (roundUpDown)
                 {
                     recommendedPrice = Math.Ceiling(recommendedPrice / roundTo) * roundTo;
                 }
@@ -236,7 +242,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 }
             }
 
-            return (uint?)Math.Max(1, (uint)recommendedPrice);
+            return Math.Max(1, (uint)recommendedPrice);
         }
 
         return null;

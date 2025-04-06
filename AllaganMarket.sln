@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaganMarket", "AllaganMar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaganMarketMock", "AllaganMarketMock\AllaganMarketMock.csproj", "{5AF13843-192D-488E-883D-259A3AF56553}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DalaMock.Host", "..\DalaMock\DalaMock.Host\DalaMock.Host.csproj", "{CEC12128-B14A-4AD5-92C1-8E02BCF3A453}"
+EndProject
 
 
 Global
@@ -27,6 +29,10 @@ Global
 		{5AF13843-192D-488E-883D-259A3AF56553}.Debug|x64.Build.0 = Debug|Any CPU
 		{5AF13843-192D-488E-883D-259A3AF56553}.Release|x64.ActiveCfg = Release|Any CPU
 		{5AF13843-192D-488E-883D-259A3AF56553}.Release|x64.Build.0 = Release|Any CPU
+		{CEC12128-B14A-4AD5-92C1-8E02BCF3A453}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CEC12128-B14A-4AD5-92C1-8E02BCF3A453}.Debug|x64.Build.0 = Debug|Any CPU
+		{CEC12128-B14A-4AD5-92C1-8E02BCF3A453}.Release|x64.ActiveCfg = Release|Any CPU
+		{CEC12128-B14A-4AD5-92C1-8E02BCF3A453}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
