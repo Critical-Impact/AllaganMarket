@@ -46,8 +46,4 @@
     <ItemGroup>
         <AdditionalFiles Include="stylecop.json"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\..\DalaMock\DalaMock.Host\DalaMock.Host.csproj" />
-    </ItemGroup>
 </Project>

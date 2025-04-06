@@ -64,6 +64,19 @@
           "Microsoft.Extensions.DependencyInjection.Abstractions": "8.0.1"
         }
       },
+      "DalaMock.Host": {
+        "type": "Direct",
+        "requested": "[2.2.3, )",
+        "resolved": "2.2.3",
+        "contentHash": "f0bwRoBN/8UVIj+rZLmKAjIPQv9wab49lv72LZ/UDNTYOjnIcxgbTge/uJi3XEP6lAhRH30R0EAFffJgzqjSOw==",
+        "dependencies": {
+          "Autofac.Extensions.DependencyInjection": "10.0.0",
+          "DalaMock.Shared": "2.2.1",
+          "Microsoft.Extensions.Hosting": "8.0.0",
+          "Microsoft.Extensions.Hosting.Abstractions": "8.0.0",
+          "Microsoft.Extensions.ObjectPool": "9.0.0-preview.6.24328.4"
+        }
+      },
       "DalaMock.Shared": {
         "type": "Direct",
         "requested": "[2.2.1, )",
@@ -822,8 +835,8 @@
       },
       "Microsoft.Extensions.ObjectPool": {
         "type": "Transitive",
-        "resolved": "9.0.3",
-        "contentHash": "4uPdnj9hLRrb3ZSeVEDtwIm9nNrrT9vAXYC9o1/yTW8lGOPwTyI2QlkcICwYEGM1LESGTFidcPMFACznUZKbIQ=="
+        "resolved": "9.0.0-preview.6.24328.4",
+        "contentHash": "gtSoyW2B38YGz5TWzlZbi8AoPUryq00xvVBCGkN288lHU7e9oap/GSOwoi7bXGNOWnLJGske1yUZFDDj+3QGkw=="
       },
       "Microsoft.Extensions.Options": {
         "type": "Transitive",
@@ -880,16 +893,6 @@
         "type": "Transitive",
         "resolved": "5.0.0",
         "contentHash": "ZD9TMpsmYJLrxbbmdvhwt9YEgG5WntEnZ/d1eH8JBX9LBp+Ju8BSBhUGbZMNVHHomWo2KVImJhTDl2hIgw/6MA=="
-      },
-      "dalamock.host": {
-        "type": "Project",
-        "dependencies": {
-          "Autofac.Extensions.DependencyInjection": "[10.0.0, )",
-          "DalaMock.Shared": "[2.2.1, )",
-          "Microsoft.Extensions.Hosting": "[8.0.0, )",
-          "Microsoft.Extensions.Hosting.Abstractions": "[9.0.3, )",
-          "Microsoft.Extensions.ObjectPool": "[9.0.3, )"
-        }
       }
     }
   }
