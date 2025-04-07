@@ -185,7 +185,11 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         // Config details here
         var roundDir = this.roundUpDownSetting.CurrentValue(this.configuration);
         var roundTo = this.roundToSetting.CurrentValue(this.configuration);
-
+        // If the user has set a custom value, use that instead of the default. Prevent potential issues with evaluating null variables below.
+        if (roundDir == true )
+        {
+            roundUpDown = true;
+        }
         undercutComparison = this.configuration.GetUndercutComparison(itemId) ?? undercutComparison;
 
         bool? requestedQuality = null;
