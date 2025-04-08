@@ -15,6 +15,7 @@ using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
 
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
 using Microsoft.Extensions.Hosting;
@@ -34,31 +35,15 @@ public class RetainerMarketService(
     MarketPriceUpdaterService marketPriceUpdaterService,
     IAtkOrderService atkOrderService) : IHostedService, IDisposable
 {
-    /// <summary>
-    /// This comes from Client::UI::Agent::AgentRetainer_ReceiveEvent.
-    /// </summary>
-    [Signature(
-        "40 53 55 56 57 41 57 48 81 EC ?? ?? ?? ?? 48 8B 05 ?? ?? ?? ?? 48 33 C4 48 89 84 24 ?? ?? ?? ?? 48 8B 84 24 ?? ?? ?? ??",
-        DetourName = nameof(RetainerItemCommandDetour),
-        Fallibility = Fallibility.Fallible)]
-    #pragma warning disable CS0649
-    private Hook<RetainerItemCommandDelegate>? retainerItemCommandHook;
-    #pragma warning restore CS0649
-
     private ulong retainerId;
+    private bool initialLoadingDone;
 
+    private Hook<AgentInterface.Delegates.ReceiveEvent>? onReceiveEventHook;
     public delegate void ItemEventDelegate(RetainerMarketListEvent listEvent);
 
     public delegate void MarketEventDelegate();
 
     public delegate void UpdatedEventDelegate(RetainerMarketListEventType listEvent);
-
-    internal unsafe delegate nint RetainerItemCommandDelegate(
-        nint agentRetainerItemCommandModule,
-        nint result,
-        byte* a3,
-        uint a4,
-        nint command);
 
     /// <summary>
     /// A item was added to your market listings for the active retainer
@@ -116,17 +101,18 @@ public class RetainerMarketService(
 
     public void Dispose()
     {
-        this.retainerItemCommandHook?.Dispose();
+        this.onReceiveEventHook?.Dispose();
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    public unsafe Task StartAsync(CancellationToken cancellationToken)
     {
         this.GameInteropProvider.InitializeFromAttributes(this);
-        this.retainerItemCommandHook?.Enable();
         this.AddonLifecycle.RegisterListener(AddonEvent.PostRefresh, "RetainerSellList", this.PostRefreshList);
         this.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, "RetainerSellList", this.RetainerSellWindowOpened);
         this.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
         this.AddonLifecycle.RegisterListener(AddonEvent.PreReceiveEvent, "RetainerSell", this.RetainerSellReceiveEvent);
+        this.onReceiveEventHook ??= this.GameInteropProvider.HookFromAddress<AgentInterface.Delegates.ReceiveEvent>(AgentModule.Instance()->GetAgentByInternalId(AgentId.Retainer)->VirtualTable->ReceiveEvent, this.RetainerItemCommandDetour);
+        this.onReceiveEventHook?.Enable();
         this.Framework.Update += this.FrameworkOnUpdate;
         return Task.CompletedTask;
     }
@@ -141,7 +127,7 @@ public class RetainerMarketService(
             AddonEvent.PreReceiveEvent,
             "RetainerSell",
             this.RetainerSellReceiveEvent);
-        this.retainerItemCommandHook?.Disable();
+        this.onReceiveEventHook?.Disable();
         return Task.CompletedTask;
     }
 
@@ -156,38 +142,38 @@ public class RetainerMarketService(
         }
     }
 
-    private unsafe nint RetainerItemCommandDetour(
-        nint agentRetainerItemCommandModule,
-        nint result,
-        byte* a3,
+    private unsafe AtkValue* RetainerItemCommandDetour(
+        AgentInterface* thisPtr,
+        AtkValue* returnValue,
+        AtkValue* values,
         uint a4,
-        nint command)
+        ulong eventKind)
     {
-        this.PluginLog.Verbose("Item added to market.");
-        var currentOrder = this.AtkOrderService.GetCurrentOrder();
-        if (!this.InventoryService.HasSeenInventory((uint)InventoryType.RetainerMarket))
-        {
-            this.PluginLog.Verbose("RetainerMarket has not been seen.");
-            this.InBadState = true;
-            return this.retainerItemCommandHook!.Original(agentRetainerItemCommandModule, result, a3, a4, command);
-        }
-
-        if (currentOrder == null)
-        {
-            this.PluginLog.Verbose("No market order is available, unable to parse.");
-            return this.retainerItemCommandHook!.Original(agentRetainerItemCommandModule, result, a3, a4, command);
-        }
-
         try
         {
+            this.PluginLog.Verbose("Item added to market.");
+            var currentOrder = this.AtkOrderService.GetCurrentOrder();
+            if (!this.InventoryService.HasSeenInventory((uint)InventoryType.RetainerMarket))
+            {
+                this.PluginLog.Verbose("RetainerMarket has not been seen.");
+                this.InBadState = true;
+                return this.onReceiveEventHook!.Original(thisPtr, returnValue, values, a4, eventKind);
+            }
+
+            if (currentOrder == null)
+            {
+                this.PluginLog.Verbose("No market order is available, unable to parse.");
+                return this.onReceiveEventHook!.Original(thisPtr, returnValue, values, a4, eventKind);
+            }
+
+
             var selectedItemContainer = this.InventoryService.GetInventoryContainer(InventoryType.DamagedGear);
             var selectedItem = selectedItemContainer->GetInventorySlot(0);
 
-            var agentRetainer = (AgentRetainer*)agentRetainerItemCommandModule;
+            var agentRetainer = (AgentRetainer*)thisPtr;
 
-            var itemId = selectedItem->ItemId;
-            var value = (AtkValue*)a3; // Value is the event sub command, cancel save price, save price, update price
-            var subCommand = value->Int;
+            // Values is the event sub command, cancel save price, save price, update price
+            var subCommand = values->Int;
             var onMarket = selectedItem->Container == InventoryType.RetainerMarket;
             var retainerMarketContainer = this.InventoryService.GetInventoryContainer(InventoryType.RetainerMarket);
 
@@ -206,7 +192,7 @@ public class RetainerMarketService(
             var hasEvent = false;
             var isHq = selectedItem->Flags.HasFlag(InventoryItem.ItemFlags.HighQuality);
             var slot = selectedItem->Slot;
-            if (a4 == 5 && command == 5 && subCommand == 0)
+            if (a4 == 5 && eventKind == 5 && subCommand == 0)
             {
                 this.PluginLog.Verbose("Item removed from market.");
                 eventType = RetainerMarketListEventType.Removed;
@@ -214,7 +200,7 @@ public class RetainerMarketService(
             }
             else
             {
-                if (a4 == 1 && command == 8 && subCommand == 0)
+                if (a4 == 1 && eventKind == 8 && subCommand == 0)
                 {
                     if (onMarket)
                     {
@@ -259,12 +245,7 @@ public class RetainerMarketService(
                 }
             }
 
-            var retainerItemCommandDetour = this.retainerItemCommandHook!.Original(
-                agentRetainerItemCommandModule,
-                result,
-                a3,
-                a4,
-                command);
+            var retainerItemCommandDetour = this.onReceiveEventHook!.Original(thisPtr, returnValue, values, a4, eventKind);
 
             if (eventType == RetainerMarketListEventType.Added && this.MarketListEvent?.SaleItem != null)
             {
@@ -278,7 +259,7 @@ public class RetainerMarketService(
             this.PluginLog.Error(e.Message);
         }
 
-        return this.retainerItemCommandHook!.Original(agentRetainerItemCommandModule, result, a3, a4, command);
+        return this.onReceiveEventHook!.Original(thisPtr, returnValue, values, a4, eventKind);
     }
 
     private unsafe void PostRefreshList(AddonEvent type, AddonArgs args)
@@ -402,6 +383,7 @@ public class RetainerMarketService(
         if (this.RetainerService.RetainerId != 0 && this.retainerId == 0 &&
             this.InventoryService.HasSeenInventory((uint)InventoryType.RetainerMarket))
         {
+            this.initialLoadingDone = false;
             this.InBadState = false;
             this.retainerId = this.RetainerService.RetainerId;
             this.PluginLog.Verbose("Retainer window opened. Loading initial items");
@@ -426,7 +408,7 @@ public class RetainerMarketService(
     {
         var currentOrder = this.AtkOrderService.GetCurrentOrder();
 
-        if (this.RetainerService.RetainerId != 0 && this.InventoryService.HasSeenInventory((uint)InventoryType.RetainerMarket) && currentOrder != null)
+        if (this.RetainerService.RetainerId != 0 && !this.initialLoadingDone && this.InventoryService.HasSeenInventory((uint)InventoryType.RetainerMarket) && currentOrder != null)
         {
             this.PluginLog.Verbose($"Current order has {currentOrder.Count} items");
             foreach (var item in currentOrder)
@@ -438,6 +420,7 @@ public class RetainerMarketService(
             this.retainerId = this.RetainerService.RetainerId;
             this.PluginLog.Verbose("Retainer sell list opened. Loading items");
             this.LoadInitialItems(currentOrder);
+            this.initialLoadingDone = true;
             this.OnOpened?.Invoke();
             this.OnUpdated?.Invoke(RetainerMarketListEventType.Initial);
         }

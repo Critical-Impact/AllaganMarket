@@ -112,6 +112,7 @@ public class CharacterMonitorService(
     {
         clientState.Login += this.ClientStateOnLogin;
         addonLifecycle.RegisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
+        addonLifecycle.RegisterListener(AddonEvent.PostSetup, "RetainerList", this.RetainerListOpened);
         addonLifecycle.RegisterListener(AddonEvent.PostRefresh, "RetainerList", this.RetainerListUpdate);
         framework.Update += this.FrameworkOnUpdate;
         framework.RunOnFrameworkThread(this.UpdatePlayerCharacter);
@@ -122,6 +123,7 @@ public class CharacterMonitorService(
     {
         clientState.Login -= this.ClientStateOnLogin;
         addonLifecycle.UnregisterListener(AddonEvent.PostSetup, "SelectString", this.RetainerWindowOpened);
+        addonLifecycle.UnregisterListener(AddonEvent.PostSetup, "RetainerList", this.RetainerListOpened);
         addonLifecycle.UnregisterListener(AddonEvent.PostRefresh, "RetainerList", this.RetainerListUpdate);
         framework.Update -= this.FrameworkOnUpdate;
         return Task.CompletedTask;
@@ -201,6 +203,11 @@ public class CharacterMonitorService(
     }
 
     private void RetainerListUpdate(AddonEvent type, AddonArgs args)
+    {
+        this.UpdateRetainerDisplayOrders();
+    }
+
+    private void RetainerListOpened(AddonEvent type, AddonArgs args)
     {
         this.UpdateRetainerDisplayOrders();
     }

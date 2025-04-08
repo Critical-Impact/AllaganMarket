@@ -206,7 +206,11 @@ public class RetainerSellOverlayWindow : OverlayWindow
 
             var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.Value.RowId, isHq ?? false, 1, false);
             var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.Value.RowId);
-            var marketCache = this.undercutService.GetMarketPriceCache(activeRetainer.WorldId, currentItem.Value.RowId, isHq ?? false);
+            var marketCache = this.undercutService.GetMarketPriceCache(activeRetainer.WorldId, currentItem.Value.RowId, isHq);
+            if (marketCache == null)
+            {
+                marketCache = this.undercutService.GetMarketPriceCache(activeRetainer.WorldId, currentItem.Value.RowId, null);
+            }
             var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
 
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))

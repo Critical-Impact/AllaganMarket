@@ -676,7 +676,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                                 {
                                     foreach (var retainer in this.CharacterMonitorService.GetOwnedCharacters(
                                                  character.CharacterId,
-                                                 CharacterType.Retainer))
+                                                 CharacterType.Retainer).OrderBy(c => c.DisplayOrder))
                                     {
                                         if (ImGui.Selectable(
                                                 retainer.Name,
@@ -1056,6 +1056,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                             ImGui.Image(icon.GetWrapOrEmpty().ImGuiHandle, new Vector2(64, 64));
                         }
                     }
+                    var iconHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
 
                     var undercutHovered = false;
 
@@ -1104,7 +1105,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                         }
                     }
 
-                    if (!undercutHovered && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenOverlapped))
+                    if (!undercutHovered && (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenOverlapped) || iconHovered))
                     {
                         using var tooltip = ImRaii.Tooltip();
                         if (tooltip)
