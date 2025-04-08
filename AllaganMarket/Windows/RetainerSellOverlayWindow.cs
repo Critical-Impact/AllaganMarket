@@ -206,6 +206,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
 
             var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(activeRetainer.WorldId, currentItem.Value.RowId, isHq ?? false, 1, false);
             var lastUpdated = this.undercutService.GetLastUpdateTime(activeRetainer.WorldId, currentItem.Value.RowId);
+            var marketCache = this.undercutService.GetMarketPriceCache(activeRetainer.WorldId, currentItem.Value.RowId, isHq ?? false);
             var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
 
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))
@@ -256,6 +257,12 @@ public class RetainerSellOverlayWindow : OverlayWindow
                 ImGui.Text("Listed At: ");
                 ImGui.TableNextColumn();
                 ImGui.Text($"{currentSaleItem?.ListedAt.ToString(CultureInfo.CurrentCulture) ?? "N/A"}");
+
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+                ImGui.Text("Sourced From: ");
+                ImGui.TableNextColumn();
+                ImGui.Text($"{marketCache?.GetFormattedType() ?? "N/A"}");
             }
         }
         else

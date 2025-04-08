@@ -1104,7 +1104,7 @@ public class MainWindow : ExtendedWindow, IDisposable
                         }
                     }
 
-                    if (!undercutHovered && ImGui.IsWindowHovered())
+                    if (!undercutHovered && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenOverlapped))
                     {
                         using var tooltip = ImRaii.Tooltip();
                         if (tooltip)

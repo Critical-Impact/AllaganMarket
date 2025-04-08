@@ -185,11 +185,13 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         // Config details here
         var roundDir = this.roundUpDownSetting.CurrentValue(this.configuration);
         var roundTo = this.roundToSetting.CurrentValue(this.configuration);
+
         // If the user has set a custom value, use that instead of the default. Prevent potential issues with evaluating null variables below.
-        if (roundDir == true )
+        if (roundDir)
         {
             roundUpDown = true;
         }
+
         undercutComparison = this.configuration.GetUndercutComparison(itemId) ?? undercutComparison;
 
         bool? requestedQuality = null;
@@ -644,7 +646,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             var newMarketPrice = new MarketPriceCache(itemId, isHq, worldId, type, lastUpdated, newUnitCost, ownPrice);
             var isBatchUpdate = Math.Truncate((newMarketPrice.LastUpdated - oldMarketPrice.LastUpdated).TotalSeconds) < 2;
 
-            if ((oldMarketPrice.LastUpdated < newMarketPrice.LastUpdated && !isBatchUpdate) || (isBatchUpdate && oldMarketPrice.UnitCost > newMarketPrice.UnitCost))
+            // Always use the game's prices as they are always going to be newer.
+            if ((oldMarketPrice.LastUpdated < newMarketPrice.LastUpdated && !isBatchUpdate) || (isBatchUpdate && oldMarketPrice.UnitCost > newMarketPrice.UnitCost) || type == MarketPriceCacheType.Game)
             {
                 if (oldMarketPrice.UnitCost > newMarketPrice.UnitCost)
                 {
@@ -659,7 +662,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             wasUpdated = true;
         }
 
-        if (!this.configuration.MarketPriceCache[worldId][itemKey].OwnPrice && wasUpdated)
+        if (!this.configuration.MarketPriceCache[worldId][itemKey].OwnPrice)
         {
             if (this.saleTrackerService.SaleItemsByItemId.TryGetValue(itemId, out var currentSales))
             {
@@ -673,7 +676,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
                     foreach (var saleItem in currentSales.Where(c => c.WorldId == worldId))
                     {
-                        if (!currentCheapestPrice.OwnPrice)
+                        if (!currentCheapestPrice.OwnPrice && wasUpdated)
                         {
                             this.ItemUndercut?.Invoke(saleItem.RetainerId, saleItem.ItemId);
                         }

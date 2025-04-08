@@ -105,6 +105,12 @@ public class Configuration : IPluginConfiguration, IConfigurable<int?>, IConfigu
         set => this.version = value;
     }
 
+    public Dictionary<uint, UndercutComparison> UndercutComparisonSettings
+    {
+        get => this.undercutComparisonSettings;
+        set => this.undercutComparisonSettings = value;
+    }
+
     [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate, NullValueHandling = NullValueHandling.Ignore)]
     [DefaultValue(true)]
     public bool ShowWizardNewFeatures
