@@ -212,8 +212,8 @@
       },
       "AllaganLib.Universalis": {
         "type": "Transitive",
-        "resolved": "1.2.3",
-        "contentHash": "MwBIOzNKr1cWTvo7QXeyOEtO3dc+e0LI2JFS4DYSSxtXKxQ2Ey63d1Y99vOinxqhHnIFW7LGm4I5T42742WS2Q==",
+        "resolved": "1.2.5",
+        "contentHash": "rQsRGC/3D0Jn8JzEPR/MQ5yhaSgBvR8BMGIUR7Kvp9CK4jCLitJBJemP8KYTuRY4WFDf2pgd2dFxv6tucxaiZw==",
         "dependencies": {
           "AllaganLib.Shared": "1.2.0",
           "Microsoft.Extensions.Hosting": "8.0.0",
@@ -1132,7 +1132,7 @@
           "AllaganLib.Data": "[1.2.0, )",
           "AllaganLib.Interface": "[1.2.4, )",
           "AllaganLib.Shared": "[1.2.0, )",
-          "AllaganLib.Universalis": "[1.2.3, )",
+          "AllaganLib.Universalis": "[1.2.5, )",
           "Autofac": "[8.2.1, )",
           "Autofac.Extensions.DependencyInjection": "[10.0.0, )",
           "DalaMock.Host": "[2.2.3, )",

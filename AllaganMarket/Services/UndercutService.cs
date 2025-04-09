@@ -50,7 +50,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     private readonly Configuration configuration;
     private readonly MarketPriceUpdaterService marketPriceUpdaterService;
     private readonly IInventoryService inventoryService;
-    private readonly RetainerMarketService retainerMarketService;
+    private readonly IRetainerMarketService retainerMarketService;
     private readonly UndercutComparisonSetting undercutComparisonSetting;
     private readonly UndercutBySetting undercutBySetting;
     private readonly RoundUpDownSetting roundUpDownSetting;
@@ -75,7 +75,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         Configuration configuration,
         MarketPriceUpdaterService marketPriceUpdaterService,
         IInventoryService inventoryService,
-        RetainerMarketService retainerMarketService,
+        IRetainerMarketService retainerMarketService,
         UndercutComparisonSetting undercutComparisonSetting,
         UndercutBySetting undercutBySetting,
         RoundUpDownSetting roundUpDownSetting,
@@ -646,6 +646,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             var newMarketPrice = new MarketPriceCache(itemId, isHq, worldId, type, lastUpdated, newUnitCost, ownPrice);
             var isBatchUpdate = Math.Truncate((newMarketPrice.LastUpdated - oldMarketPrice.LastUpdated).TotalSeconds) < 2;
 
+            this.pluginLog.Verbose($"Old Last Updated Date: {oldMarketPrice.LastUpdated.ToString(CultureInfo.CurrentCulture)}");
+            this.pluginLog.Verbose($"New Last Updated Date: {newMarketPrice.LastUpdated.ToString(CultureInfo.CurrentCulture)}");
             // Always use the game's prices as they are always going to be newer.
             if ((oldMarketPrice.LastUpdated < newMarketPrice.LastUpdated && !isBatchUpdate) || (isBatchUpdate && oldMarketPrice.UnitCost > newMarketPrice.UnitCost) || type == MarketPriceCacheType.Game)
             {
@@ -711,7 +713,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                             c => c.Value.Name == cheapestNqListing.RetainerName &&
                                  c.Value.WorldId == message.World);
                         var listingDate =
-                            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeNq.Value);
+                            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeNq.Value).ToLocalTime().AddSeconds(-10);
                         this.UpdateMarketPriceCache(
                             itemId,
                             false,
@@ -737,7 +739,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                             c => c.Value.Name == cheapestHqListing.RetainerName &&
                                  c.Value.WorldId == message.World);
                         var listingDate =
-                            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeHq.Value);
+                            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeHq.Value).ToLocalTime().AddSeconds(-10);
                         this.UpdateMarketPriceCache(
                             itemId,
                             true,

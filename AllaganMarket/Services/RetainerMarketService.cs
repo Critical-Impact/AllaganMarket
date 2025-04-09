@@ -33,7 +33,7 @@ public class RetainerMarketService(
     IRetainerService retainerService,
     IFramework framework,
     MarketPriceUpdaterService marketPriceUpdaterService,
-    IAtkOrderService atkOrderService) : IHostedService, IDisposable
+    IAtkOrderService atkOrderService) : IRetainerMarketService
 {
     private ulong retainerId;
     private bool initialLoadingDone;

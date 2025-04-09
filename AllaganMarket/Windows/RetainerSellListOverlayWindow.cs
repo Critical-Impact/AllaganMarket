@@ -35,7 +35,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
     private readonly ExcelSheet<Item> itemSheet;
     private readonly RetainerOverlayCollapsedSetting overlayCollapsedSetting;
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
-    private readonly RetainerMarketService retainerMarketService;
+    private readonly IRetainerMarketService retainerMarketService;
     private readonly UndercutService undercutService;
     private readonly HighlightingRetainerSellListSetting retainerSellListSetting;
     private bool showAllItems;
@@ -55,7 +55,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
         ExcelSheet<Item> itemSheet,
         RetainerOverlayCollapsedSetting overlayCollapsedSetting,
         ShowRetainerOverlaySetting retainerOverlaySetting,
-        RetainerMarketService retainerMarketService,
+        IRetainerMarketService retainerMarketService,
         UndercutService undercutService,
         HighlightingRetainerSellListSetting retainerSellListSetting)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer Sell List Overlay")

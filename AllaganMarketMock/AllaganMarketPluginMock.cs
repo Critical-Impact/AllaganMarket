@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 using AllaganMarket;
 using AllaganMarket.Services;
 using AllaganMarket.Services.Interfaces;
@@ -59,14 +62,13 @@ public class AllaganMarketPluginMock(
         containerBuilder.RegisterType<MockRetainerService>().AsSelf().As<IRetainerService>().SingleInstance();
         containerBuilder.RegisterType<MockWindow>().AsSelf().As<Window>().SingleInstance();
         containerBuilder.RegisterType<MockCharacterWindow>().AsSelf().As<Window>().SingleInstance();
-        containerBuilder.RegisterType<MockBootService>().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<MockInventoryService>().AsSelf().AsImplementedInterfaces().SingleInstance();
-        containerBuilder.RegisterType<MockGameInterfaceService>().AsSelf().AsImplementedInterfaces().SingleInstance();
+        containerBuilder.RegisterType<MockBootService>().AsSelf().AsImplementedInterfaces().SingleInstance();
     }
 
-    public override void ConfigureServices(IServiceCollection serviceCollection)
+    public override void ReplaceHostedServices(Dictionary<Type, Type> replacements)
     {
-        base.ConfigureServices(serviceCollection);
-        serviceCollection.AddHostedService<MockBootService>(c => c.GetRequiredService<MockBootService>());
+        replacements.Add(typeof(InventoryService), typeof(MockInventoryService));
+        replacements.Add(typeof(GameInterfaceService), typeof(MockGameInterfaceService));
+        replacements.Add(typeof(RetainerMarketService), typeof(MockRetainerMarketService));
     }
 }

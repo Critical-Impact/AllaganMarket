@@ -36,7 +36,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
     private readonly RetainerOverlayCollapsedSetting overlayCollapsedSetting;
     private readonly IInventoryService inventoryService;
     private readonly ShowRetainerOverlaySetting retainerOverlaySetting;
-    private readonly RetainerMarketService retainerMarketService;
+    private readonly IRetainerMarketService retainerMarketService;
     private readonly UndercutService undercutService;
 
     public RetainerSellOverlayWindow(
@@ -54,7 +54,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
         RetainerOverlayCollapsedSetting overlayCollapsedSetting,
         IInventoryService inventoryService,
         ShowRetainerOverlaySetting retainerOverlaySetting,
-        RetainerMarketService retainerMarketService,
+        IRetainerMarketService retainerMarketService,
         UndercutService undercutService)
         : base(addonLifecycle, gameGui, logger, mediator, imGuiService, "Retainer Sell Overlay")
     {
@@ -261,12 +261,27 @@ public class RetainerSellOverlayWindow : OverlayWindow
                 ImGui.Text("Listed At: ");
                 ImGui.TableNextColumn();
                 ImGui.Text($"{currentSaleItem?.ListedAt.ToString(CultureInfo.CurrentCulture) ?? "N/A"}");
+            }
 
-                ImGui.TableNextRow();
-                ImGui.TableNextColumn();
-                ImGui.Text("Sourced From: ");
-                ImGui.TableNextColumn();
-                ImGui.Text($"{marketCache?.GetFormattedType() ?? "N/A"}");
+            using (ImRaii.PushFont(this.font.IconFont))
+            {
+                var contentRegion = ImGui.GetWindowSize();
+                var padding = ImGui.GetStyle().WindowPadding;
+                var infoText = $"{FontAwesomeIcon.InfoCircle.ToIconString()}";
+                var iconSize = ImGui.CalcTextSize(infoText);
+                ImGui.SetCursorPos(new Vector2(contentRegion.X - iconSize.X - padding.X, contentRegion.Y - iconSize.Y - padding.X));
+                ImGui.Text(infoText);
+            }
+
+            if (ImGui.IsItemHovered())
+            {
+                using (var tooltip = ImRaii.Tooltip())
+                {
+                    if (tooltip)
+                    {
+                        ImGui.Text($"Sourced From: {marketCache?.GetFormattedType() ?? "N/A"}");
+                    }
+                }
             }
         }
         else

@@ -35,9 +35,9 @@
       },
       "AllaganLib.Universalis": {
         "type": "Direct",
-        "requested": "[1.2.3, )",
-        "resolved": "1.2.3",
-        "contentHash": "MwBIOzNKr1cWTvo7QXeyOEtO3dc+e0LI2JFS4DYSSxtXKxQ2Ey63d1Y99vOinxqhHnIFW7LGm4I5T42742WS2Q==",
+        "requested": "[1.2.5, )",
+        "resolved": "1.2.5",
+        "contentHash": "rQsRGC/3D0Jn8JzEPR/MQ5yhaSgBvR8BMGIUR7Kvp9CK4jCLitJBJemP8KYTuRY4WFDf2pgd2dFxv6tucxaiZw==",
         "dependencies": {
           "AllaganLib.Shared": "1.2.0",
           "Microsoft.Extensions.Hosting": "8.0.0",

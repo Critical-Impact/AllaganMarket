@@ -32,7 +32,7 @@ public class SaleTrackerService(
     IFramework framework,
     IInventoryService inventoryService,
     IRetainerService retainerService,
-    RetainerMarketService retainerMarketService,
+    IRetainerMarketService retainerMarketService,
     IAddonLifecycle addonLifecycle,
     IPluginLog pluginLog,
     IDataManager dataManager,
@@ -67,7 +67,7 @@ public class SaleTrackerService(
 
     public IRetainerService RetainerService { get; } = retainerService;
 
-    public RetainerMarketService RetainerMarketService { get; } = retainerMarketService;
+    public IRetainerMarketService RetainerMarketService { get; } = retainerMarketService;
 
     public IAddonLifecycle AddonLifecycle { get; } = addonLifecycle;
 

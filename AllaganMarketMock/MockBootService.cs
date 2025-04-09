@@ -2,6 +2,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using AllaganMarket.Mediator;
+using AllaganMarket.Services;
 using AllaganMarket.Services.Interfaces;
 
 using DalaMock.Core.Mocks;
@@ -13,6 +14,7 @@ namespace AllaganMarketMock;
 
 public class MockBootService(
     MediatorService mediatorService,
+    PluginBootService pluginBootService,
     MockWindow mockWindow,
     MockCharacterWindow mockCharacterWindow) : IHostedService, IMediatorSubscriber
 {
@@ -20,7 +22,8 @@ public class MockBootService(
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.MediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
+        mockWindow.IsOpen = true;
+        mockCharacterWindow.IsOpen = true;
         return Task.CompletedTask;
     }
 
@@ -32,7 +35,6 @@ public class MockBootService(
 
     private void PluginLoaded(PluginLoadedMessage obj)
     {
-        mockWindow.IsOpen = true;
-        mockCharacterWindow.IsOpen = true;
+
     }
 }

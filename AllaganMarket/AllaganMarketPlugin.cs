@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -84,6 +87,50 @@ public class AllaganMarketPlugin : HostedPlugin
         this.Start();
     }
 
+    private List<Type> HostedServices { get; } = new()
+    {
+        typeof(WindowService),
+        typeof(InstallerWindowService),
+        typeof(MarketPriceUpdaterService),
+        typeof(RetainerMarketService),
+        typeof(ATService),
+        typeof(MediatorService),
+        typeof(CommandService),
+        typeof(UniversalisWebsocketService),
+        typeof(UniversalisApiService),
+        typeof(InventoryService),
+        typeof(SaleTrackerService),
+        typeof(UndercutService),
+        typeof(AutoSaveService),
+        typeof(NotificationService),
+        typeof(CharacterMonitorService),
+        typeof(PluginBootService),
+        typeof(PluginStateService),
+        typeof(ConfigurationLoaderService),
+        typeof(LaunchButtonService),
+        typeof(DtrService),
+        typeof(HighlightingService),
+    };
+
+    public List<Type> GetHostedServices()
+    {
+        var hostedServices = this.HostedServices.ToList();
+        Dictionary<Type, Type> replacements = new();
+        this.ReplaceHostedServices(replacements);
+        foreach (var replacement in replacements)
+        {
+            hostedServices.Remove(replacement.Key);
+            hostedServices.Add(replacement.Value);
+        }
+
+        return hostedServices;
+    }
+
+    public virtual void ReplaceHostedServices(Dictionary<Type, Type> replacements)
+    {
+
+    }
+
     public override void ConfigureContainer(ContainerBuilder containerBuilder)
     {
         var dataAccess = Assembly.GetExecutingAssembly();
@@ -126,28 +173,11 @@ public class AllaganMarketPlugin : HostedPlugin
                         .AsSelf()
                         .AsImplementedInterfaces();
 
-        // Hosted Services
-        containerBuilder.RegisterType<WindowService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<InstallerWindowService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<MarketPriceUpdaterService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<RetainerMarketService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<ATService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<MediatorService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<CommandService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<UniversalisWebsocketService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<UniversalisApiService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<InventoryService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<SaleTrackerService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<UndercutService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<AutoSaveService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<NotificationService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<CharacterMonitorService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<PluginBootService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<PluginStateService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<ConfigurationLoaderService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<LaunchButtonService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<DtrService>().AsImplementedInterfaces().AsSelf().SingleInstance();
-        containerBuilder.RegisterType<HighlightingService>().AsImplementedInterfaces().AsSelf().SingleInstance();
+        foreach (var hostedService in this.GetHostedServices())
+        {
+            containerBuilder.RegisterType(hostedService).AsSelf().AsImplementedInterfaces().SingleInstance();
+        }
+
 
         containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
         containerBuilder.RegisterType<ImGuiMenus>().SingleInstance();

@@ -85,7 +85,7 @@ public class MainWindow : ExtendedWindow, IDisposable
         ITextureProvider textureProvider,
         ConfigWindow configWindow,
         IPluginLog pluginLog,
-        RetainerMarketService retainerMarketService,
+        IRetainerMarketService retainerMarketService,
         SaleTrackerService saleTrackerService,
         ICharacterMonitorService characterMonitorService,
         IDataManager dataManager,
@@ -177,7 +177,7 @@ public class MainWindow : ExtendedWindow, IDisposable
 
     public ConfigWindow ConfigWindow { get; }
 
-    public RetainerMarketService RetainerMarketService { get; }
+    public IRetainerMarketService RetainerMarketService { get; }
 
     public SaleTrackerService SaleTrackerService { get; }
 
