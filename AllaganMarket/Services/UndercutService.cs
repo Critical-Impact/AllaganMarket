@@ -53,6 +53,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     private readonly IRetainerMarketService retainerMarketService;
     private readonly UndercutComparisonSetting undercutComparisonSetting;
     private readonly UndercutBySetting undercutBySetting;
+    private readonly UndercutAllowFallbackSetting undercutAllowFallbackSetting;
     private readonly RoundUpDownSetting roundUpDownSetting;
     private readonly RoundToSetting roundToSetting;
     private readonly IFramework framework;
@@ -78,6 +79,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         IRetainerMarketService retainerMarketService,
         UndercutComparisonSetting undercutComparisonSetting,
         UndercutBySetting undercutBySetting,
+        UndercutAllowFallbackSetting undercutAllowFallbackSetting,
         RoundUpDownSetting roundUpDownSetting,
         RoundToSetting roundToSetting,
         IFramework framework)
@@ -97,6 +99,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.retainerMarketService = retainerMarketService;
         this.undercutComparisonSetting = undercutComparisonSetting;
         this.undercutBySetting = undercutBySetting;
+        this.undercutAllowFallbackSetting = undercutAllowFallbackSetting;
         this.roundUpDownSetting = roundUpDownSetting;
         this.roundToSetting = roundToSetting;
         this.framework = framework;
@@ -113,10 +116,36 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.universalisApiService.PriceRetrieved += this.UniversalisApiPriceRetrieved;
         this.marketPriceUpdaterService.MarketBoardItemRequestReceived += this.MarketBoardItemRequestReceived;
         this.retainerMarketService.OnItemUpdated += this.LocalRetainerMarketUpdated;
+        this.retainerMarketService.OnItemAdded += this.LocalRetainerMarketItemAdded;
 
         // Check to see if they are logged in already
         this.framework.RunOnFrameworkThread(this.OnLogin);
         return Task.CompletedTask;
+    }
+
+    // When an item is added and we don't have any pricing it means nobody was selling it so we should make this the lowest price
+    private void LocalRetainerMarketItemAdded(RetainerMarketListEvent listEvent)
+    {
+        this.pluginLog.Verbose("Undercut Service: Has detected an item added to the market list.");
+        if(listEvent.SaleItem != null)
+        {
+            var hasExistingCache = this.GetMarketPriceCache(
+                listEvent.SaleItem.WorldId,
+                listEvent.SaleItem.ItemId,
+                listEvent.SaleItem.IsHq);
+            if (hasExistingCache == null)
+            {
+                this.pluginLog.Verbose("Undercut Service: No existing cache so adding a new entry to the cache.");
+                this.UpdateMarketPriceCache(
+                    listEvent.SaleItem.ItemId,
+                    listEvent.SaleItem.IsHq,
+                    listEvent.SaleItem.WorldId,
+                    MarketPriceCacheType.Game,
+                    DateTime.Now,
+                    listEvent.SaleItem.UnitPrice,
+                    true);
+            }
+        }
     }
 
     /// <summary>
@@ -141,6 +170,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.universalisApiService.PriceRetrieved -= this.UniversalisApiPriceRetrieved;
         this.marketPriceUpdaterService.MarketBoardItemRequestReceived -= this.MarketBoardItemRequestReceived;
         this.retainerMarketService.OnItemUpdated -= this.LocalRetainerMarketUpdated;
+        this.retainerMarketService.OnItemAdded -= this.LocalRetainerMarketItemAdded;
         return Task.CompletedTask;
     }
 
@@ -213,7 +243,13 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             requestedQuality = null;
         }
 
-        var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, requestedQuality) ?? this.GetMarketPriceCache(worldId, itemId, null);
+        var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, requestedQuality);
+
+        if (this.undercutAllowFallbackSetting.CurrentValue(this.configuration))
+        {
+            marketPriceCache ??= this.GetMarketPriceCache(worldId, itemId, null);
+        }
+
         if (marketPriceCache != null)
         {
             decimal recommendedPrice = marketPriceCache.UnitCost;
@@ -541,7 +577,10 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                                               .GroupBy(c => c.ItemId).ToDictionary(c => c.Key, c => c.ToList());
                         if (activeSales.TryGetValue(selectedItem->ItemId, out var currentSales))
                         {
-                            this.UpdateMarketPriceCache(selectedItem->ItemId, selectedItem->Flags != InventoryItem.ItemFlags.None, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, currentSales.Min(c => c.UnitPrice), true);
+                            var minCost = currentSales.Min(c => c.UnitPrice);
+                            this.pluginLog.Verbose(
+                                $"No item listings provided, saving minimum sale price of item to cache as {minCost}.");
+                            this.UpdateMarketPriceCache(selectedItem->ItemId, selectedItem->Flags != InventoryItem.ItemFlags.None, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, minCost, true);
                         }
                         //TODO: Remove both cached entries
                     }
@@ -562,7 +601,19 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                     }
                     else
                     {
-                        this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
+                        var lowestOfferingOwnNq = listings.Where(
+                                                           c => this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                                       .Where(c => c.IsHq == false)
+                                                       .DefaultIfEmpty()
+                                                       .Min(c => c?.PricePerUnit);
+                        if (lowestOfferingOwnNq != null)
+                        {
+                            this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnNq.Value, true);
+                        }
+                        else
+                        {
+                            this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
+                        }
                     }
 
                     var lowestOfferingHq = listings.Where(
@@ -576,7 +627,19 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                     }
                     else
                     {
-                        this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
+                        var lowestOfferingOwnHq = listings.Where(
+                                                           c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                                       .Where(c => c.IsHq == true)
+                                                       .DefaultIfEmpty()
+                                                       .Min(c => c?.PricePerUnit);
+                        if (lowestOfferingOwnHq != null)
+                        {
+                            this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnHq.Value, true);
+                        }
+                        else
+                        {
+                            this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
+                        }
                     }
                 }
             }
