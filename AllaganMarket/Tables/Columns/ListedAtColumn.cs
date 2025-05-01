@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 
 using AllaganLib.Interface.Grid;
@@ -34,13 +35,14 @@ public class ListedAtColumn(ImGuiService imGuiService, StringColumnFilter string
 
     public override string Version { get; } = "1.0.0";
 
-    public override string? CurrentValue(SearchResult item)
+
+    public override DateTime? CurrentDateValue(SearchResult item)
     {
         if (item.SaleItem != null && item.SaleItem.IsEmpty())
         {
             return null;
         }
 
-        return item.SaleItem?.ListedAt.ToString(CultureInfo.CurrentCulture) ?? null;
+        return item.SaleItem?.ListedAt ?? null;
     }
 }

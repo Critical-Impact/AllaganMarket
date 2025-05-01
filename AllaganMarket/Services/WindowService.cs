@@ -25,7 +25,7 @@ public class WindowService(
     IDalamudPluginInterface pluginInterface,
     IEnumerable<Window> pluginWindows,
     IWindowSystemFactory windowSystemFactory,
-    IFileDialogManager fileDialogManager) : IHostedService, IMediatorSubscriber, IDisposable
+    IFileDialogManager fileDialogManager) : IHostedService, IMediatorSubscriber
 {
     public MediatorService MediatorService { get; } = mediatorService;
 
@@ -57,12 +57,8 @@ public class WindowService(
     {
         this.PluginInterface.UiBuilder.Draw -= this.UiBuilderOnDraw;
         this.WindowSystem.RemoveAllWindows();
-        return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
         this.MediatorService.UnsubscribeAll(this);
+        return Task.CompletedTask;
     }
 
     private void CloseWindow(CloseWindowMessage obj)

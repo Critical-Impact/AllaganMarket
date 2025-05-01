@@ -39,6 +39,8 @@ using ImGuiNET;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
+using Serilog.Events;
+
 using TimeUnit = Humanizer.Localisation.TimeUnit;
 
 namespace AllaganMarket.Windows;
@@ -212,6 +214,19 @@ public class MainWindow : ExtendedWindow, IDisposable
                 {
                     "https://github.com/Critical-Impact/AllaganMarket".OpenBrowser();
                 }
+
+                if (ImGui.MenuItem("Enable Verbose Logging", "", this.pluginLog.MinimumLogLevel == LogEventLevel.Verbose))
+                {
+                    if (this.pluginLog.MinimumLogLevel == LogEventLevel.Verbose)
+                    {
+                        this.pluginLog.MinimumLogLevel = LogEventLevel.Debug;
+                    }
+                    else
+                    {
+                        this.pluginLog.MinimumLogLevel = LogEventLevel.Verbose;
+                    }
+                }
+
 
                 if (ImGui.MenuItem("Ko-Fi"))
                 {

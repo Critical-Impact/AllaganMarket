@@ -15,8 +15,11 @@ using AllaganMarket.Settings.Layout;
 using DalaMock.Host.Mediator;
 
 using Dalamud.Interface.Utility.Raii;
+using Dalamud.Plugin.Services;
 
 using ImGuiNET;
+
+using Serilog.Events;
 
 // ReSharper disable DisposeOnUsingVariable
 namespace AllaganMarket.Windows;
@@ -26,6 +29,7 @@ public class ConfigWindow : ExtendedWindow, IDisposable
     private readonly Configuration configuration;
     private readonly IConfigurationWizardService<Configuration> configurationWizardService;
     private readonly SettingTypeConfiguration settingTypeConfiguration;
+    private readonly IPluginLog pluginLog;
     private readonly VerticalSplitter verticalSplitter;
     private readonly List<IGrouping<SettingType, ISetting>> settings;
     private SettingType currentSettingType;
@@ -38,7 +42,8 @@ public class ConfigWindow : ExtendedWindow, IDisposable
         IEnumerable<ISetting> settings,
         IConfigurationWizardService<Configuration> configurationWizardService,
         SettingTypeConfiguration settingTypeConfiguration,
-        IEnumerable<SettingPage> settingPages)
+        IEnumerable<SettingPage> settingPages,
+        IPluginLog pluginLog)
         : base(mediatorService, imGuiService, "Allagan Market - Configuration")
     {
         this.SizeConstraints = new WindowSizeConstraints
@@ -52,6 +57,7 @@ public class ConfigWindow : ExtendedWindow, IDisposable
         this.configuration = configuration;
         this.configurationWizardService = configurationWizardService;
         this.settingTypeConfiguration = settingTypeConfiguration;
+        this.pluginLog = pluginLog;
         this.settingPages = settingPages.ToDictionary(c => c.SettingType, c => c);
         this.settings =
             [.. settings.GroupBy(c => c.Type).OrderBy(c => settingTypeConfiguration.GetCategoryOrder().IndexOf(c.Key))];
@@ -87,6 +93,18 @@ public class ConfigWindow : ExtendedWindow, IDisposable
                 if (ImGui.MenuItem("Report a Issue"))
                 {
                     "https://github.com/Critical-Impact/AllaganMarket".OpenBrowser();
+                }
+
+                if (ImGui.MenuItem("Enable Verbose Logging", "", this.pluginLog.MinimumLogLevel == LogEventLevel.Verbose))
+                {
+                    if (this.pluginLog.MinimumLogLevel == LogEventLevel.Verbose)
+                    {
+                        this.pluginLog.MinimumLogLevel = LogEventLevel.Debug;
+                    }
+                    else
+                    {
+                        this.pluginLog.MinimumLogLevel = LogEventLevel.Verbose;
+                    }
                 }
 
                 if (ImGui.MenuItem("Ko-Fi"))
