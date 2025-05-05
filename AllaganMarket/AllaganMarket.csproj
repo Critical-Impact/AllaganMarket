@@ -25,7 +25,7 @@
         <PackageReference Include="AllaganLib.Data" Version="1.2.0" />
         <PackageReference Include="AllaganLib.Interface" Version="1.2.7" />
         <PackageReference Include="AllaganLib.Shared" Version="1.2.8" />
-        <PackageReference Include="AllaganLib.Universalis" Version="1.2.8" />
+        <PackageReference Include="AllaganLib.Universalis" Version="1.2.9" />
     </ItemGroup>
 
     <ItemGroup>

@@ -10,6 +10,7 @@ using AllaganLib.Data.Service;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
+using AllaganLib.Universalis.Models;
 using AllaganLib.Universalis.Services;
 
 using AllaganMarket.Filtering;
@@ -196,6 +197,15 @@ public class AllaganMarketPlugin : HostedPlugin
 
         containerBuilder.RegisterType<ClientWebSocket>();
         containerBuilder.Register(c => new HttpClient()).As<HttpClient>();
+        containerBuilder.Register<UniversalisUserAgent>(c =>
+        {
+            var pluginInterface = c.Resolve<IDalamudPluginInterface>();
+            #if DEBUG
+            return new UniversalisUserAgent(pluginInterface.InternalName, "DEV");
+            #else
+            return new UniversalisUserAgent(pluginInterface.InternalName, pluginInterface.Manifest.AssemblyVersion.ToString());
+            #endif
+        });
 
         // Windows
         containerBuilder.RegisterType<MainWindow>().As<Window>().AsSelf().SingleInstance();

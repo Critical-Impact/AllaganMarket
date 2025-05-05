@@ -55,7 +55,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="DalaMock.Core" Version="2.2.5" />
+        <PackageReference Include="DalaMock.Core" Version="2.2.6" />
         <PackageReference Include="DalaMock.Host" Version="2.2.5" />
         <PackageReference Include="Humanizer.Core" Version="2.14.1"/>
         <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="9.0.3" />

@@ -563,83 +563,86 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             this.accumulatedListings = new();
 
             var currentPlayer = this.clientState.LocalPlayer;
-            if (currentPlayer != null)
+            if (currentPlayer == null)
             {
-                var offeringDate = DateTime.Now;
-                if (listings.Count == 0)
+                return;
+            }
+
+            var offeringDate = DateTime.Now;
+            if (listings.Count == 0)
+            {
+                this.pluginLog.Verbose(
+                    "No item listings provided, marking item as updated as our price is more than likely correct.");
+                var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.DamagedGear, 0);
+                if (selectedItem != null && selectedItem->ItemId != 0)
                 {
-                    this.pluginLog.Verbose(
-                        "No item listings provided, marking item as updated as our price is more than likely correct.");
-                    var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.DamagedGear, 0);
-                    if (selectedItem != null && selectedItem->ItemId != 0)
+                    var activeSales = this.saleTrackerService.GetSales(null, currentPlayer.HomeWorld.RowId)
+                                          .GroupBy(c => c.ItemId).ToDictionary(c => c.Key, c => c.ToList());
+                    if (activeSales.TryGetValue(selectedItem->ItemId, out var currentSales))
                     {
-                        var activeSales = this.saleTrackerService.GetSales(null, currentPlayer.HomeWorld.RowId)
-                                              .GroupBy(c => c.ItemId).ToDictionary(c => c.Key, c => c.ToList());
-                        if (activeSales.TryGetValue(selectedItem->ItemId, out var currentSales))
-                        {
-                            var minCost = currentSales.Min(c => c.UnitPrice);
-                            this.pluginLog.Verbose(
-                                $"No item listings provided, saving minimum sale price of item to cache as {minCost}.");
-                            this.UpdateMarketPriceCache(selectedItem->ItemId, selectedItem->Flags != InventoryItem.ItemFlags.None, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, minCost, true);
-                        }
-                        //TODO: Remove both cached entries
+                        var minCost = currentSales.Min(c => c.UnitPrice);
+                        this.pluginLog.Verbose(
+                            $"No item listings provided, saving minimum sale price of item to cache as {minCost}.");
+                        this.UpdateMarketPriceCache(selectedItem->ItemId, selectedItem->Flags != InventoryItem.ItemFlags.None, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, minCost, true);
                     }
+                    //TODO: Remove both cached entries
+                }
+            }
+            else
+            {
+                var itemId = listings[0].ItemId;
+
+                // Find the lowest NQ listing from a character that is not ours
+                var lowestOfferingNq = listings.Where(
+                                                   c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                               .Where(c => c.IsHq == false)
+                                               .DefaultIfEmpty()
+                                               .Min(c => c?.PricePerUnit);
+
+                if (lowestOfferingNq != null)
+                {
+                    this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingNq.Value, false);
                 }
                 else
                 {
-                    var itemId = listings[0].ItemId;
-
-                    var lowestOfferingNq = listings.Where(
-                                                       c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
-                                                   .Where(c => c.IsHq == false)
-                                                   .DefaultIfEmpty()
-                                                   .Min(c => c?.PricePerUnit);
-
-                    if (lowestOfferingNq != null)
+                    var lowestOfferingOwnNq = listings.Where(
+                                                          c => this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                                      .Where(c => c.IsHq == false)
+                                                      .DefaultIfEmpty()
+                                                      .Min(c => c?.PricePerUnit);
+                    if (lowestOfferingOwnNq != null)
                     {
-                        this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingNq.Value, false);
+                        this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnNq.Value, true);
                     }
                     else
                     {
-                        var lowestOfferingOwnNq = listings.Where(
-                                                           c => this.characterMonitorService.IsCharacterKnown(c.RetainerId))
-                                                       .Where(c => c.IsHq == false)
-                                                       .DefaultIfEmpty()
-                                                       .Min(c => c?.PricePerUnit);
-                        if (lowestOfferingOwnNq != null)
-                        {
-                            this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnNq.Value, true);
-                        }
-                        else
-                        {
-                            this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
-                        }
+                        this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
                     }
+                }
 
-                    var lowestOfferingHq = listings.Where(
-                                                       c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
-                                                   .Where(c => c.IsHq == true)
-                                                   .DefaultIfEmpty()
-                                                   .Min(c => c?.PricePerUnit);
-                    if (lowestOfferingHq != null)
+                var lowestOfferingHq = listings.Where(
+                                                   c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                               .Where(c => c.IsHq == true)
+                                               .DefaultIfEmpty()
+                                               .Min(c => c?.PricePerUnit);
+                if (lowestOfferingHq != null)
+                {
+                    this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingHq.Value, false);
+                }
+                else
+                {
+                    var lowestOfferingOwnHq = listings.Where(
+                                                          c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                                      .Where(c => c.IsHq == true)
+                                                      .DefaultIfEmpty()
+                                                      .Min(c => c?.PricePerUnit);
+                    if (lowestOfferingOwnHq != null)
                     {
-                        this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingHq.Value, false);
+                        this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnHq.Value, true);
                     }
                     else
                     {
-                        var lowestOfferingOwnHq = listings.Where(
-                                                           c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
-                                                       .Where(c => c.IsHq == true)
-                                                       .DefaultIfEmpty()
-                                                       .Min(c => c?.PricePerUnit);
-                        if (lowestOfferingOwnHq != null)
-                        {
-                            this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnHq.Value, true);
-                        }
-                        else
-                        {
-                            this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
-                        }
+                        this.RemoveMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, offeringDate);
                     }
                 }
             }
@@ -701,6 +704,26 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     /// <param name="ownPrice"></param>
     private void UpdateMarketPriceCache(uint itemId, bool isHq, uint worldId, MarketPriceCacheType type, DateTime lastUpdated, uint newUnitCost, bool ownPrice)
     {
+        if (itemId == 0)
+        {
+            this.pluginLog.Error($"{type} tried to update the market cache with a 0 ID item.");
+            return;
+        }
+
+        if (this.itemSheet.TryGetRow(itemId, out var itemRow))
+        {
+            if (isHq && !itemRow.CanBeHq)
+            {
+                this.pluginLog.Error($"{type} tried to update the market cache with an update that is HQ but cannot be HQ.");
+                return;
+            }
+        }
+        else
+        {
+            this.pluginLog.Error($"{type} provided an invalid item ID: {itemId} on {worldId}.");
+            return;
+        }
+
         var wasUpdated = false;
         this.configuration.MarketPriceCache.TryAdd(worldId, []);
         var itemKey = (itemId, isHq);
@@ -720,9 +743,14 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 }
                 this.configuration.MarketPriceCache[worldId][itemKey] = newMarketPrice;
             }
+            else
+            {
+                this.pluginLog.Verbose($"Price for {itemId} on {worldId} was not newer than currently stored, was not cheaper and was not sourced from the game, ignoring.");
+            }
         }
         else
         {
+            this.pluginLog.Verbose($"Price for {itemId} on {worldId} was not cached, saving to cache.");
             this.configuration.MarketPriceCache[worldId][itemKey] = new MarketPriceCache(itemId, isHq, worldId, type, lastUpdated, newUnitCost, ownPrice);
             wasUpdated = true;
         }
@@ -766,56 +794,51 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             var itemId = message.Item;
             if (this.saleTrackerService.SaleItemsByItemId.TryGetValue(itemId, out var value))
             {
-                var cheapestNqListing = message.Listings.DefaultIfEmpty(null).MinBy(c => c?.PricePerUnit ?? 0);
-                var oldestReviewTimeNq = message.Listings.DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
-                if (oldestReviewTimeNq != null)
+                var cheapestNqListing = message.Listings.Where(c => !c.HQ).DefaultIfEmpty(null).MinBy(c => c?.PricePerUnit ?? 0);
+                var oldestReviewTimeNq = message.Listings.Where(c => !c.HQ).DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
+                if (oldestReviewTimeNq != null && cheapestNqListing != null)
                 {
-                    if (cheapestNqListing != null)
-                    {
-                        var ownsListing = this.characterMonitorService.Characters.Any(
-                            c => c.Value.Name == cheapestNqListing.RetainerName &&
-                                 c.Value.WorldId == message.World);
-                        var listingDate =
-                            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeNq.Value).ToLocalTime().AddSeconds(-10);
-                        this.UpdateMarketPriceCache(
-                            itemId,
-                            false,
-                            message.World,
-                            MarketPriceCacheType.UniversalisWS,
-                            listingDate,
-                            (uint)cheapestNqListing.PricePerUnit,
-                            ownsListing);
-                    }
-                    else
-                    {
-                        this.RemoveMarketPriceCache(itemId, false, message.World, DateTime.Now);
-                    }
+                    var ownsListing = this.characterMonitorService.Characters.Any(c => c.Value.Name == cheapestNqListing.RetainerName &&
+                             c.Value.WorldId == message.World);
+                    var listingDate =
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeNq.Value).ToLocalTime().AddSeconds(-10);
+                    this.pluginLog.Verbose($"Adding NQ listing received from universalis WS for {itemId}");
+                    this.UpdateMarketPriceCache(
+                        itemId,
+                        false,
+                        message.World,
+                        MarketPriceCacheType.UniversalisWS,
+                        listingDate,
+                        (uint)cheapestNqListing.PricePerUnit,
+                        ownsListing);
+                }
+                else
+                {
+                    this.pluginLog.Verbose($"No NQ listing received from universalis WS for {itemId}, removing cached prices");
+                    this.RemoveMarketPriceCache(itemId, false, message.World, DateTime.Now);
                 }
 
-                var cheapestHqListing = message.Listings.DefaultIfEmpty(null).MinBy(c => c?.PricePerUnit ?? 0);
-                var oldestReviewTimeHq = message.Listings.DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
-                if (oldestReviewTimeHq != null)
+                var cheapestHqListing = message.Listings.Where(c => c.HQ).DefaultIfEmpty(null).MinBy(c => c?.PricePerUnit ?? 0);
+                var oldestReviewTimeHq = message.Listings.Where(c => c.HQ).DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
+                if (oldestReviewTimeHq != null && cheapestHqListing != null)
                 {
-                    if (cheapestHqListing != null)
-                    {
-                        var ownsListing = this.characterMonitorService.Characters.Any(
-                            c => c.Value.Name == cheapestHqListing.RetainerName &&
-                                 c.Value.WorldId == message.World);
-                        var listingDate =
-                            new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeHq.Value).ToLocalTime().AddSeconds(-10);
-                        this.UpdateMarketPriceCache(
-                            itemId,
-                            true,
-                            message.World,
-                            MarketPriceCacheType.UniversalisWS,
-                            listingDate,
-                            (uint)cheapestHqListing.PricePerUnit,
-                            ownsListing);
-                    }
-                    else
-                    {
-                        this.RemoveMarketPriceCache(itemId, true, message.World, DateTime.Now);
-                    }
+                    var ownsListing = this.characterMonitorService.Characters.Any(c => c.Value.Name == cheapestHqListing.RetainerName &&
+                             c.Value.WorldId == message.World);
+                    var listingDate =
+                        new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(oldestReviewTimeHq.Value).ToLocalTime().AddSeconds(-10);
+                    this.UpdateMarketPriceCache(
+                        itemId,
+                        true,
+                        message.World,
+                        MarketPriceCacheType.UniversalisWS,
+                        listingDate,
+                        (uint)cheapestHqListing.PricePerUnit,
+                        ownsListing);
+                }
+                else
+                {
+                    this.pluginLog.Verbose($"No HQ listing received from universalis WS for {itemId}, removing cached prices");
+                    this.RemoveMarketPriceCache(itemId, false, message.World, DateTime.Now);
                 }
             }
         }

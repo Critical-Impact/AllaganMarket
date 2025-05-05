@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using AllaganLib.Universalis.Models;
+
 using AllaganMarket;
 using AllaganMarket.Services;
 using AllaganMarket.Services.Interfaces;
@@ -63,6 +65,10 @@ public class AllaganMarketPluginMock(
         containerBuilder.RegisterType<MockWindow>().AsSelf().As<Window>().SingleInstance();
         containerBuilder.RegisterType<MockCharacterWindow>().AsSelf().As<Window>().SingleInstance();
         containerBuilder.RegisterType<MockBootService>().AsSelf().AsImplementedInterfaces().SingleInstance();
+        containerBuilder.Register<UniversalisUserAgent>(c =>
+        {
+            return new UniversalisUserAgent("AllaganMarket", "DEV");
+        });
     }
 
     public override void ReplaceHostedServices(Dictionary<Type, Type> replacements)

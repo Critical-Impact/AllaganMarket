@@ -12,6 +12,9 @@ using AllaganMarket.Models;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 
+using Lumina.Excel;
+using Lumina.Excel.Sheets;
+
 using Microsoft.Extensions.Hosting;
 
 namespace AllaganMarket.Services;
@@ -19,7 +22,8 @@ namespace AllaganMarket.Services;
 public class ConfigurationLoaderService(
     CsvLoaderService csvLoaderService,
     IDalamudPluginInterface pluginInterface,
-    IPluginLog pluginLog) : IHostedService
+    IPluginLog pluginLog,
+    ExcelSheet<Item> itemSheet) : IHostedService
 {
     private Configuration? configuration;
 
@@ -97,12 +101,16 @@ public class ConfigurationLoaderService(
 
         try
         {
-            configuration.MarketPriceCache = csvLoaderService
-                                      .LoadCsv<MarketPriceCache>(
-                                          Path.Combine(
-                                              pluginInterface.GetPluginConfigDirectory(),
-                                              "MarketPriceCache.csv"),
-                                          out _).Where(c => c.LastUpdated != DateTime.UnixEpoch).GroupBy(c => c.WorldId).ToDictionary(c => c.Key, c => c.ToDictionary(d => (d.ItemId, d.IsHq), e => e));
+            var marketPriceCaches = csvLoaderService
+                .LoadCsv<MarketPriceCache>(
+                    Path.Combine(
+                        pluginInterface.GetPluginConfigDirectory(),
+                        "MarketPriceCache.csv"),
+                    out _);
+
+            marketPriceCaches = marketPriceCaches.Where(c => !c.IsHq || (c.IsHq && (itemSheet.GetRowOrDefault(c.ItemId)?.CanBeHq ?? false))).ToList();
+
+            configuration.MarketPriceCache = marketPriceCaches.Where(c => c.LastUpdated != DateTime.UnixEpoch).GroupBy(c => c.WorldId).ToDictionary(c => c.Key, c => c.ToDictionary(d => (d.ItemId, d.IsHq), e => e));
         }
         catch (FileNotFoundException)
         {
