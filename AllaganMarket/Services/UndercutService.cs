@@ -838,7 +838,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 else
                 {
                     this.pluginLog.Verbose($"No HQ listing received from universalis WS for {itemId}, removing cached prices");
-                    this.RemoveMarketPriceCache(itemId, false, message.World, DateTime.Now);
+                    this.RemoveMarketPriceCache(itemId, true, message.World, DateTime.Now);
                 }
             }
         }
