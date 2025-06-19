@@ -8,10 +8,11 @@ using DalaMock.Host.Mediator;
 using Dalamud.Plugin.Services;
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AllaganMarket.Services;
 
-public class ATService(IPluginLog logger, MediatorService mediatorService, ICommandManager commandManager)
+public class ATService(ILogger<ATService> logger, MediatorService mediatorService, ICommandManager commandManager)
     : DisposableMediatorSubscriberBase(logger, mediatorService), IHostedService
 {
     public Task StartAsync(CancellationToken cancellationToken)

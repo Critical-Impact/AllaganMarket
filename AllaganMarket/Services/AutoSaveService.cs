@@ -8,6 +8,7 @@ using DalaMock.Host.Mediator;
 using Dalamud.Plugin.Services;
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AllaganMarket.Services;
 
@@ -16,9 +17,8 @@ public class AutoSaveService(
     ConfigurationLoaderService configurationLoaderService,
     IFramework framework,
     MediatorService mediatorService,
-    IPluginLog pluginLog) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
+    ILogger<AutoSaveService> pluginLog) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
 {
-    private readonly IPluginLog pluginLog = pluginLog;
     private bool pluginLoaded;
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -48,7 +48,7 @@ public class AutoSaveService(
 
         if (configuration.IsDirty)
         {
-            this.pluginLog.Verbose("Configuration is dirty, saving.");
+            this.Logger.LogTrace("Configuration is dirty, saving.");
             configurationLoaderService.Save();
             this.MediatorService.Publish(new ConfigurationModifiedMessage());
         }

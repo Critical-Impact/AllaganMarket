@@ -20,6 +20,8 @@ public record CloseWindowMessage(Type WindowType) : MessageBase;
 
 public record PluginLoadedMessage() : MessageBase;
 
+public record SaleFilterRefreshedMessage() : MessageBase;
+
 public record ConfigurationModifiedMessage() : MessageBase;
 
 #pragma warning restore SA1402

@@ -45,7 +45,7 @@ using TimeUnit = Humanizer.Localisation.TimeUnit;
 
 namespace AllaganMarket.Windows;
 
-public class MainWindow : ExtendedWindow, IDisposable
+public class MainWindow : ExtendedWindow
 {
     private readonly ExcelSheet<Item> itemSheet;
     private readonly ExcelSheet<ClassJob> classJobSheet;
@@ -158,6 +158,14 @@ public class MainWindow : ExtendedWindow, IDisposable
             new GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase>(this.soldItemTable);
         this.saleSummarySearchWidget =
             new GridQuickSearchWidget<SearchResultConfiguration, SearchResult, MessageBase>(this.saleSummaryTable);
+        this.MediatorService.Subscribe<SaleFilterRefreshedMessage>(this, this.SaleFilterRefreshed);
+    }
+
+    private void SaleFilterRefreshed(SaleFilterRefreshedMessage obj)
+    {
+        this.saleItemTable.IsDirty = true;
+        this.saleSummaryTable.IsDirty = true;
+        this.soldItemTable.IsDirty = true;
     }
 
     public enum SummaryDateMode

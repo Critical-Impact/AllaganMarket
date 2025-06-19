@@ -20,6 +20,7 @@ using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AllaganMarket.Services;
 
@@ -34,12 +35,12 @@ public class SaleTrackerService(
     IRetainerService retainerService,
     IRetainerMarketService retainerMarketService,
     IAddonLifecycle addonLifecycle,
-    IPluginLog pluginLog,
+    ILogger<SaleTrackerService> logger,
     IDataManager dataManager,
     ICharacterMonitorService characterMonitorService,
     IChatGui chatGui,
     NumberFormatInfo gilNumberFormat,
-    MediatorService mediatorService) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
+    MediatorService mediatorService) : DisposableMediatorSubscriberBase(logger, mediatorService), IHostedService
 {
     private readonly ExcelSheet<Item> itemSheet = dataManager.GetExcelSheet<Item>()!;
     private readonly Dictionary<ulong, List<SaleItem>> characterSalesCache = [];
@@ -71,7 +72,6 @@ public class SaleTrackerService(
 
     public IAddonLifecycle AddonLifecycle { get; } = addonLifecycle;
 
-    public IPluginLog PluginLog { get; } = pluginLog;
 
     public IDataManager DataManager { get; } = dataManager;
 
@@ -328,7 +328,7 @@ public class SaleTrackerService(
 
                 if (oldGil == newGil)
                 {
-                    this.PluginLog.Verbose("Item removed from market.");
+                    this.Logger.LogTrace("Item removed from market.");
 
                     // The assumption is that they took the item off the market
                 }
@@ -355,7 +355,7 @@ public class SaleTrackerService(
                             this.ItemSold?.Invoke(previousItem, newSale);
                         }
 
-                        this.PluginLog.Verbose("Sale created!");
+                        this.Logger.LogTrace("Sale created!");
                     }
                 }
 
@@ -367,16 +367,16 @@ public class SaleTrackerService(
                 {
                     if (previousItem.ItemId != newItem.ItemId)
                     {
-                        this.PluginLog.Error("Item has been switched, AM does not know about this.");
+                        this.Logger.LogError("Item has been switched, AM does not know about this.");
                     }
                     else if (previousItem.UnitPrice != newItem.UnitPrice)
                     {
-                        this.PluginLog.Verbose("Item price mismatch, item was probably updated.");
+                        this.Logger.LogTrace("Item price mismatch, item was probably updated.");
                     }
                     else
                     {
                         // TODO: Add reconcilation tab
-                        this.PluginLog.Error("Could not reconcile item.");
+                        this.Logger.LogError("Could not reconcile item.");
                     }
                 }
             }
@@ -407,7 +407,7 @@ public class SaleTrackerService(
             }
         }
 
-        this.PluginLog.Verbose("A snapshot was created.");
+        this.Logger.LogTrace("A snapshot was created.");
         this.SnapshotCreated?.Invoke();
     }
 

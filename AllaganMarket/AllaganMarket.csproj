@@ -10,10 +10,10 @@
     <ItemGroup>
         <PackageReference Include="Autofac" Version="8.3.0" />
         <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
-        <PackageReference Include="DalaMock.Host" Version="2.2.5" />
-        <PackageReference Include="DalaMock.Shared" Version="2.2.6" />
+        <PackageReference Include="DalaMock.Host" Version="2.3.0" />
+        <PackageReference Include="DalaMock.Shared" Version="2.3.0" />
         <PackageReference Include="Humanizer" Version="2.14.1"/>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.5" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
         <PackageReference Include="MongoDB.Bson" Version="3.4.0" />
         <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556">
             <PrivateAssets>all</PrivateAssets>
@@ -22,10 +22,10 @@
         <PackageReference Include="System.Reactive" Version="6.0.1" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="AllaganLib.Data" Version="1.2.0" />
-        <PackageReference Include="AllaganLib.Interface" Version="1.2.13" />
-        <PackageReference Include="AllaganLib.Shared" Version="1.2.8" />
-        <PackageReference Include="AllaganLib.Universalis" Version="1.2.9" />
+        <PackageReference Include="AllaganLib.Data" Version="1.2.17" />
+        <PackageReference Include="AllaganLib.Interface" Version="1.2.17" />
+        <PackageReference Include="AllaganLib.Shared" Version="1.2.16" />
+        <PackageReference Include="AllaganLib.Universalis" Version="1.2.17" />
     </ItemGroup>
 
     <ItemGroup>

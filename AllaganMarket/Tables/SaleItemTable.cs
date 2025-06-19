@@ -68,6 +68,7 @@ public class SaleItemTable : RenderTable<SearchResultConfiguration, SearchResult
         this.saleFilter = saleFilter;
         this.undercutService = undercutService;
         this.imGuiMenus = imGuiMenus;
+
         this.ShowFilterRow = true;
     }
 

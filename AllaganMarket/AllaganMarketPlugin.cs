@@ -26,7 +26,6 @@ using AllaganMarket.Windows;
 using Autofac;
 
 using DalaMock.Host.Hosting;
-using DalaMock.Host.Mediator;
 using DalaMock.Shared.Classes;
 using DalaMock.Shared.Interfaces;
 
@@ -95,7 +94,6 @@ public class AllaganMarketPlugin : HostedPlugin
         typeof(MarketPriceUpdaterService),
         typeof(RetainerMarketService),
         typeof(ATService),
-        typeof(MediatorService),
         typeof(CommandService),
         typeof(UniversalisWebsocketService),
         typeof(UniversalisApiService),
@@ -130,6 +128,14 @@ public class AllaganMarketPlugin : HostedPlugin
     public virtual void ReplaceHostedServices(Dictionary<Type, Type> replacements)
     {
 
+    }
+
+    public override HostedPluginOptions ConfigureOptions()
+    {
+        return new HostedPluginOptions()
+        {
+            UseMediatorService = true,
+        };
     }
 
     public override void ConfigureContainer(ContainerBuilder containerBuilder)

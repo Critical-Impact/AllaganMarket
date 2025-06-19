@@ -1,11 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using AllaganMarket.Mediator;
 using AllaganMarket.Models;
 using AllaganMarket.Services;
 using AllaganMarket.Services.Interfaces;
 using AllaganMarket.Settings;
 using AllaganMarket.Tables;
+
+using DalaMock.Host.Mediator;
 
 using Dalamud.Plugin.Services;
 
@@ -19,9 +22,11 @@ public class SaleFilter(
     SaleTrackerService saleTrackerService,
     ICharacterMonitorService characterMonitorService,
     ItemUpdatePeriodSetting itemUpdatePeriodSetting,
-    Configuration configuration)
+    Configuration configuration,
+    MediatorService mediatorService)
 {
     private readonly IDataManager dataManager = dataManager;
+    private readonly MediatorService mediatorService = mediatorService;
     private readonly ExcelSheet<Item> itemSheet = dataManager.GetExcelSheet<Item>()!;
     private long aggSalesTotalGil;
     private long aggSoldTotalGil;
@@ -88,7 +93,7 @@ public class SaleFilter(
         return this.itemSheet.GetRow(rowId);
     }
 
-    public List<SearchResult> RecalculateSaleResults()
+    private List<SearchResult> recalculateSaleResults()
     {
         var saleItems = this.GetSaleItems();
         var searchResults = new List<SearchResult>();
@@ -96,12 +101,17 @@ public class SaleFilter(
         return searchResults;
     }
 
-    public List<SearchResult> RecalculateSoldResults()
+    private List<SearchResult> recalculateSoldResults()
     {
         var soldItems = this.GetSoldItems();
         var searchResults = new List<SearchResult>();
         searchResults.AddRange(soldItems.Select(c => new SearchResult() { SoldItem = c }));
         return searchResults;
+    }
+
+    public void NotifyRefresh()
+    {
+        this.mediatorService.Publish(new SaleFilterRefreshedMessage());
     }
 
     public List<SaleItem> GetSaleItems()
@@ -110,6 +120,9 @@ public class SaleFilter(
         {
             this.cachedSales = this.RecalculateSaleItems();
             this.cachedSoldItems = this.RecalculateSoldItems();
+            this.cachedSaleResults = this.recalculateSaleResults();
+            this.cachedSoldResults = this.recalculateSoldResults();
+            this.NotifyRefresh();
         }
 
         return this.cachedSales;
@@ -121,6 +134,9 @@ public class SaleFilter(
         {
             this.cachedSales = this.RecalculateSaleItems();
             this.cachedSoldItems = this.RecalculateSoldItems();
+            this.cachedSaleResults = this.recalculateSaleResults();
+            this.cachedSoldResults = this.recalculateSoldResults();
+            this.NotifyRefresh();
         }
 
         return this.cachedSoldItems;
@@ -130,7 +146,11 @@ public class SaleFilter(
     {
         if (this.needsRefresh || this.cachedSaleResults == null)
         {
-            this.cachedSaleResults = this.RecalculateSaleResults();
+            this.cachedSales = this.RecalculateSaleItems();
+            this.cachedSoldItems = this.RecalculateSoldItems();
+            this.cachedSaleResults = this.recalculateSaleResults();
+            this.cachedSoldResults = this.recalculateSoldResults();
+            this.NotifyRefresh();
         }
 
         return this.cachedSaleResults;
@@ -140,7 +160,11 @@ public class SaleFilter(
     {
         if (this.needsRefresh || this.cachedSoldResults == null)
         {
-            this.cachedSoldResults = this.RecalculateSoldResults();
+            this.cachedSales = this.RecalculateSaleItems();
+            this.cachedSoldItems = this.RecalculateSoldItems();
+            this.cachedSaleResults = this.recalculateSaleResults();
+            this.cachedSoldResults = this.recalculateSoldResults();
+            this.NotifyRefresh();
         }
 
         return this.cachedSoldResults;

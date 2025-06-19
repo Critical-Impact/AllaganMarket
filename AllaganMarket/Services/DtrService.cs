@@ -13,6 +13,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Plugin.Services;
 
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace AllaganMarket.Services;
 
@@ -23,7 +24,7 @@ public class DtrService(
     AddDtrBarEntrySetting addDtrBarEntrySetting,
     UndercutService undercutService,
     Configuration configuration,
-    IPluginLog pluginLog) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
+    ILogger<DtrService> pluginLog) : DisposableMediatorSubscriberBase(pluginLog, mediatorService), IHostedService
 {
     private readonly MediatorService mediatorService = mediatorService;
     private readonly UndercutService undercutService = undercutService;
