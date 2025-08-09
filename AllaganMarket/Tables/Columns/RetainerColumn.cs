@@ -6,7 +6,7 @@ using AllaganMarket.Services.Interfaces;
 
 using DalaMock.Host.Mediator;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AllaganMarket.Tables.Columns;
 

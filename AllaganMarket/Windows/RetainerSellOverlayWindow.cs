@@ -18,7 +18,7 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -85,7 +85,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
     {
         get
         {
-            var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.DamagedGear, 0);
+            var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.BlockedItems, 0);
             return selectedItem == null ? 0 : selectedItem->ItemId;
         }
     }
@@ -94,7 +94,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
     {
         get
         {
-            var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.DamagedGear, 0);
+            var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.BlockedItems, 0);
             return selectedItem == null ? null : selectedItem->Flags;
         }
     }
@@ -242,7 +242,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
                             {
                                 unsafe
                                 {
-                                    var retainerSellAddon = (AddonRetainerSell*)retainerSellPtr;
+                                    var retainerSellAddon = (AddonRetainerSell*)retainerSellPtr.Address;
                                     retainerSellAddon->AskingPrice->SetValue((int)recommendedUnitPrice.Value);
                                 }
                             }

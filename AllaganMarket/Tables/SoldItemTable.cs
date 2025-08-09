@@ -3,22 +3,15 @@ using System.Collections.Generic;
 
 using AllaganLib.Data.Service;
 using AllaganLib.Interface.Grid;
-
 using AllaganMarket.Filtering;
-using AllaganMarket.Mediator;
 using AllaganMarket.Services;
 using AllaganMarket.Tables.Columns;
-
 using DalaMock.Host.Mediator;
-
 using Dalamud.Plugin.Services;
-
-using ImGuiNET;
-
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
-using static ImGuiNET.ImGuiTableFlags;
+using static Dalamud.Bindings.ImGui.ImGuiTableFlags;
 
 namespace AllaganMarket.Tables;
 

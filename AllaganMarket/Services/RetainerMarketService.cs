@@ -167,7 +167,7 @@ public class RetainerMarketService(
             }
 
 
-            var selectedItemContainer = this.InventoryService.GetInventoryContainer(InventoryType.DamagedGear);
+            var selectedItemContainer = this.InventoryService.GetInventoryContainer(InventoryType.BlockedItems);
             var selectedItem = selectedItemContainer->GetInventorySlot(0);
 
             var agentRetainer = (AgentRetainer*)thisPtr;
@@ -175,7 +175,7 @@ public class RetainerMarketService(
             // Values is the event sub command, cancel save price, save price, update price
             var subCommand = values->Int;
             var onMarket = selectedItem->Container == InventoryType.RetainerMarket;
-            var retainerMarketContainer = this.InventoryService.GetInventoryContainer(InventoryType.RetainerMarket);
+            var retainerMarketContainer = this.InventoryService.GetInventoryContainer(InventoryType.BlockedItems);
 
             this.ActiveSlots.Clear();
 

@@ -7,7 +7,7 @@ using AllaganLib.Interface.Services;
 
 using DalaMock.Host.Mediator;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AllaganMarket.Tables.Columns;
 

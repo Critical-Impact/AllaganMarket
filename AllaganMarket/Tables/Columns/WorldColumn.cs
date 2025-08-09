@@ -4,7 +4,7 @@ using AllaganLib.Interface.Services;
 
 using DalaMock.Host.Mediator;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 using Lumina.Excel;
 using Lumina.Excel.Sheets;

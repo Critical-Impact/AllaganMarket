@@ -8,7 +8,7 @@ using AllaganMarket.Tables.Columns;
 
 using DalaMock.Host.Mediator;
 
-using static ImGuiNET.ImGuiTableFlags;
+using static Dalamud.Bindings.ImGui.ImGuiTableFlags;
 
 namespace AllaganMarket.Tables;
 

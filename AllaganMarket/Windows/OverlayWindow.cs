@@ -13,7 +13,7 @@ using Dalamud.Plugin.Services;
 
 using FFXIVClientStructs.FFXIV.Component.GUI;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AllaganMarket.Windows;
 
@@ -71,7 +71,7 @@ public abstract class OverlayWindow : ExtendedWindow, IDisposable
             this.addonVisibility[addonName] = false;
             if (addonPtr != IntPtr.Zero)
             {
-                var atkUnitBase = (AtkUnitBase*)addonPtr;
+                var atkUnitBase = (AtkUnitBase*)addonPtr.Address;
                 if (atkUnitBase != null)
                 {
                     this.addonVisibility[addonName] = atkUnitBase->IsVisible;
@@ -157,7 +157,7 @@ public abstract class OverlayWindow : ExtendedWindow, IDisposable
         // Window shown/hidden
         if (args.Addon != IntPtr.Zero)
         {
-            var atkUnitBase = (AtkUnitBase*)args.Addon;
+            var atkUnitBase = (AtkUnitBase*)args.Addon.Address;
             var previousAddonVisibility = this.addonVisibility[args.AddonName];
             if (this.shouldOpen != true && this.shouldClose != true &&
                 previousAddonVisibility != atkUnitBase->IsVisible)

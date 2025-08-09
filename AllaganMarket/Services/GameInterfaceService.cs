@@ -49,7 +49,7 @@ public class GameInterfaceService : IGameInterfaceService
 
     public unsafe bool OpenCraftingLog(uint itemId, uint? recipeId = null)
     {
-        if (this.condition[ConditionFlag.Crafting] || this.condition[ConditionFlag.Crafting40])
+        if (this.condition[ConditionFlag.Crafting] || this.condition[ConditionFlag.ExecutingCraftingAction])
         {
             if (!this.condition[ConditionFlag.PreparingToCraft])
             {
@@ -63,7 +63,7 @@ public class GameInterfaceService : IGameInterfaceService
         {
             if (recipeId == null)
             {
-                AgentRecipeNote.Instance()->OpenRecipeByItemId(itemId);
+                AgentRecipeNote.Instance()->SearchRecipeByItemId(itemId);
             }
             else if(recipes.Any(c => c == recipeId.Value))
             {

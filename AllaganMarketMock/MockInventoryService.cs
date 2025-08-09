@@ -29,7 +29,7 @@ public class MockInventoryService : IInventoryService
 
     public unsafe InventoryItem* GetInventorySlot(InventoryType inventoryType, int index)
     {
-        if (inventoryType == InventoryType.DamagedGear)
+        if (inventoryType == InventoryType.BlockedItems)
         {
             var item = default(InventoryItem);
             item.ItemId = 28992;

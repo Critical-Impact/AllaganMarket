@@ -17,7 +17,7 @@ using Dalamud.Plugin.Services;
 
 using Humanizer;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AllaganMarket.Windows;
 

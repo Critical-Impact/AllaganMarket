@@ -17,7 +17,7 @@ using Dalamud.Plugin.Services;
 
 using FFXIVClientStructs.FFXIV.Common.Math;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 using Lumina.Excel;
 using Lumina.Excel.Sheets;

@@ -34,7 +34,7 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game.Event;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -625,9 +625,10 @@ public class MainWindow : ExtendedWindow
 
                         ImGui.SameLine();
                         var style = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
-                        if (ImGui.ArrowButton(
+                        if (ImGuiP.ArrowButtonEx(
                                 "world_" + worldId,
-                                this.IsWorldExpanded(worldId) ? ImGuiDir.Down : ImGuiDir.Right))
+                                this.IsWorldExpanded(worldId) ? ImGuiDir.Down : ImGuiDir.Right,
+                                new Vector2(24, 24)))
                         {
                             this.ToggleWorldExpanded(worldId);
                         }
@@ -680,9 +681,10 @@ public class MainWindow : ExtendedWindow
 
                                 ImGui.SameLine();
                                 style.Push(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
-                                if (ImGui.ArrowButton(
+                                if (ImGuiP.ArrowButtonEx(
                                         character.CharacterId.ToString(),
-                                        this.IsCharacterExpanded(character.CharacterId) ? ImGuiDir.Down : ImGuiDir.Right))
+                                        this.IsCharacterExpanded(character.CharacterId) ? ImGuiDir.Down : ImGuiDir.Right,
+                                        new Vector2(24, 24)))
                                 {
                                     this.ToggleCharacterExpanded(character.CharacterId);
                                 }
@@ -714,7 +716,7 @@ public class MainWindow : ExtendedWindow
                                         var icon = this.TextureProvider.GetFromGameIcon(
                                             new GameIconLookup(retainer.ClassJobId == 0 ? 62045 : retainer.ClassJobId + 62000));
                                         ImGui.Image(
-                                            icon.GetWrapOrEmpty().ImGuiHandle,
+                                            icon.GetWrapOrEmpty().Handle,
                                             new Vector2(16, 16) * ImGui.GetIO().FontGlobalScale);
 
                                         if (retainerHovered || ImGui.IsItemHovered())
@@ -983,7 +985,7 @@ public class MainWindow : ExtendedWindow
                             var icon = this.TextureProvider.GetFromGameIcon(
                                 new GameIconLookup(item.Icon, saleItem.IsHq));
 
-                            ImGui.Image(icon.GetWrapOrEmpty().ImGuiHandle, new Vector2(64, 64));
+                            ImGui.Image(icon.GetWrapOrEmpty().Handle, new Vector2(64, 64));
                         }
                     }
 
@@ -1076,7 +1078,7 @@ public class MainWindow : ExtendedWindow
                         {
                             var icon = this.TextureProvider.GetFromGameIcon(
                                 new GameIconLookup(item.Icon, saleItem.IsHq));
-                            ImGui.Image(icon.GetWrapOrEmpty().ImGuiHandle, new Vector2(64, 64));
+                            ImGui.Image(icon.GetWrapOrEmpty().Handle, new Vector2(64, 64));
                         }
                     }
                     var iconHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByActiveItem);
@@ -1100,7 +1102,7 @@ public class MainWindow : ExtendedWindow
                                 ImGui.SetCursorPosY(ImGui.GetWindowContentRegionMax().Y - 16);
                                 ImGui.Image(
                                     this.TextureProvider.GetFromGameIcon(new GameIconLookup(61575)).GetWrapOrEmpty()
-                                        .ImGuiHandle,
+                                        .Handle,
                                     new Vector2(16, 16));
                                 undercutHovered = ImGui.IsItemHovered();
                                 ImGuiService.HoverTooltip(

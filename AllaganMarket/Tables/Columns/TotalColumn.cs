@@ -8,7 +8,7 @@ using DalaMock.Host.Mediator;
 
 using Dalamud.Game.Text;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AllaganMarket.Tables.Columns;
 

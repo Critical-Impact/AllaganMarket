@@ -107,7 +107,7 @@ public class HighlightingService : IHostedService
     {
         if (args.Addon != IntPtr.Zero)
         {
-            var addon = (AtkUnitBase*)args.Addon;
+            var addon = (AtkUnitBase*)args.Addon.Address;
             if (addon != null)
             {
                 var isEnabled = this.retainerListSetting.CurrentValue(this.configuration);

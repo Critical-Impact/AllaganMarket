@@ -573,7 +573,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             {
                 this.pluginLog.Verbose(
                     "No item listings provided, marking item as updated as our price is more than likely correct.");
-                var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.DamagedGear, 0);
+                var selectedItem = this.inventoryService.GetInventorySlot(InventoryType.BlockedItems, 0);
                 if (selectedItem != null && selectedItem->ItemId != 0)
                 {
                     var activeSales = this.saleTrackerService.GetSales(null, currentPlayer.HomeWorld.RowId)

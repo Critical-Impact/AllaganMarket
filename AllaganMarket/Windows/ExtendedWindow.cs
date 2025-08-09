@@ -6,7 +6,7 @@ using DalaMock.Host.Mediator;
 
 using Dalamud.Interface.Windowing;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AllaganMarket.Windows;
 

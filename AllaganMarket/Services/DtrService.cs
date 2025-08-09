@@ -59,7 +59,7 @@ public class DtrService(
         }
     }
 
-    private void DtrClicked()
+    private void DtrClicked(DtrInteractionEvent interactionEvent)
     {
         this.mediatorService.Publish(new OpenWindowMessage(typeof(MainWindow)));
     }

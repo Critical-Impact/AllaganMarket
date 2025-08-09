@@ -9,7 +9,7 @@ using DalaMock.Host.Mediator;
 
 using Dalamud.Plugin.Services;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 using Lumina.Excel;
 using Lumina.Excel.Sheets;

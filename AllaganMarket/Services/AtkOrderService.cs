@@ -35,7 +35,7 @@ public class AtkOrderService : IAtkOrderService
             return null;
         }
 
-        var retainerSellList = (AtkUnitBase*)retainerSellListPtr;
+        var retainerSellList = (AtkUnitBase*)retainerSellListPtr.Address;
         var atkValues = retainerSellList->AtkValues;
         if (atkValues == null)
         {

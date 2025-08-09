@@ -1,6 +1,6 @@
 using Autofac;
 
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AllaganMarket.Settings.Layout;
 
