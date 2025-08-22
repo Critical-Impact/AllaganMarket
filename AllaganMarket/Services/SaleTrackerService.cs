@@ -413,6 +413,15 @@ public class SaleTrackerService(
 
     private void UpdateSalesDictionary()
     {
+        var characters = this.CharacterMonitorService.GetCharactersByType(CharacterType.Retainer, null);
+        foreach (var character in characters)
+        {
+            if (!this.SaleItems.ContainsKey(character.CharacterId))
+            {
+                this.SaleItems[character.CharacterId] = new SaleItem[20].FillList(character.CharacterId);
+            }
+        }
+
         var newDict = new Dictionary<uint, List<SaleItem>>();
         foreach (var retainerSales in this.SaleItems)
         {

@@ -7,9 +7,12 @@ using System.Net.WebSockets;
 using System.Reflection;
 
 using AllaganLib.Data.Service;
+using AllaganLib.Interface.FormFields;
 using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
+using AllaganLib.Shared.Interfaces;
+using AllaganLib.Shared.Windows;
 using AllaganLib.Universalis.Models;
 using AllaganLib.Universalis.Services;
 
@@ -27,6 +30,7 @@ using Autofac;
 
 using DalaMock.Host.Hosting;
 using DalaMock.Shared.Classes;
+using DalaMock.Shared.Extensions;
 using DalaMock.Shared.Interfaces;
 
 using Dalamud.Game.Text;
@@ -153,10 +157,10 @@ public class AllaganMarketPlugin : HostedPlugin
                 return gilNumberFormat;
             });
 
-        containerBuilder.RegisterAssemblyTypes(dataAccess)
-                        .Where(t => t.Name.EndsWith("Setting"))
-                        .AsSelf()
-                        .AsImplementedInterfaces();
+        containerBuilder.RegisterSingletonsSelfAndInterfaces<IDebugPane>(dataAccess);
+        containerBuilder.RegisterTransientsSelfAndInterfaces<ISetting>(dataAccess);
+        containerBuilder.RegisterAssemblyTypes(dataAccess).AssignableTo(typeof(IFeature<>)).As(typeof(IFeature<>)).AsSelf().InstancePerDependency();
+
 
         containerBuilder.RegisterAssemblyTypes(dataAccess)
                         .Where(t => t.Name.EndsWith("Feature"))
@@ -185,7 +189,7 @@ public class AllaganMarketPlugin : HostedPlugin
             containerBuilder.RegisterType(hostedService).AsSelf().AsImplementedInterfaces().SingleInstance();
         }
 
-
+        containerBuilder.RegisterSingletonSelfAndInterfaces<AllaganDebugWindow>(typeof(Window));
         containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
         containerBuilder.RegisterType<ImGuiMenus>().SingleInstance();
         containerBuilder.RegisterType<RetainerService>().As<IRetainerService>().SingleInstance();

@@ -20,6 +20,11 @@ public class ChatNotifyUndercutCharacterSetting(ImGuiService imGuiService)
 
     public override string Version { get; } = "1.0.0";
 
+    public override bool Equal(Enum item1, Enum item2)
+    {
+        return Equals(item1, item2);
+    }
+
     public override Dictionary<Enum, string> Choices { get; } = new()
     {
         { ChatNotifyCharacterEnum.OnlyActiveCharacter, "Only undercuts on active character's retainers" },
@@ -27,4 +32,6 @@ public class ChatNotifyUndercutCharacterSetting(ImGuiService imGuiService)
     };
 
     public SettingType Type { get; set; } = SettingType.Chat;
+
+    public bool ShowInSettings => true;
 }

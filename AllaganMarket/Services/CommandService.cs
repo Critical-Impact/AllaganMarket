@@ -1,7 +1,14 @@
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using AllaganLib.Shared.Windows;
+
+using AllaganMarket.Mediator;
 using AllaganMarket.Windows;
+
+using DalaMock.Host.Mediator;
 
 using Dalamud.Game.Command;
 using Dalamud.Plugin.Services;
@@ -10,23 +17,45 @@ using Microsoft.Extensions.Hosting;
 
 namespace AllaganMarket.Services;
 
-public class CommandService(ICommandManager commandManager, MainWindow mainWindow) : IHostedService
+public class CommandService : IHostedService
 {
-    private readonly string[] commandName = { "/allaganmarket" , "/amarket"};
+    private readonly ICommandManager commandManager;
+    private readonly MediatorService mediatorService;
 
-    public ICommandManager CommandManager { get; } = commandManager;
+    private readonly List<CommandRegistration> commands;
 
-    public MainWindow MainWindow { get; } = mainWindow;
+    public CommandService(ICommandManager commandManager, MediatorService mediatorService)
+    {
+        this.commandManager = commandManager;
+        this.mediatorService = mediatorService;
+        this.commands = new List<CommandRegistration>
+        {
+            new("/allaganmarket",
+                "Shows the Allagan Market main window.",
+                (args) => this.mediatorService.Publish(new ToggleWindowMessage(typeof(MainWindow)))),
+
+            new("/amarket",
+                "Alias for /allaganmarket.",
+                (args) => this.mediatorService.Publish(new ToggleWindowMessage(typeof(MainWindow)))),
+
+            new("/amconfig",
+                "Shows the Allagan Market configuration window.",
+                (args) => this.mediatorService.Publish(new ToggleWindowMessage(typeof(ConfigWindow)))),
+
+            new("/amdebug",
+                "Shows the Allagan Market debug window.",
+                (args) => this.mediatorService.Publish(new ToggleWindowMessage(typeof(AllaganDebugWindow)))),
+        };
+    }
+
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        for (int i = 0; i < commandName.Length; i++)
+        foreach (var cmd in this.commands)
         {
-            this.CommandManager.AddHandler(
-            commandName[i],
-            new CommandInfo(this.OnCommand)
+            this.commandManager.AddHandler(cmd.Name, new CommandInfo((_, args) => cmd.Action(args))
             {
-                HelpMessage = "Shows the Allagan Market main window.",
+                HelpMessage = cmd.HelpMessage,
             });
         }
 
@@ -35,16 +64,13 @@ public class CommandService(ICommandManager commandManager, MainWindow mainWindo
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        for (int i = 0; i < commandName.Length; i++)
+        foreach (var cmd in this.commands)
         {
-            this.CommandManager.RemoveHandler(commandName[i]);
+            this.commandManager.RemoveHandler(cmd.Name);
         }
 
         return Task.CompletedTask;
     }
 
-    private void OnCommand(string command, string arguments)
-    {
-        this.MainWindow.Toggle();
-    }
+    private record CommandRegistration(string Name, string HelpMessage, Action<string> Action);
 }

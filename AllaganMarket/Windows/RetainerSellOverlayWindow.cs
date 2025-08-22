@@ -19,6 +19,7 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Common.Math;
 
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Colors;
 
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
@@ -211,7 +212,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
             {
                 marketCache = this.undercutService.GetMarketPriceCache(activeRetainer.WorldId, currentItem.Value.RowId, null);
             }
-            var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
+            var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.Amount.ToString();
 
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))
             {
@@ -243,11 +244,19 @@ public class RetainerSellOverlayWindow : OverlayWindow
                                 unsafe
                                 {
                                     var retainerSellAddon = (AddonRetainerSell*)retainerSellPtr.Address;
-                                    retainerSellAddon->AskingPrice->SetValue((int)recommendedUnitPrice.Value);
+                                    retainerSellAddon->AskingPrice->SetValue((int)recommendedUnitPrice.Value.Amount);
                                 }
                             }
                         }
                     }
+                }
+
+                if (recommendedUnitPrice?.UsedFallback ?? false)
+                {
+                    ImGui.SameLine();
+                    this.ImGuiService.HelpMarker(
+                            "As you have undercut fallback on, the undercut was calculated based off the lowest NQ item.",
+                            textColor: ImGuiColors.DalamudYellow);
                 }
 
                 ImGui.TableNextRow();

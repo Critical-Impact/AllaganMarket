@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaganMarket", "AllaganMar
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AllaganMarketMock", "AllaganMarketMock\AllaganMarketMock.csproj", "{5AF13843-192D-488E-883D-259A3AF56553}"
 EndProject
-
-
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

@@ -24,6 +24,11 @@ public class ChatNotifyUndercutGroupingSetting : EnumFormField<ChatNotifyUndercu
 
     public override string Version => "1.0.0.1";
 
+    public override bool Equal(Enum item1, Enum item2)
+    {
+        return Equals(item1, item2);
+    }
+
     public override Dictionary<Enum, string> Choices => new()
     {
         { ChatNotifyUndercutGrouping.Individual, "Individually"},
@@ -33,6 +38,8 @@ public class ChatNotifyUndercutGroupingSetting : EnumFormField<ChatNotifyUndercu
     };
 
     public SettingType Type { get; set; } = SettingType.Chat;
+
+    public bool ShowInSettings => true;
 }
 
 public enum ChatNotifyUndercutGrouping

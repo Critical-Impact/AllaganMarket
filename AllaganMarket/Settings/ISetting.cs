@@ -5,4 +5,5 @@ namespace AllaganMarket.Settings;
 public interface ISetting : IFormField<Configuration>
 {
     public SettingType Type { get; set; }
+    public bool ShowInSettings { get; }
 }

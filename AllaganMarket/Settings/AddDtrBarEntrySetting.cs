@@ -17,4 +17,6 @@ public class AddDtrBarEntrySetting(ImGuiService imGuiService) : BooleanFormField
     public override string Version { get; } = "1.0.0";
 
     public SettingType Type { get; set; } = SettingType.Features;
+
+    public bool ShowInSettings => true;
 }

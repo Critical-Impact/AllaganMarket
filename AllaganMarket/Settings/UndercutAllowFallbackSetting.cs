@@ -21,4 +21,6 @@ public class UndercutAllowFallbackSetting : BooleanFormField<Configuration>, ISe
     public override string Version { get; } = "1.1.0.9";
 
     public SettingType Type { get; set; } = SettingType.Undercutting;
+
+    public bool ShowInSettings => true;
 }

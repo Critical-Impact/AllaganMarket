@@ -19,6 +19,11 @@ public class ViewModeSetting(ImGuiService imGuiService) : EnumFormField<ViewMode
 
     public override string Version { get; } = "1.0.0";
 
+    public override bool Equal(Enum item1, Enum item2)
+    {
+        return Equals(item1, item2);
+    }
+
     public override Dictionary<Enum, string> Choices { get; } = new()
     {
         [ViewMode.Grid] = "Grid",
@@ -26,4 +31,6 @@ public class ViewModeSetting(ImGuiService imGuiService) : EnumFormField<ViewMode
     };
 
     public SettingType Type { get; set; } = SettingType.General;
+
+    public bool ShowInSettings => true;
 }

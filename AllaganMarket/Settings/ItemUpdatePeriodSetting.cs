@@ -20,4 +20,6 @@ public class ItemUpdatePeriodSetting(ImGuiService imGuiService)
     public override string Version { get; } = "1.0.0";
 
     public SettingType Type { get; set; } = SettingType.General;
+
+    public bool ShowInSettings => true;
 }

@@ -18,4 +18,6 @@ public class HighlightingRetainerListSetting(ImGuiService imGuiService)
     public override string Version { get; } = "1.0.0.3";
 
     public SettingType Type { get; set; } = SettingType.Highlighting;
+
+    public bool ShowInSettings => true;
 }

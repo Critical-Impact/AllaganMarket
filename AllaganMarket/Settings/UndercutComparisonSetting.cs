@@ -23,6 +23,11 @@ public class UndercutComparisonSetting : EnumFormField<UndercutComparison, Confi
 
     public override string Version { get; } = "1.0.0.1";
 
+    public override bool Equal(Enum item1, Enum item2)
+    {
+        return Equals(item1, item2);
+    }
+
     public override Dictionary<Enum, string> Choices { get; } = new()
     {
         { UndercutComparison.Any, "Any" },
@@ -32,4 +37,6 @@ public class UndercutComparisonSetting : EnumFormField<UndercutComparison, Confi
     };
 
     public SettingType Type { get; set; } = SettingType.Undercutting;
+
+    public bool ShowInSettings => true;
 }

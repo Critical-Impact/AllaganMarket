@@ -3,7 +3,7 @@ using AllaganLib.Interface.Services;
 
 namespace AllaganMarket.Settings;
 
-public class RetainerOverlayCollapsedSetting(ImGuiService imGuiService) : BooleanFormField<Configuration>(imGuiService)
+public class RetainerOverlayCollapsedSetting(ImGuiService imGuiService) : BooleanFormField<Configuration>(imGuiService), ISetting
 {
     public override bool DefaultValue { get; set; } = true;
 
@@ -14,4 +14,8 @@ public class RetainerOverlayCollapsedSetting(ImGuiService imGuiService) : Boolea
     public override string HelpText { get; set; } = "Is the retainer overlay currently collapsed?";
 
     public override string Version { get; } = "1.0.0";
+
+    public SettingType Type { get; set; } = SettingType.Overlays;
+
+    public bool ShowInSettings => false;
 }

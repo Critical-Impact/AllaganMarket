@@ -63,6 +63,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
     public event ItemUndercutDelegate? ItemUndercut;
 
+    public readonly record struct UndercutResult(uint Amount, bool UsedFallback);
+
     public UndercutService(
         UniversalisWebsocketService websocketService,
         MediatorService mediatorService,
@@ -196,18 +198,18 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         var recommendedUnitPrice = this.GetRecommendedUnitPrice(worldId, itemId, isHq, roundToVal, roundUpDown);
         if (recommendedUnitPrice != null)
         {
-            return recommendedUnitPrice < currentPrice;
+            return recommendedUnitPrice.Value.Amount < currentPrice;
         }
 
         return null;
     }
 
-    public uint? GetRecommendedUnitPrice(SaleItem saleItem)
+    public UndercutResult? GetRecommendedUnitPrice(SaleItem saleItem)
     {
         return this.GetRecommendedUnitPrice(saleItem.WorldId, saleItem.ItemId, saleItem.IsHq, 1, false);
     }
 
-    public uint? GetRecommendedUnitPrice(uint worldId, uint itemId, bool isHq, uint roundToVal, bool roundUpDown)
+    public UndercutResult? GetRecommendedUnitPrice(uint worldId, uint itemId, bool isHq, uint roundToVal, bool roundUpDown)
     {
         var undercutComparison = this.undercutComparisonSetting.CurrentValue(this.configuration);
         var undercutAmount = this.undercutBySetting.CurrentValue(this.configuration);
@@ -238,16 +240,23 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             requestedQuality = true;
         }
 
-        if (!this.itemSheet.GetRowOrDefault(itemId)?.CanBeHq ?? true)
+        if (this.itemSheet.TryGetRow(itemId, out var row))
         {
-            requestedQuality = null;
+            if (!row.CanBeHq)
+            {
+                requestedQuality = false;
+            }
         }
 
         var marketPriceCache = this.GetMarketPriceCache(worldId, itemId, requestedQuality);
-
-        if (this.undercutAllowFallbackSetting.CurrentValue(this.configuration))
+        var wasFallback = false;
+        if (this.undercutAllowFallbackSetting.CurrentValue(this.configuration) && marketPriceCache == null)
         {
-            marketPriceCache ??= this.GetMarketPriceCache(worldId, itemId, null);
+            marketPriceCache = this.GetMarketPriceCache(worldId, itemId, null);
+            if (marketPriceCache != null)
+            {
+                wasFallback = true;
+            }
         }
 
         if (marketPriceCache != null)
@@ -255,7 +264,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             decimal recommendedPrice = marketPriceCache.UnitCost;
             if (marketPriceCache.OwnPrice)
             {
-                return (uint)recommendedPrice;
+                return new UndercutResult((uint)recommendedPrice, wasFallback);
             }
 
             // Rounding logic slapped in, make sure we do any undercut adjustment before the rounding happens.
@@ -284,7 +293,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                 }
             }
 
-            return Math.Max(1, (uint)recommendedPrice);
+            return new UndercutResult(Math.Max(1, (uint)recommendedPrice), wasFallback);
         }
 
         return null;
@@ -601,6 +610,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
 
                 if (lowestOfferingNq != null)
                 {
+                    this.pluginLog.Verbose($"Found an existing NQ offering stored for {itemId}, updating.");
                     this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingNq.Value, false);
                 }
                 else
@@ -612,10 +622,12 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                                                       .Min(c => c?.PricePerUnit);
                     if (lowestOfferingOwnNq != null)
                     {
+                        this.pluginLog.Verbose($"Found an existing NQ offering stored for {itemId} owned by the player, updating.");
                         this.UpdateMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnNq.Value, true);
                     }
                     else
                     {
+                        this.pluginLog.Verbose($"Could not find an existing NQ offering stored for {itemId}, clearing the last cached figure.");
                         this.RemoveMarketPriceCache(itemId, false, currentPlayer.HomeWorld.RowId, offeringDate);
                     }
                 }
@@ -627,21 +639,24 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                                                .Min(c => c?.PricePerUnit);
                 if (lowestOfferingHq != null)
                 {
+                    this.pluginLog.Verbose($"Found an existing HQ offering stored for {itemId}, updating.");
                     this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingHq.Value, false);
                 }
                 else
                 {
                     var lowestOfferingOwnHq = listings.Where(
-                                                          c => !this.characterMonitorService.IsCharacterKnown(c.RetainerId))
+                                                          c => this.characterMonitorService.IsCharacterKnown(c.RetainerId))
                                                       .Where(c => c.IsHq == true)
                                                       .DefaultIfEmpty()
                                                       .Min(c => c?.PricePerUnit);
                     if (lowestOfferingOwnHq != null)
                     {
+                        this.pluginLog.Verbose($"Found an existing HQ offering stored for {itemId} owned by the player, updating.");
                         this.UpdateMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, MarketPriceCacheType.Game, offeringDate, lowestOfferingOwnHq.Value, true);
                     }
                     else
                     {
+                        this.pluginLog.Verbose($"Could not find an existing HQ offering stored for {itemId}, clearing the last cached figure.");
                         this.RemoveMarketPriceCache(itemId, true, currentPlayer.HomeWorld.RowId, offeringDate);
                     }
                 }

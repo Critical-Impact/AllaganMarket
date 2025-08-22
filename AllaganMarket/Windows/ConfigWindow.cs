@@ -60,7 +60,7 @@ public class ConfigWindow : ExtendedWindow, IDisposable
         this.pluginLog = pluginLog;
         this.settingPages = settingPages.ToDictionary(c => c.SettingType, c => c);
         this.settings =
-            [.. settings.GroupBy(c => c.Type).OrderBy(c => settingTypeConfiguration.GetCategoryOrder().IndexOf(c.Key))];
+            [.. settings.Where(c => c.ShowInSettings).GroupBy(c => c.Type).OrderBy(c => settingTypeConfiguration.GetCategoryOrder().IndexOf(c.Key))];
         this.Flags = ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.MenuBar;
         this.verticalSplitter = new VerticalSplitter(150, new Vector2(100, 200));
         this.currentSettingType = this.settings.First().Key;

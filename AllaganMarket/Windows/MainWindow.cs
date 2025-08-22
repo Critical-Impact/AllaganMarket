@@ -625,10 +625,9 @@ public class MainWindow : ExtendedWindow
 
                         ImGui.SameLine();
                         var style = ImRaii.PushStyle(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
-                        if (ImGuiP.ArrowButtonEx(
+                        if (ImGui.ArrowButton(
                                 "world_" + worldId,
-                                this.IsWorldExpanded(worldId) ? ImGuiDir.Down : ImGuiDir.Right,
-                                new Vector2(24, 24)))
+                                this.IsWorldExpanded(worldId) ? ImGuiDir.Down : ImGuiDir.Right))
                         {
                             this.ToggleWorldExpanded(worldId);
                         }
@@ -681,10 +680,9 @@ public class MainWindow : ExtendedWindow
 
                                 ImGui.SameLine();
                                 style.Push(ImGuiStyleVar.FramePadding, new Vector2(1, 1));
-                                if (ImGuiP.ArrowButtonEx(
+                                if (ImGui.ArrowButton(
                                         character.CharacterId.ToString(),
-                                        this.IsCharacterExpanded(character.CharacterId) ? ImGuiDir.Down : ImGuiDir.Right,
-                                        new Vector2(24, 24)))
+                                        this.IsCharacterExpanded(character.CharacterId) ? ImGuiDir.Down : ImGuiDir.Right))
                                 {
                                     this.ToggleCharacterExpanded(character.CharacterId);
                                 }
@@ -1251,22 +1249,31 @@ public class MainWindow : ExtendedWindow
             if (this.SelectedTab == MainWindowTab.SalesSummary)
             {
                 ImGui.SameLine();
-                this.saleSummaryGroupFormField.DrawInput(
-                    this.saleSummaryTable.SaleSummary,
-                    (int?)(150 * ImGuiHelpers.GlobalScale));
+                if (this.saleSummaryGroupFormField.DrawInput(
+                        this.saleSummaryTable.SaleSummary,
+                        (int?)(150 * ImGuiHelpers.GlobalScale)))
+                {
+                    this.saleSummaryTable.IsDirty = true;
+                }
 
                 ImGui.SameLine();
                 if (this.summaryDateMode == SummaryDateMode.Range)
                 {
-                    this.saleSummaryDateRangeFormField.DrawInput(
+                    if(this.saleSummaryDateRangeFormField.DrawInput(
                         this.saleSummaryTable.SaleSummary,
-                        (int?)(150 * ImGuiHelpers.GlobalScale));
+                        (int?)(150 * ImGuiHelpers.GlobalScale)))
+                    {
+                        this.saleSummaryTable.IsDirty = true;
+                    }
                 }
                 else
                 {
-                    this.saleSummaryTimeSpanFormField.DrawInput(
+                    if(this.saleSummaryTimeSpanFormField.DrawInput(
                         this.saleSummaryTable.SaleSummary,
-                        (int?)(150 * ImGuiHelpers.GlobalScale));
+                        (int?)(150 * ImGuiHelpers.GlobalScale)))
+                    {
+                        this.saleSummaryTable.IsDirty = true;
+                    }
                 }
 
                 ImGui.SameLine();

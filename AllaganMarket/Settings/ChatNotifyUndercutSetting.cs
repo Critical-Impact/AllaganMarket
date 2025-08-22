@@ -18,4 +18,6 @@ public class ChatNotifyUndercutSetting(ImGuiService imGuiService)
     public override string Version { get; } = "1.0.0";
 
     public SettingType Type { get; set; } = SettingType.Chat;
+
+    public bool ShowInSettings => true;
 }

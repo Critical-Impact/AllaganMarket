@@ -24,4 +24,6 @@ public class RoundToSetting : IntegerFormField<Configuration>, ISetting
     public override string Version { get; } = "1.0.0.1";
 
     public SettingType Type { get; set; } = SettingType.Undercutting;
+
+    public bool ShowInSettings => true;
 }
