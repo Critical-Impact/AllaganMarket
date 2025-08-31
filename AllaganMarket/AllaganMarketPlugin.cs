@@ -158,8 +158,8 @@ public class AllaganMarketPlugin : HostedPlugin
             });
 
         containerBuilder.RegisterSingletonsSelfAndInterfaces<IDebugPane>(dataAccess);
-        containerBuilder.RegisterTransientsSelfAndInterfaces<ISetting>(dataAccess);
-        containerBuilder.RegisterAssemblyTypes(dataAccess).AssignableTo(typeof(IFeature<>)).As(typeof(IFeature<>)).AsSelf().InstancePerDependency();
+        containerBuilder.RegisterTransientsSelfAndInterfaces<ISetting>(dataAccess, [typeof(IFormField<Configuration>)]);
+        containerBuilder.RegisterAssemblyTypes(dataAccess).AssignableTo(typeof(IFeature<Configuration>)).As(typeof(IFeature<Configuration>)).AsSelf().InstancePerDependency();
 
 
         containerBuilder.RegisterAssemblyTypes(dataAccess)
