@@ -8,6 +8,16 @@ Instead the changelog reader and automation surrounding plugin PRs will add the 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.html).
 
+## [1.2.0.3] - 2025-09-05
+
+### Fixed
+- Fixed signature mismatch
+
+## [1.2.0.2] - 2025-08-31
+
+### Fixed
+- Fixed a bug causing features/settings to not be loaded within the wizard causing it to never close
+
 ## [1.2.0.1] - 2025-08-22
 
 ### Added
