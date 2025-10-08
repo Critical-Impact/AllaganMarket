@@ -156,27 +156,27 @@ public class CharacterMonitorService(
         if (retainerId != 0 && clientState.LocalPlayer != null)
         {
             pluginLog.Verbose($"Updating retainers: {retainerId}");
-            var span = RetainerManager.Instance()->Retainers;
-            for (var index = 0; index < span.Length; index++)
+            for (byte index = 0; index < 10; index++)
             {
-                var retainer = span[index];
-                var displayOrder = RetainerManager.Instance()->DisplayOrder.IndexOf((byte)index);
-                displayOrder = displayOrder == -1 ? 0 : displayOrder;
-                if (retainer.RetainerId == retainerId)
+                var retainer = RetainerManager.Instance()->GetRetainerBySortedIndex(index);
+                if (retainer != null && retainer->RetainerId != 0)
                 {
-                    var retainerName = retainer.NameString.Trim();
+                    if (retainer->RetainerId == retainerId)
+                    {
+                        var retainerName = retainer->NameString.Trim();
 
-                    var newRetainer = new Character(
-                        CharacterType.Retainer,
-                        retainerId,
-                        retainerName,
-                        clientState.LocalPlayer.HomeWorld.RowId,
-                        retainer.ClassJob,
-                        retainer.Level,
-                        (byte)displayOrder);
-                    newRetainer.RetainerTown = retainer.Town;
-                    newRetainer.OwnerId = clientState.LocalContentId;
-                    this.Characters[retainerId] = newRetainer;
+                        var newRetainer = new Character(
+                            CharacterType.Retainer,
+                            retainerId,
+                            retainerName,
+                            clientState.LocalPlayer.HomeWorld.RowId,
+                            retainer->ClassJob,
+                            retainer->Level,
+                            index);
+                        newRetainer.RetainerTown = retainer->Town;
+                        newRetainer.OwnerId = clientState.LocalContentId;
+                        this.Characters[retainerId] = newRetainer;
+                    }
                 }
             }
         }

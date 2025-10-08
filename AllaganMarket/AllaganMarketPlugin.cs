@@ -12,6 +12,7 @@ using AllaganLib.Interface.Grid.ColumnFilters;
 using AllaganLib.Interface.Widgets;
 using AllaganLib.Interface.Wizard;
 using AllaganLib.Shared.Interfaces;
+using AllaganLib.Shared.Services;
 using AllaganLib.Shared.Windows;
 using AllaganLib.Universalis.Models;
 using AllaganLib.Universalis.Services;
@@ -190,6 +191,8 @@ public class AllaganMarketPlugin : HostedPlugin
         }
 
         containerBuilder.RegisterSingletonSelfAndInterfaces<AllaganDebugWindow>(typeof(Window));
+        containerBuilder.RegisterSingletonSelfAndInterfaces<BackgroundTaskCollector>();
+        containerBuilder.RegisterTransientSelfAndInterfaces<BackgroundTaskQueue>();
         containerBuilder.RegisterType<SettingTypeConfiguration>().SingleInstance();
         containerBuilder.RegisterType<ImGuiMenus>().SingleInstance();
         containerBuilder.RegisterType<RetainerService>().As<IRetainerService>().SingleInstance();

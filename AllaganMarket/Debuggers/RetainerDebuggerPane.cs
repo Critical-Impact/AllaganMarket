@@ -136,14 +136,13 @@ public unsafe class RetainerDebuggerPane : IDebugPane
             return;
         }
 
-        var span = manager->Retainers;
         var active = new List<RetainerManager.Retainer>();
-        for (var i = 0; i < span.Length; i++)
+        for (uint i = 0; i < 10; i++)
         {
-            var r = span[i];
-            if (r.RetainerId != 0)
+            var retainer = RetainerManager.Instance()->GetRetainerBySortedIndex(i);
+            if (retainer != null && retainer->RetainerId != 0)
             {
-                active.Add(r);
+                active.Add(*retainer);
             }
         }
 
