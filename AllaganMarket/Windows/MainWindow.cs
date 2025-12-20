@@ -41,8 +41,6 @@ using Lumina.Excel.Sheets;
 
 using Serilog.Events;
 
-using TimeUnit = Humanizer.Localisation.TimeUnit;
-
 namespace AllaganMarket.Windows;
 
 public class MainWindow : ExtendedWindow
