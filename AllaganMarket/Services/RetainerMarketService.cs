@@ -137,8 +137,11 @@ public class RetainerMarketService(
         {
             this.PluginLog.Verbose($"Event Param: {receiveEventArgs.EventParam}");
             this.PluginLog.Verbose($"Atk Event Param: {receiveEventArgs.AtkEventType}");
-            var value = (AtkEventData*)receiveEventArgs.Data;
-            this.PluginLog.Verbose(value->ListItemData.SelectedIndex.ToString());
+            if (receiveEventArgs.AtkEventData != nint.Zero)
+            {
+                var value = (AtkEventData*)receiveEventArgs.AtkEventData;
+                this.PluginLog.Verbose(value->ListItemData.SelectedIndex.ToString());
+            }
         }
     }
 
