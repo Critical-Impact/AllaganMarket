@@ -231,7 +231,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                         }
 
                         var recommendedUnitPrice = this.undercutService.GetRecommendedUnitPrice(saleItem);
-                        var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.ToString();
+                        var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.Amount.ToString();
 
                         itemsToCheck = true;
                         ImGui.TableNextRow();

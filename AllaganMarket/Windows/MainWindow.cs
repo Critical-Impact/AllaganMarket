@@ -31,17 +31,12 @@ using Dalamud.Interface.Utility;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 
-using FFXIVClientStructs.FFXIV.Client.Game.Event;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-
 using Dalamud.Bindings.ImGui;
 
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
 using Serilog.Events;
-
-using TimeUnit = Humanizer.Localisation.TimeUnit;
 
 namespace AllaganMarket.Windows;
 

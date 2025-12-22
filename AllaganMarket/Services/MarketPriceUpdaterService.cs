@@ -9,6 +9,7 @@ using Dalamud.Plugin.Services;
 using Dalamud.Utility.Signatures;
 
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Network;
 
 using Microsoft.Extensions.Hosting;
 
@@ -21,7 +22,7 @@ public class MarketPriceUpdaterService(IGameInteropProvider gameInteropProvider,
     : IHostedService, IDisposable
 {
     [Signature(
-        "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D7 41 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 57 10",
+        "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8B D7 8B CE E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? 48 8D 57 10",
         DetourName = nameof(ItemMarketBoardInfoDetour))]
     private readonly Hook<ItemMarketBoardInfoData>? itemMarketBoardInfoHook = null;
 
