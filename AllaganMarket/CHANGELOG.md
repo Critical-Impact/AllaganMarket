@@ -2,39 +2,39 @@
 
 All notable changes to this project will be documented in this file.
 
-The log versioning the plugin versioning will not match as 1.0.0.0 technically does not match semantic versioning but the headache of trying to change this would be too much.
-Instead the changelog reader and automation surrounding plugin PRs will add the 1. back in 
+The log versioning the plugin versioning will not match as 0.0.0 technically does not match semantic versioning but the headache of trying to change this would be too much.
+Instead the changelog reader and automation surrounding plugin PRs will add the  back in 
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.html).
 
-## [1.3.0.0] - 2025-22-12
+## [3.0.0] - 2025-22-12
 
 ### Fixed
 - Support for 7.4
 
-## [1.2.0.5] - 2025-10-17
+## [2.0.5] - 2025-10-17
 
 ### Fixed
 - Fixed a broken signature, I'll see if I can make this less liable to break later
 
-## [1.2.0.4] - 2025-10-08
+## [2.0.4] - 2025-10-08
 
 ### Fixed
 - Fixed broke signature
 - Changed the way the retainer order is retrieved, this should fix some edge cases where peoples retainers were in the wrong order.
 
-## [1.2.0.3] - 2025-09-05
+## [2.0.3] - 2025-09-05
 
 ### Fixed
 - Fixed signature mismatch
 
-## [1.2.0.2] - 2025-08-31
+## [2.0.2] - 2025-08-31
 
 ### Fixed
 - Fixed a bug causing features/settings to not be loaded within the wizard causing it to never close
 
-## [1.2.0.1] - 2025-08-22
+## [2.0.1] - 2025-08-22
 
 ### Added
 - Added debug windows available for end-users when debugging specific issues
@@ -47,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.h
 - Fixed how the arrow buttons were rendered
 - Changing the date in the sales summary should update the list instantly instead of needing a reorder
 
-## [1.2.0.0] - 2025-08-09
+## [2.0.0] - 2025-08-09
 
 ### Fixed
 - API13 support
