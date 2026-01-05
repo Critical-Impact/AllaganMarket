@@ -8,6 +8,11 @@ Instead the changelog reader and automation surrounding plugin PRs will add the 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.html).
 
+## [3.0.1] - 2026-01-06
+
+### Fixed
+- Fixed an issue when a HQ listing attempts to use the NQ pricing for the recommended unit price
+
 ## [3.0.0] - 2025-22-12
 
 ### Fixed

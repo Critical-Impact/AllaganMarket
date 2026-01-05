@@ -68,7 +68,9 @@ public class AllaganMarketPlugin : HostedPlugin
         ITitleScreenMenu titleScreenMenu,
         IDtrBar dtrBar,
         IGameGui gameGui,
-        ICondition condition)
+        ICondition condition,
+        IObjectTable objectTable,
+        IPlayerState playerState)
         : base(
             pluginInterface,
             pluginLog,
@@ -85,7 +87,9 @@ public class AllaganMarketPlugin : HostedPlugin
             titleScreenMenu,
             dtrBar,
             gameGui,
-            condition)
+            condition,
+            objectTable,
+            playerState)
     {
         this.gameGui = gameGui;
         this.CreateHost();
@@ -161,7 +165,6 @@ public class AllaganMarketPlugin : HostedPlugin
         containerBuilder.RegisterSingletonsSelfAndInterfaces<IDebugPane>(dataAccess);
         containerBuilder.RegisterTransientsSelfAndInterfaces<ISetting>(dataAccess, [typeof(IFormField<Configuration>)]);
         containerBuilder.RegisterAssemblyTypes(dataAccess).AssignableTo(typeof(IFeature<Configuration>)).As(typeof(IFeature<Configuration>)).AsSelf().InstancePerDependency();
-
 
         containerBuilder.RegisterAssemblyTypes(dataAccess)
                         .Where(t => t.Name.EndsWith("Feature"))

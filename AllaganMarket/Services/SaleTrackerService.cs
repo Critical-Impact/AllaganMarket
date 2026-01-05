@@ -38,8 +38,6 @@ public class SaleTrackerService(
     ILogger<SaleTrackerService> logger,
     IDataManager dataManager,
     ICharacterMonitorService characterMonitorService,
-    IChatGui chatGui,
-    NumberFormatInfo gilNumberFormat,
     MediatorService mediatorService) : DisposableMediatorSubscriberBase(logger, mediatorService), IHostedService
 {
     private readonly ExcelSheet<Item> itemSheet = dataManager.GetExcelSheet<Item>()!;

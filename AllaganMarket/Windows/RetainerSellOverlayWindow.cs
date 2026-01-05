@@ -100,7 +100,6 @@ public class RetainerSellOverlayWindow : OverlayWindow
         }
     }
 
-
     public Item? CurrentItem => this.itemSheet.GetRow(this.CurrentItemId);
 
     public SaleItem? CurrentSaleItem => this.saleTrackerService.GetSaleItem(
@@ -212,6 +211,7 @@ public class RetainerSellOverlayWindow : OverlayWindow
             {
                 marketCache = this.undercutService.GetMarketPriceCache(activeRetainer.WorldId, currentItem.Value.RowId, null);
             }
+
             var recommendedPrice = recommendedUnitPrice == null ? "No Data" : recommendedUnitPrice.Value.Amount.ToString();
 
             using (ImRaii.Table("ItemList", 2, ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.NoSavedSettings))

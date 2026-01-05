@@ -10,9 +10,9 @@ namespace AllaganMarket.Services;
 /// <summary>
 /// Wrapper for the item order module's retainer ID.
 /// </summary>
-public class RetainerService(IClientState clientState) : IRetainerService
+public class RetainerService(IObjectTable objectTable) : IRetainerService
 {
-    public uint RetainerWorldId => clientState.LocalPlayer?.HomeWorld.RowId ?? 0;
+    public uint RetainerWorldId => objectTable.LocalPlayer?.HomeWorld.RowId ?? 0;
 
     public ulong RetainerId
     {

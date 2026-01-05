@@ -40,6 +40,7 @@ public class NotificationService : IHostedService
     private readonly ChatNotifyUndercutLoginChatTypeSetting notifyUndercutLoginChatTypeSetting;
     private readonly ICharacterMonitorService characterMonitorService;
     private readonly IRetainerService retainerService;
+    private readonly IPlayerState playerState;
     private readonly Subject<(ulong RetainerId, uint ItemId)> undercutQueue = new();
 
     public NotificationService(
@@ -58,7 +59,8 @@ public class NotificationService : IHostedService
         ChatNotifyUndercutLoginSetting notifyUndercutLoginSetting,
         ChatNotifyUndercutLoginChatTypeSetting notifyUndercutLoginChatTypeSetting,
         ICharacterMonitorService characterMonitorService,
-        IRetainerService retainerService)
+        IRetainerService retainerService,
+        IPlayerState playerState)
     {
         this.undercutService = undercutService;
         this.saleTrackerService = saleTrackerService;
@@ -76,6 +78,7 @@ public class NotificationService : IHostedService
         this.notifyUndercutLoginChatTypeSetting = notifyUndercutLoginChatTypeSetting;
         this.characterMonitorService = characterMonitorService;
         this.retainerService = retainerService;
+        this.playerState = playerState;
         this.undercutQueue
             .Buffer(() => this.undercutQueue.Throttle(TimeSpan.FromSeconds(2)))
             .Subscribe(
@@ -118,7 +121,7 @@ public class NotificationService : IHostedService
             ulong? characterId = null;
             if (characterSetting == ChatNotifyCharacterEnum.OnlyActiveCharacter)
             {
-                characterId = this.clientState.LocalContentId;
+                characterId = this.playerState.ContentId;
             }
 
             var undercutHashSet = undercuts.Distinct().ToHashSet();
@@ -131,7 +134,7 @@ public class NotificationService : IHostedService
     {
         if (this.notifyUndercutLoginSetting.CurrentValue(this.configuration))
         {
-            var currentCharacterId = this.clientState.LocalContentId;
+            var currentCharacterId = this.playerState.ContentId;
             var currentSales = this.saleTrackerService.GetSales(currentCharacterId, null);
             List<SaleItem> undercutItems = [];
             foreach (var currentSale in currentSales)

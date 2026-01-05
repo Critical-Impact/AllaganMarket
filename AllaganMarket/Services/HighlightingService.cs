@@ -45,6 +45,7 @@ public class HighlightingService : IHostedService
     private readonly HighlightingRetainerListSetting retainerListSetting;
     private readonly HighlightingRetainerSellListSetting retainerSellListSetting;
     private readonly IGameGui gameGui;
+    private readonly IPlayerState playerState;
     private bool retainerListModified;
     private bool retainerSellListModified;
     private ByteColor? originalRetainerListColor;
@@ -62,7 +63,8 @@ public class HighlightingService : IHostedService
         ExcelSheet<Item> itemSheet,
         HighlightingRetainerListSetting retainerListSetting,
         HighlightingRetainerSellListSetting retainerSellListSetting,
-        IGameGui gameGui)
+        IGameGui gameGui,
+        IPlayerState playerState)
     {
         this.addonLifecycle = addonLifecycle;
         this.retainerService = retainerService;
@@ -76,6 +78,7 @@ public class HighlightingService : IHostedService
         this.retainerListSetting = retainerListSetting;
         this.retainerSellListSetting = retainerSellListSetting;
         this.gameGui = gameGui;
+        this.playerState = playerState;
     }
 
     public static ByteColor ColorFromVector4(Vector4 hexString)
@@ -121,7 +124,7 @@ public class HighlightingService : IHostedService
                 var componentList = addon->GetComponentListById(27);
                 if (componentList != null)
                 {
-                    var retainers = this.characterMonitorService.GetRetainers(this.clientState.LocalContentId)
+                    var retainers = this.characterMonitorService.GetRetainers(this.playerState.ContentId)
                                         .OrderBy(c => c.DisplayOrder).ToArray();
 
                     foreach (var index in Enumerable.Range(0, componentList->ListLength))

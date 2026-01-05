@@ -45,16 +45,11 @@ public class MarketPriceCache : ICsv
         {
             case MarketPriceCacheType.Game:
                 return "In-Game";
-                break;
             case MarketPriceCacheType.UniversalisWS:
-                return "Universalis";
-                break;
             case MarketPriceCacheType.UniversalisReq:
                 return "Universalis";
-                break;
             case MarketPriceCacheType.Override:
                 return "Forced Update";
-                break;
         }
 
         return "Unknown";

@@ -21,12 +21,8 @@ public class SaleFilter(
     IDataManager dataManager,
     SaleTrackerService saleTrackerService,
     ICharacterMonitorService characterMonitorService,
-    ItemUpdatePeriodSetting itemUpdatePeriodSetting,
-    Configuration configuration,
     MediatorService mediatorService)
 {
-    private readonly IDataManager dataManager = dataManager;
-    private readonly MediatorService mediatorService = mediatorService;
     private readonly ExcelSheet<Item> itemSheet = dataManager.GetExcelSheet<Item>()!;
     private long aggSalesTotalGil;
     private long aggSoldTotalGil;
@@ -36,7 +32,6 @@ public class SaleFilter(
     private List<SearchResult>? cachedSoldResults;
     private ulong? characterId;
     private bool? showEmpty;
-    private bool? needUpdating;
     private bool needsRefresh;
     private uint? worldId;
 
@@ -79,7 +74,6 @@ public class SaleFilter(
         this.characterId = null;
         this.worldId = null;
         this.showEmpty = null;
-        this.needUpdating = null;
         this.needsRefresh = true;
     }
 
@@ -93,7 +87,7 @@ public class SaleFilter(
         return this.itemSheet.GetRow(rowId);
     }
 
-    private List<SearchResult> recalculateSaleResults()
+    private List<SearchResult> RecalculateSaleResults()
     {
         var saleItems = this.GetSaleItems();
         var searchResults = new List<SearchResult>();
@@ -101,7 +95,7 @@ public class SaleFilter(
         return searchResults;
     }
 
-    private List<SearchResult> recalculateSoldResults()
+    private List<SearchResult> RecalculateSoldResults()
     {
         var soldItems = this.GetSoldItems();
         var searchResults = new List<SearchResult>();
@@ -111,7 +105,7 @@ public class SaleFilter(
 
     public void NotifyRefresh()
     {
-        this.mediatorService.Publish(new SaleFilterRefreshedMessage());
+        mediatorService.Publish(new SaleFilterRefreshedMessage());
     }
 
     public List<SaleItem> GetSaleItems()
@@ -120,8 +114,8 @@ public class SaleFilter(
         {
             this.cachedSales = this.RecalculateSaleItems();
             this.cachedSoldItems = this.RecalculateSoldItems();
-            this.cachedSaleResults = this.recalculateSaleResults();
-            this.cachedSoldResults = this.recalculateSoldResults();
+            this.cachedSaleResults = this.RecalculateSaleResults();
+            this.cachedSoldResults = this.RecalculateSoldResults();
             this.NotifyRefresh();
         }
 
@@ -134,8 +128,8 @@ public class SaleFilter(
         {
             this.cachedSales = this.RecalculateSaleItems();
             this.cachedSoldItems = this.RecalculateSoldItems();
-            this.cachedSaleResults = this.recalculateSaleResults();
-            this.cachedSoldResults = this.recalculateSoldResults();
+            this.cachedSaleResults = this.RecalculateSaleResults();
+            this.cachedSoldResults = this.RecalculateSoldResults();
             this.NotifyRefresh();
         }
 
@@ -148,8 +142,8 @@ public class SaleFilter(
         {
             this.cachedSales = this.RecalculateSaleItems();
             this.cachedSoldItems = this.RecalculateSoldItems();
-            this.cachedSaleResults = this.recalculateSaleResults();
-            this.cachedSoldResults = this.recalculateSoldResults();
+            this.cachedSaleResults = this.RecalculateSaleResults();
+            this.cachedSoldResults = this.RecalculateSoldResults();
             this.NotifyRefresh();
         }
 
@@ -162,8 +156,8 @@ public class SaleFilter(
         {
             this.cachedSales = this.RecalculateSaleItems();
             this.cachedSoldItems = this.RecalculateSoldItems();
-            this.cachedSaleResults = this.recalculateSaleResults();
-            this.cachedSoldResults = this.recalculateSoldResults();
+            this.cachedSaleResults = this.RecalculateSaleResults();
+            this.cachedSoldResults = this.RecalculateSoldResults();
             this.NotifyRefresh();
         }
 

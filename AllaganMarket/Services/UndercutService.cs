@@ -57,6 +57,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
     private readonly RoundUpDownSetting roundUpDownSetting;
     private readonly RoundToSetting roundToSetting;
     private readonly IFramework framework;
+    private readonly IObjectTable objectTable;
     private uint activeHomeWorld;
 
     public delegate void ItemUndercutDelegate(ulong retainerId, uint itemId);
@@ -84,7 +85,8 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         UndercutAllowFallbackSetting undercutAllowFallbackSetting,
         RoundUpDownSetting roundUpDownSetting,
         RoundToSetting roundToSetting,
-        IFramework framework)
+        IFramework framework,
+        IObjectTable objectTable)
     {
         this.websocketService = websocketService;
         this.mediatorService = mediatorService;
@@ -105,6 +107,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
         this.roundUpDownSetting = roundUpDownSetting;
         this.roundToSetting = roundToSetting;
         this.framework = framework;
+        this.objectTable = objectTable;
         this.mediatorService.Subscribe<PluginLoadedMessage>(this, this.PluginLoaded);
     }
     public MediatorService MediatorService => this.mediatorService;
@@ -571,7 +574,7 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             var listings = this.accumulatedListings;
             this.accumulatedListings = new();
 
-            var currentPlayer = this.clientState.LocalPlayer;
+            var currentPlayer = this.objectTable.LocalPlayer;
             if (currentPlayer == null)
             {
                 return;
@@ -676,19 +679,25 @@ public class UndercutService : IHostedService, IMediatorSubscriber
             this.websocketService.UnsubscribeFromChannel(
                 UniversalisWebsocketService.EventType.ListingsAdd,
                 this.activeHomeWorld);
+            this.websocketService.UnsubscribeFromChannel(
+                UniversalisWebsocketService.EventType.ListingsRemove,
+                this.activeHomeWorld);
             this.activeHomeWorld = 0;
         }
     }
 
     private void OnLogin()
     {
-        if (this.clientState.LocalPlayer != null)
+        if (this.objectTable.LocalPlayer != null)
         {
-            this.pluginLog.Verbose($"Subscribing to universalis websocket for world {this.clientState.LocalPlayer.HomeWorld.RowId}.");
+            this.pluginLog.Verbose($"Subscribing to universalis websocket for world {this.objectTable.LocalPlayer.HomeWorld.RowId}.");
             this.websocketService.SubscribeToChannel(
                 UniversalisWebsocketService.EventType.ListingsAdd,
-                this.clientState.LocalPlayer.HomeWorld.RowId);
-            this.activeHomeWorld = this.clientState.LocalPlayer.HomeWorld.RowId;
+                this.objectTable.LocalPlayer.HomeWorld.RowId);
+            this.websocketService.SubscribeToChannel(
+                UniversalisWebsocketService.EventType.ListingsRemove,
+                this.objectTable.LocalPlayer.HomeWorld.RowId);
+            this.activeHomeWorld = this.objectTable.LocalPlayer.HomeWorld.RowId;
         }
     }
 
@@ -827,11 +836,6 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                         (uint)cheapestNqListing.PricePerUnit,
                         ownsListing);
                 }
-                else
-                {
-                    this.pluginLog.Verbose($"No NQ listing received from universalis WS for {itemId}, removing cached prices");
-                    this.RemoveMarketPriceCache(itemId, false, message.World, DateTime.Now);
-                }
 
                 var cheapestHqListing = message.Listings.Where(c => c.HQ).DefaultIfEmpty(null).MinBy(c => c?.PricePerUnit ?? 0);
                 var oldestReviewTimeHq = message.Listings.Where(c => c.HQ).DefaultIfEmpty(null).Max(c => c?.LastReviewTime);
@@ -850,11 +854,17 @@ public class UndercutService : IHostedService, IMediatorSubscriber
                         (uint)cheapestHqListing.PricePerUnit,
                         ownsListing);
                 }
-                else
-                {
-                    this.pluginLog.Verbose($"No HQ listing received from universalis WS for {itemId}, removing cached prices");
-                    this.RemoveMarketPriceCache(itemId, true, message.World, DateTime.Now);
-                }
+            }
+        }
+
+        if (message.EventType == UniversalisWebsocketService.EventType.ListingsRemove)
+        {
+            var itemId = message.Item;
+            if (this.saleTrackerService.SaleItemsByItemId.TryGetValue(itemId, out var value))
+            {
+                this.pluginLog.Verbose($"Requesting new prices from universalis for {itemId}");
+                //We have no idea what the lowest price is anymore, request the data again(ideally we'd cache all of the data but we currently don't and it'd require some restructuring)
+                this.universalisApiService.QueuePriceCheck(itemId, message.World);
             }
         }
     }

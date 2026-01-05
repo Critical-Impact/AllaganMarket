@@ -23,6 +23,8 @@ public class CharacterMonitorService(
     IClientState clientState,
     IRetainerService retainerService,
     IAddonLifecycle addonLifecycle,
+    IObjectTable objectTable,
+    IPlayerState playerState,
     IPluginLog pluginLog) : ICharacterMonitorService
 {
     private ulong cachedRetainerId;
@@ -35,7 +37,7 @@ public class CharacterMonitorService(
 
     public ulong ActiveRetainerId => retainerService.RetainerId;
 
-    public ulong ActiveCharacterId => clientState.LocalContentId;
+    public ulong ActiveCharacterId => playerState.ContentId;
 
     public bool IsLoggedIn => clientState.IsLoggedIn;
 
@@ -136,24 +138,24 @@ public class CharacterMonitorService(
 
     private void UpdatePlayerCharacter()
     {
-        if (clientState.LocalPlayer != null && clientState.LocalContentId != 0)
+        if (objectTable.LocalPlayer != null && playerState.ContentId != 0)
         {
             var newCharacter = new Character(
                 CharacterType.Character,
-                clientState.LocalContentId,
-                clientState.LocalPlayer.Name.ToString(),
-                clientState.LocalPlayer.HomeWorld.RowId,
-                clientState.LocalPlayer.ClassJob.RowId,
-                clientState.LocalPlayer.Level,
+                playerState.ContentId,
+                objectTable.LocalPlayer.Name.ToString(),
+                objectTable.LocalPlayer.HomeWorld.RowId,
+                objectTable.LocalPlayer.ClassJob.RowId,
+                objectTable.LocalPlayer.Level,
                 0);
-            this.Characters[clientState.LocalContentId] = newCharacter;
+            this.Characters[playerState.ContentId] = newCharacter;
         }
     }
 
     private unsafe void UpdateRetainer()
     {
         var retainerId = this.cachedRetainerId;
-        if (retainerId != 0 && clientState.LocalPlayer != null)
+        if (retainerId != 0 && objectTable.LocalPlayer != null)
         {
             pluginLog.Verbose($"Updating retainers: {retainerId}");
             for (byte index = 0; index < 10; index++)
@@ -169,12 +171,12 @@ public class CharacterMonitorService(
                             CharacterType.Retainer,
                             retainerId,
                             retainerName,
-                            clientState.LocalPlayer.HomeWorld.RowId,
+                            objectTable.LocalPlayer.HomeWorld.RowId,
                             retainer->ClassJob,
                             retainer->Level,
                             index);
                         newRetainer.RetainerTown = retainer->Town;
-                        newRetainer.OwnerId = clientState.LocalContentId;
+                        newRetainer.OwnerId = playerState.ContentId;
                         this.Characters[retainerId] = newRetainer;
                     }
                 }

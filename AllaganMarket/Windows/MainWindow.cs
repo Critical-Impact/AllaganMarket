@@ -1254,7 +1254,7 @@ public class MainWindow : ExtendedWindow
                 ImGui.SameLine();
                 if (this.summaryDateMode == SummaryDateMode.Range)
                 {
-                    if(this.saleSummaryDateRangeFormField.DrawInput(
+                    if (this.saleSummaryDateRangeFormField.DrawInput(
                         this.saleSummaryTable.SaleSummary,
                         (int?)(150 * ImGuiHelpers.GlobalScale)))
                     {
@@ -1263,7 +1263,7 @@ public class MainWindow : ExtendedWindow
                 }
                 else
                 {
-                    if(this.saleSummaryTimeSpanFormField.DrawInput(
+                    if (this.saleSummaryTimeSpanFormField.DrawInput(
                         this.saleSummaryTable.SaleSummary,
                         (int?)(150 * ImGuiHelpers.GlobalScale)))
                     {
