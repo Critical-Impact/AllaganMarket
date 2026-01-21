@@ -97,7 +97,7 @@ public class RetainerMarketService(
 
     private RetainerMarketListEvent? MarketListEvent { get; set; }
 
-    private HashSet<short> ActiveSlots { get; } = [];
+    public HashSet<short> ActiveSlots { get; } = [];
 
     public void Dispose()
     {
@@ -175,7 +175,7 @@ public class RetainerMarketService(
             // Values is the event sub command, cancel save price, save price, update price
             var subCommand = values->Int;
             var onMarket = selectedItem->Container == InventoryType.RetainerMarket;
-            var retainerMarketContainer = this.InventoryService.GetInventoryContainer(InventoryType.BlockedItems);
+            var retainerMarketContainer = this.InventoryService.GetInventoryContainer(InventoryType.RetainerMarket);
 
             this.ActiveSlots.Clear();
 
@@ -289,7 +289,7 @@ public class RetainerMarketService(
 
                 if (!slotFound)
                 {
-                    this.PluginLog.Error("Removed an item from the market, but could not determine which slot");
+                    this.PluginLog.Error("Removed an item from the market, but could not determine which slot.");
                     return;
                 }
             }

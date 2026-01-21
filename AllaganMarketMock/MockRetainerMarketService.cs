@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,4 +39,6 @@ public class MockRetainerMarketService : IRetainerMarketService
     public bool InBadState { get; set; }
 
     public SaleItem?[] SaleItems { get; set; } = [];
+
+    public HashSet<short> ActiveSlots { get; set; } = [];
 }
