@@ -92,7 +92,7 @@ public class RetainerSellListOverlayWindow : OverlayWindow
     public override void PreOpenCheck()
     {
         base.PreOpenCheck();
-        if (this.characterMonitorService.ActiveRetainerId == 0 && this.IsOpen)
+        if (this.IsOpen && this.characterMonitorService.ActiveRetainerId == 0)
         {
             this.IsOpen = false;
         }

@@ -85,7 +85,7 @@ public class RetainerListOverlayWindow : OverlayWindow
     public override void PreOpenCheck()
     {
         base.PreOpenCheck();
-        if (!this.clientState.IsLoggedIn && this.IsOpen)
+        if (this.IsOpen && !this.clientState.IsLoggedIn)
         {
             this.IsOpen = false;
         }
