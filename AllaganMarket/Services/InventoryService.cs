@@ -23,7 +23,7 @@ public class InventoryService(
     IRetainerService retainerService) : IInventoryService, IDisposable
 {
     [Signature(
-        "48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 44 0F B7 42 ??",
+        "48 89 6C 24 ?? 48 89 74 24 ?? 57 48 81 EC ?? ?? ?? ?? 41 0F B7 40 ??",
         DetourName = nameof(ContainerInfoDetour),
         UseFlags = SignatureUseFlags.Hook)]
     private readonly Hook<ContainerInfoNetworkData>? containerInfoNetworkHook = null;
