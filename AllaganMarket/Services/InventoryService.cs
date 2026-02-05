@@ -30,7 +30,7 @@ public class InventoryService(
     private readonly HashSet<uint> loadedInventories = [];
     private ulong currentRetainer;
 
-    private unsafe delegate void* ContainerInfoNetworkData(int a2, int* a3);
+    private unsafe delegate void* ContainerInfoNetworkData(nint networkInstance, int a2, int* a3);
 
     public event IInventoryService.RetainerInventoryLoadedDelegate? OnRetainerInventoryLoaded;
 
@@ -114,7 +114,7 @@ public class InventoryService(
         return Task.CompletedTask;
     }
 
-    private unsafe void* ContainerInfoDetour(int seq, int* a3)
+    private unsafe void* ContainerInfoDetour(nint networkInstance, int seq, int* a3)
     {
         try
         {
@@ -140,6 +140,6 @@ public class InventoryService(
             this.PluginLog.Error(e, "Something went wrong while decoding the container info");
         }
 
-        return this.containerInfoNetworkHook!.Original(seq, a3);
+        return this.containerInfoNetworkHook!.Original(networkInstance, seq, a3);
     }
 }
