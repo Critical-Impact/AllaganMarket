@@ -17,7 +17,7 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
 {
     public SaleItem(
         InventoryItem inventoryItem,
-        RetainerMarketItemPrice? retainerMarketItemPrice,
+        ulong? retainerMarketItemPrice,
         ulong retainerId,
         uint worldId,
         uint menuIndex)
@@ -27,7 +27,7 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         this.ItemId = inventoryItem.ItemId;
         this.IsHq = inventoryItem.Flags.HasFlag(InventoryItem.ItemFlags.HighQuality);
         this.Quantity = (uint)inventoryItem.Quantity;
-        this.UnitPrice = retainerMarketItemPrice?.UnitPrice ?? 0;
+        this.UnitPrice = (uint?)retainerMarketItemPrice ?? 0;
         this.ListedAt = DateTime.Now;
         this.UpdatedAt = DateTime.Now;
         this.MenuIndex = menuIndex;
