@@ -45,6 +45,33 @@ public class ItemIconColumn : IconColumn<SearchResultConfiguration, SearchResult
 
     public override int? CurrentValue(SearchResult item)
     {
+        if (item.SaleSummaryItem != null)
+        {
+            if (item.SaleSummaryItem.SaleSummaryKey.ItemId != null)
+            {
+                var itemRow = this.itemSheet.GetRowOrDefault((uint)item.SaleSummaryItem.SaleSummaryKey.ItemId);
+                if (itemRow != null)
+                {
+                    return itemRow.Value.Icon;
+                }
+            }
+            if (item.SaleSummaryItem.SaleSummaryKey.IsHq != null)
+            {
+                return item.SaleSummaryItem.SaleSummaryKey.IsHq == true ? 61391 : 61394;
+            }
+            if (item.SaleSummaryItem.SaleSummaryKey.WorldId != null)
+            {
+                return 65;
+            }
+            if (item.SaleSummaryItem.SaleSummaryKey.OwnerId != null)
+            {
+                return 62045;
+            }
+            if (item.SaleSummaryItem.SaleSummaryKey.RetainerId != null)
+            {
+                return 60560;
+            }
+        }
         return item.SaleItem?.GetItem(this.itemSheet)!.Value.Icon ?? item.SoldItem?.GetItem(this.itemSheet)!.Value.Icon ?? null;
     }
 

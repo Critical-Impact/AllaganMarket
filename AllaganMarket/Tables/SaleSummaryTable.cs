@@ -17,6 +17,7 @@ public class SaleSummaryTable : RenderTable<SearchResultConfiguration, SearchRes
     public SaleSummaryTable(
         CsvLoaderService csvLoaderService,
         SaleSummary saleSummary,
+        ItemIconColumn iconColumn,
         NameColumn nameColumn,
         QuantityColumn quantityColumn,
         SearchResultConfiguration searchResultConfiguration,
@@ -28,7 +29,7 @@ public class SaleSummaryTable : RenderTable<SearchResultConfiguration, SearchRes
         : base(
             csvLoaderService,
             searchResultConfiguration,
-            [nameColumn, quantityColumn, worldColumn, retainerColumn, isHqColumn, averageSalePriceColumn, totalColumn],
+            [iconColumn, nameColumn, quantityColumn, worldColumn, retainerColumn, isHqColumn, averageSalePriceColumn, totalColumn],
             None | Resizable | Hideable | Sortable | RowBg | BordersInnerH | BordersOuterH | BordersInnerV | BordersOuterV | BordersH | BordersV | BordersInner | BordersOuter | Borders | ScrollX | ScrollY,
             "Sold Item Table",
             "SoldItemTable")

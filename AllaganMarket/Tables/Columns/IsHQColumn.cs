@@ -3,6 +3,8 @@ using AllaganLib.Interface.Services;
 
 using DalaMock.Host.Mediator;
 
+using Dalamud.Bindings.ImGui;
+
 namespace AllaganMarket.Tables.Columns;
 
 public class IsHQColumn(ImGuiService imGuiService)
@@ -17,6 +19,10 @@ public class IsHQColumn(ImGuiService imGuiService)
     public override string? RenderName { get; set; } = null;
 
     public override int Width { get; set; } = 70;
+
+    public override bool HideFilter { get; set; } = false;
+
+    public override ImGuiTableColumnFlags ColumnFlags { get; set; } = ImGuiTableColumnFlags.None;
 
     public override string HelpText { get; set; } = "Is the item high quality?";
 

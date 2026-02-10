@@ -21,40 +21,49 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace AllaganMarketMock;
 
-public class AllaganMarketPluginMock(
-    IDalamudPluginInterface pluginInterface,
-    IPluginLog pluginLog,
-    ICommandManager commandManager,
-    ITextureProvider textureProvider,
-    IGameInteropProvider gameInteropProvider,
-    IAddonLifecycle addonLifecycle,
-    IClientState clientState,
-    IGameInventory gameInventory,
-    IFramework framework,
-    IDataManager dataManager,
-    IChatGui chatGui,
-    IMarketBoard marketBoard,
-    ITitleScreenMenu titleScreenMenu,
-    IDtrBar dtrBar,
-    IGameGui gameGui,
-    ICondition condition) : AllaganMarketPlugin(
-    pluginInterface,
-    pluginLog,
-    commandManager,
-    textureProvider,
-    gameInteropProvider,
-    addonLifecycle,
-    clientState,
-    gameInventory,
-    framework,
-    dataManager,
-    chatGui,
-    marketBoard,
-    titleScreenMenu,
-    dtrBar,
-    gameGui,
-    condition)
+public class AllaganMarketPluginMock : AllaganMarketPlugin
 {
+    public AllaganMarketPluginMock(
+        IDalamudPluginInterface pluginInterface,
+        IPluginLog pluginLog,
+        ICommandManager commandManager,
+        ITextureProvider textureProvider,
+        IGameInteropProvider gameInteropProvider,
+        IAddonLifecycle addonLifecycle,
+        IClientState clientState,
+        IGameInventory gameInventory,
+        IFramework framework,
+        IDataManager dataManager,
+        IChatGui chatGui,
+        IMarketBoard marketBoard,
+        ITitleScreenMenu titleScreenMenu,
+        IDtrBar dtrBar,
+        IGameGui gameGui,
+        ICondition condition,
+        IObjectTable objectTable,
+        IPlayerState playerState)
+        : base(
+        pluginInterface,
+        pluginLog,
+        commandManager,
+        textureProvider,
+        gameInteropProvider,
+        addonLifecycle,
+        clientState,
+        gameInventory,
+        framework,
+        dataManager,
+        chatGui,
+        marketBoard,
+        titleScreenMenu,
+        dtrBar,
+        gameGui,
+        condition,
+        objectTable,
+        playerState)
+    {
+    }
+
     public override void ConfigureContainer(ContainerBuilder containerBuilder)
     {
         base.ConfigureContainer(containerBuilder);

@@ -4,12 +4,12 @@
     "net10.0-windows7.0": {
       "DalaMock.Core": {
         "type": "Direct",
-        "requested": "[4.0.0, )",
-        "resolved": "4.0.0",
-        "contentHash": "xbFYDCABvFBIaYfmd4Gs6cEV3M2a1YnkfZLpbqdPyBeFujljXOarC2RrOCqOsgq6v6JHg84MVnjZIApIWNxoQA==",
+        "requested": "[4.0.5, )",
+        "resolved": "4.0.5",
+        "contentHash": "+fLt679rRbgfd5z7Qxm/1iTBJsX75wASSNcbdUOME4bvrUIs5PldvVXfZZ5bikdJqrF0DJsQWXjuWZkI4T8krQ==",
         "dependencies": {
           "Autofac": "9.0.0",
-          "DalaMock.Shared": "4.0.0",
+          "DalaMock.Shared": "4.0.5",
           "Microsoft.DotNet.PlatformAbstractions": "3.1.6",
           "Microsoft.Extensions.Configuration": "10.0.1",
           "Microsoft.Extensions.DependencyModel": "10.0.1",
@@ -26,118 +26,11 @@
           "Veldrid.StartupUtilities": "4.9.0"
         }
       },
-      "DalaMock.Host": {
-        "type": "Direct",
-        "requested": "[4.0.0, )",
-        "resolved": "4.0.0",
-        "contentHash": "wmlZL54TBH9LLrEk5bXzmEsWMIaroN8qI63slB2nYIM9wDOeLQ59e4a6r3XViJ+BIWiO2ViK04jGvdr+Cz5U5g==",
-        "dependencies": {
-          "Autofac.Extensions.DependencyInjection": "10.0.0",
-          "DalaMock.Shared": "4.0.0",
-          "Microsoft.Extensions.Hosting": "10.0.1",
-          "Microsoft.Extensions.Hosting.Abstractions": "10.0.1",
-          "Microsoft.Extensions.ObjectPool": "10.0.1"
-        }
-      },
       "DotNet.ReproducibleBuilds": {
         "type": "Direct",
         "requested": "[1.2.39, )",
         "resolved": "1.2.39",
         "contentHash": "fcFN01tDTIQqDuTwr1jUQK/geofiwjG5DycJQOnC72i1SsLAk1ELe+apBOuZ11UMQG8YKFZG1FgvjZPbqHyatg=="
-      },
-      "Humanizer.Core": {
-        "type": "Direct",
-        "requested": "[3.0.1, )",
-        "resolved": "3.0.1",
-        "contentHash": "scB3+KcxNmEjZK5V8rKCW2gIiL8m8KH91w14FuuExyhi9xTyAJ+jr+DDxGdy12mHmioe2uvjxTfMgM7WmSUFlw=="
-      },
-      "Microsoft.AspNetCore.TestHost": {
-        "type": "Direct",
-        "requested": "[10.0.1, )",
-        "resolved": "10.0.1",
-        "contentHash": "Vvos4CyBam5dCsH3eD1c9MQI4ESWwzNSJsToFz4i6NmfPsaySzNSiv0QYRmSAAIBXb8GXxPmuy42TkIrw2xCzQ=="
-      },
-      "Microsoft.DotNet.PlatformAbstractions": {
-        "type": "Direct",
-        "requested": "[5.0.0-preview.5.20278.1, )",
-        "resolved": "5.0.0-preview.5.20278.1",
-        "contentHash": "vjHO72XmJdmdFUF/YWvJwetuaop38vljZ7U6icj8HiRhEqJSEBBPvYjdoxBDYW5/bJk+4GAXq18yS4L5XKD2UA=="
-      },
-      "Microsoft.Extensions.Configuration": {
-        "type": "Direct",
-        "requested": "[10.0.1, )",
-        "resolved": "10.0.1",
-        "contentHash": "njoRekyMIK+smav8B6KL2YgIfUtlsRNuT7wvurpLW+m/hoRKVnoELk2YxnUnWRGScCd1rukLMxShwLqEOKowDg==",
-        "dependencies": {
-          "Microsoft.Extensions.Configuration.Abstractions": "10.0.1",
-          "Microsoft.Extensions.Primitives": "10.0.1"
-        }
-      },
-      "Microsoft.Extensions.Configuration.Json": {
-        "type": "Direct",
-        "requested": "[10.0.1, )",
-        "resolved": "10.0.1",
-        "contentHash": "0zW3eYBJlRctmgqk5s0kFIi5o5y2g80mvGCD8bkYxREPQlKUnr0ndU/Sop+UDIhyWN0fIi4RW63vo7BKTi7ncA==",
-        "dependencies": {
-          "Microsoft.Extensions.Configuration": "10.0.1",
-          "Microsoft.Extensions.Configuration.Abstractions": "10.0.1",
-          "Microsoft.Extensions.Configuration.FileExtensions": "10.0.1",
-          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.1"
-        }
-      },
-      "Microsoft.Extensions.DependencyModel": {
-        "type": "Direct",
-        "requested": "[10.0.1, )",
-        "resolved": "10.0.1",
-        "contentHash": "IiWPd4j8JLNjSkyXl5hvJwX2ZENDVQVPDHYgZmYdw8+YkY2xp9iQt0vjdnAQZLpo/ipeW1xgOqfSBEnivKWPYQ=="
-      },
-      "Microsoft.Extensions.Logging.Abstractions": {
-        "type": "Direct",
-        "requested": "[10.0.1, )",
-        "resolved": "10.0.1",
-        "contentHash": "YkmyiPIWAXVb+lPIrM0LE5bbtLOJkCiRTFiHpkVOvhI7uTvCfoOHLEN0LcsY56GpSD7NqX3gJNpsaDe87/B3zg==",
-        "dependencies": {
-          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.1"
-        }
-      },
-      "Serilog": {
-        "type": "Direct",
-        "requested": "[4.3.0, )",
-        "resolved": "4.3.0",
-        "contentHash": "+cDryFR0GRhsGOnZSKwaDzRRl4MupvJ42FhCE4zhQRVanX0Jpg6WuCBk59OVhVDPmab1bB+nRykAnykYELA9qQ=="
-      },
-      "Serilog.Sinks.Async": {
-        "type": "Direct",
-        "requested": "[2.1.0, )",
-        "resolved": "2.1.0",
-        "contentHash": "SnmRknWsSMgyo9wDXeZZCqSp48kkQYy44taSM6vcpxfiRICzSf09oLKEmVr0RCwQnfd8mJQ2WNN6nvhqf0RowQ==",
-        "dependencies": {
-          "Serilog": "4.1.0"
-        }
-      },
-      "Serilog.Sinks.Console": {
-        "type": "Direct",
-        "requested": "[6.1.1, )",
-        "resolved": "6.1.1",
-        "contentHash": "8jbqgjUyZlfCuSTaJk6lOca465OndqOz3KZP6Cryt/IqZYybyBu7GP0fE/AXBzrrQB3EBmQntBFAvMVz1COvAA==",
-        "dependencies": {
-          "Serilog": "4.0.0"
-        }
-      },
-      "Serilog.Sinks.File": {
-        "type": "Direct",
-        "requested": "[7.0.0, )",
-        "resolved": "7.0.0",
-        "contentHash": "fKL7mXv7qaiNBUC71ssvn/dU0k9t0o45+qm2XgKAlSt19xF+ijjxyA3R6HmCgfKEKwfcfkwWjayuQtRueZFkYw==",
-        "dependencies": {
-          "Serilog": "4.2.0"
-        }
-      },
-      "StbiSharp": {
-        "type": "Direct",
-        "requested": "[1.2.1, )",
-        "resolved": "1.2.1",
-        "contentHash": "jbi94g3UDVAC3vH6jKZmmADH4Z6tGqbcdlyGhT/WZN9UE8OjjvpGFE5zF+UCSmIdya6iJ+Zo5VvxdQywSKN0Uw=="
       },
       "StyleCop.Analyzers": {
         "type": "Direct",
@@ -148,54 +41,21 @@
           "StyleCop.Analyzers.Unstable": "1.2.0.556"
         }
       },
-      "Veldrid": {
-        "type": "Direct",
-        "requested": "[4.9.0, )",
-        "resolved": "4.9.0",
-        "contentHash": "Rvu7/OLNt6Yy/hbC+rAmjBbxcSirbG/BjOdLCF7kl5mGBkMGka3pLuTlkbXSt4UONh3tks0I7k/OJ7Sr8HFIoA==",
-        "dependencies": {
-          "NativeLibraryLoader": "1.0.13",
-          "Veldrid.MetalBindings": "4.9.0",
-          "Veldrid.OpenGLBindings": "4.9.0",
-          "Vk": "1.0.25",
-          "Vortice.D3DCompiler": "2.3.0",
-          "Vortice.Direct3D11": "2.3.0"
-        }
-      },
-      "Veldrid.SDL2": {
-        "type": "Direct",
-        "requested": "[4.9.0, )",
-        "resolved": "4.9.0",
-        "contentHash": "uE0sYIzNOF2DPokzjRel2to3euBRikLfgoxx0f7iQVevbDDYlg0e/DBgG+tDhyNQWrB+ttKaQvR/csoa/R8UmA==",
-        "dependencies": {
-          "NativeLibraryLoader": "1.0.13"
-        }
-      },
-      "Veldrid.StartupUtilities": {
-        "type": "Direct",
-        "requested": "[4.9.0, )",
-        "resolved": "4.9.0",
-        "contentHash": "45JrS5GajAaoom0HJWtPzYgJlNo8tpXB06mJM4hWxdeBxo3y2OIJIfnnB374KB1d7euodW0XneRzKVhwzZFE5g==",
-        "dependencies": {
-          "Veldrid": "4.9.0",
-          "Veldrid.SDL2": "4.9.0"
-        }
-      },
       "AllaganLib.Data": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "Ptgb1vIadCtxv1TUKHhxYgKKCpGrv/BvPh4RRtDLwc8dNue75D9Xz5RiEG9Od4OKXGlBEbrN+rHwf0zod0W58Q==",
+        "resolved": "2.0.3",
+        "contentHash": "H4KJPFgu/Nz3BnSrpmiYX25DAccezilWharyWa3lv0tZdaIyBqlGnvBsuo3tITCYnRXOZbSx2M6cH0JaZ6jn6w==",
         "dependencies": {
           "CSVFile": "3.2.1"
         }
       },
       "AllaganLib.Interface": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "AKkDh9oc8p1OZRnFa0TVtv3uSPOhO5yQgc/JdJ613+oXE8MY0LmWYJMEGZDndbAJGej2/FKmAT05FN/bQco+Cw==",
+        "resolved": "2.0.5",
+        "contentHash": "UgeP4WILvnfpM1TpKuzAi1AVCiALLfbDijZziMvUCNfqkb/gC5I8sJnIGvzXJ6+Ywui64pw6fbxjqkP1yauQfQ==",
         "dependencies": {
-          "AllaganLib.Data": "2.0.0",
-          "AllaganLib.Shared": "2.0.0",
+          "AllaganLib.Data": "2.0.3",
+          "AllaganLib.Shared": "2.0.3",
           "Autofac": "9.0.0",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.1",
           "NaturalSort.Extension": "4.4.1"
@@ -203,8 +63,8 @@
       },
       "AllaganLib.Shared": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "0yKPg9Vtpu7CDK2dsW6dJTcYFtZNTE3+GpakUIsX3nNmlWqZJy3ycr9ZsdMxharLcsWeKlOAkwNmJJKloMikDQ==",
+        "resolved": "2.0.3",
+        "contentHash": "M4xbFzrhczZ9MlzAFMI2w058WMIxh/woGlwJVwbC/AodLkaUmryCQF8ilkZ41yklQT1caGmHfiUuiwM9pw1Ndw==",
         "dependencies": {
           "Autofac": "9.0.0",
           "Microsoft.Extensions.Hosting": "10.0.1",
@@ -214,10 +74,10 @@
       },
       "AllaganLib.Universalis": {
         "type": "Transitive",
-        "resolved": "2.0.0",
-        "contentHash": "IVYFmD/LFQEZ4+U+O3JLQVrA7TnmKC+X8wFQ9sjBxcv36IslvYUm60wYNglbNQotMZcSViS6zizmjpR0lEs7lA==",
+        "resolved": "2.0.3",
+        "contentHash": "CnRfp6cE5InbmC8l1XWiqtkZrG+L7zG2b73UWOW0QevSX5bfEt/EoQOBAsqJyFXp5CO+lDd5OeJnAemu0TYOwA==",
         "dependencies": {
-          "AllaganLib.Shared": "2.0.0",
+          "AllaganLib.Shared": "2.0.3",
           "Microsoft.Extensions.Hosting": "10.0.1",
           "Microsoft.Extensions.Hosting.Abstractions": "10.0.1",
           "MongoDB.Bson": "3.5.2"
@@ -242,10 +102,22 @@
         "resolved": "3.2.1",
         "contentHash": "hXWPP7BGA8DS+UxdDEjAsLPdo6OUiCdaCiprxuRxpTy3nwI9DqwNWxaC5imfyD3kCb9/S2mW35s7f08uaokTUA=="
       },
+      "DalaMock.Host": {
+        "type": "Transitive",
+        "resolved": "4.0.5",
+        "contentHash": "a049w3CYLybukIJjLgnuG76Xixrcq2UkR/Ux5nqEc6fE/zaRPlsUeNSKjYLDXXBinJpfMNOgazTZ+0bH0rtkYQ==",
+        "dependencies": {
+          "Autofac.Extensions.DependencyInjection": "10.0.0",
+          "DalaMock.Shared": "4.0.5",
+          "Microsoft.Extensions.Hosting": "10.0.1",
+          "Microsoft.Extensions.Hosting.Abstractions": "10.0.1",
+          "Microsoft.Extensions.ObjectPool": "10.0.1"
+        }
+      },
       "DalaMock.Shared": {
         "type": "Transitive",
-        "resolved": "4.0.0",
-        "contentHash": "31CIXD0QkMryDkpFlVZb7otbQh4+kqxgQfzUT9WI87CKXc3/XQYDC9V0kIo5QTd5RHNImLyXABD5xDvY5MC92w==",
+        "resolved": "4.0.5",
+        "contentHash": "9fsAF8IiprUcYIPal77mrGouWqexAkvdpDtbL0HH6Ky3C8mCD+6Hcp0pMpii+bsijqVbyp8NauIQ4bWFajRi2g==",
         "dependencies": {
           "Autofac": "9.0.0",
           "Microsoft.Extensions.Hosting": "10.0.1",
@@ -314,6 +186,11 @@
           "Humanizer.Core.zh-Hans": "3.0.1",
           "Humanizer.Core.zh-Hant": "3.0.1"
         }
+      },
+      "Humanizer.Core": {
+        "type": "Transitive",
+        "resolved": "3.0.1",
+        "contentHash": "scB3+KcxNmEjZK5V8rKCW2gIiL8m8KH91w14FuuExyhi9xTyAJ+jr+DDxGdy12mHmioe2uvjxTfMgM7WmSUFlw=="
       },
       "Humanizer.Core.af": {
         "type": "Transitive",
@@ -723,6 +600,20 @@
           "Humanizer.Core": "[3.0.1]"
         }
       },
+      "Microsoft.DotNet.PlatformAbstractions": {
+        "type": "Transitive",
+        "resolved": "3.1.6",
+        "contentHash": "jek4XYaQ/PGUwDKKhwR8K47Uh1189PFzMeLqO83mXrXQVIpARZCcfuDedH50YDTepBkfijCZN5U/vZi++erxtg=="
+      },
+      "Microsoft.Extensions.Configuration": {
+        "type": "Transitive",
+        "resolved": "10.0.1",
+        "contentHash": "njoRekyMIK+smav8B6KL2YgIfUtlsRNuT7wvurpLW+m/hoRKVnoELk2YxnUnWRGScCd1rukLMxShwLqEOKowDg==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.1",
+          "Microsoft.Extensions.Primitives": "10.0.1"
+        }
+      },
       "Microsoft.Extensions.Configuration.Abstractions": {
         "type": "Transitive",
         "resolved": "10.0.1",
@@ -770,6 +661,17 @@
           "Microsoft.Extensions.Primitives": "10.0.1"
         }
       },
+      "Microsoft.Extensions.Configuration.Json": {
+        "type": "Transitive",
+        "resolved": "10.0.1",
+        "contentHash": "0zW3eYBJlRctmgqk5s0kFIi5o5y2g80mvGCD8bkYxREPQlKUnr0ndU/Sop+UDIhyWN0fIi4RW63vo7BKTi7ncA==",
+        "dependencies": {
+          "Microsoft.Extensions.Configuration": "10.0.1",
+          "Microsoft.Extensions.Configuration.Abstractions": "10.0.1",
+          "Microsoft.Extensions.Configuration.FileExtensions": "10.0.1",
+          "Microsoft.Extensions.FileProviders.Abstractions": "10.0.1"
+        }
+      },
       "Microsoft.Extensions.Configuration.UserSecrets": {
         "type": "Transitive",
         "resolved": "10.0.1",
@@ -793,6 +695,11 @@
         "type": "Transitive",
         "resolved": "10.0.1",
         "contentHash": "oIy8fQxxbUsSrrOvgBqlVgOeCtDmrcynnTG+FQufcUWBrwyPfwlUkCDB2vaiBeYPyT+20u9/HeuHeBf+H4F/8g=="
+      },
+      "Microsoft.Extensions.DependencyModel": {
+        "type": "Transitive",
+        "resolved": "10.0.1",
+        "contentHash": "IiWPd4j8JLNjSkyXl5hvJwX2ZENDVQVPDHYgZmYdw8+YkY2xp9iQt0vjdnAQZLpo/ipeW1xgOqfSBEnivKWPYQ=="
       },
       "Microsoft.Extensions.Diagnostics": {
         "type": "Transitive",
@@ -885,6 +792,14 @@
           "Microsoft.Extensions.DependencyInjection": "10.0.1",
           "Microsoft.Extensions.Logging.Abstractions": "10.0.1",
           "Microsoft.Extensions.Options": "10.0.1"
+        }
+      },
+      "Microsoft.Extensions.Logging.Abstractions": {
+        "type": "Transitive",
+        "resolved": "10.0.1",
+        "contentHash": "YkmyiPIWAXVb+lPIrM0LE5bbtLOJkCiRTFiHpkVOvhI7uTvCfoOHLEN0LcsY56GpSD7NqX3gJNpsaDe87/B3zg==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "10.0.1"
         }
       },
       "Microsoft.Extensions.Logging.Configuration": {
@@ -1012,6 +927,11 @@
         "resolved": "1.10.0",
         "contentHash": "+uNyVhhKOskjJLKOwIQ2qGaA0T507FaMbz5RwLAtmRaMaTAcUAZAiZvSk4Z8z6GkmqOyO1zryYNXmO0Vh7IrYQ=="
       },
+      "Serilog": {
+        "type": "Transitive",
+        "resolved": "4.3.0",
+        "contentHash": "+cDryFR0GRhsGOnZSKwaDzRRl4MupvJ42FhCE4zhQRVanX0Jpg6WuCBk59OVhVDPmab1bB+nRykAnykYELA9qQ=="
+      },
       "Serilog.Extensions.Logging": {
         "type": "Transitive",
         "resolved": "10.0.0",
@@ -1038,6 +958,11 @@
           "SharpGen.Runtime": "2.0.0-beta.13"
         }
       },
+      "StbiSharp": {
+        "type": "Transitive",
+        "resolved": "1.2.1",
+        "contentHash": "jbi94g3UDVAC3vH6jKZmmADH4Z6tGqbcdlyGhT/WZN9UE8OjjvpGFE5zF+UCSmIdya6iJ+Zo5VvxdQywSKN0Uw=="
+      },
       "StyleCop.Analyzers.Unstable": {
         "type": "Transitive",
         "resolved": "1.2.0.556",
@@ -1053,6 +978,19 @@
         "resolved": "6.1.0",
         "contentHash": "M5cCC1ZMkZr9jbSQGTHnVkb5TDN67qWCV7AP8TAHdGkvDlu0puT5NzemESNn9+HkYIDpWpocP68/i+/ame2/2w=="
       },
+      "Veldrid": {
+        "type": "Transitive",
+        "resolved": "4.9.0",
+        "contentHash": "Rvu7/OLNt6Yy/hbC+rAmjBbxcSirbG/BjOdLCF7kl5mGBkMGka3pLuTlkbXSt4UONh3tks0I7k/OJ7Sr8HFIoA==",
+        "dependencies": {
+          "NativeLibraryLoader": "1.0.13",
+          "Veldrid.MetalBindings": "4.9.0",
+          "Veldrid.OpenGLBindings": "4.9.0",
+          "Vk": "1.0.25",
+          "Vortice.D3DCompiler": "2.3.0",
+          "Vortice.Direct3D11": "2.3.0"
+        }
+      },
       "Veldrid.MetalBindings": {
         "type": "Transitive",
         "resolved": "4.9.0",
@@ -1062,6 +1000,23 @@
         "type": "Transitive",
         "resolved": "4.9.0",
         "contentHash": "Du3zr+qWQO2Pzsl2iOeLmg23gxdr6BQ9yx5ygmcoBn6nm1AsbG4JMeEIpSGDt8WiTmy2VsUNY0kIGZklkrRoWQ=="
+      },
+      "Veldrid.SDL2": {
+        "type": "Transitive",
+        "resolved": "4.9.0",
+        "contentHash": "uE0sYIzNOF2DPokzjRel2to3euBRikLfgoxx0f7iQVevbDDYlg0e/DBgG+tDhyNQWrB+ttKaQvR/csoa/R8UmA==",
+        "dependencies": {
+          "NativeLibraryLoader": "1.0.13"
+        }
+      },
+      "Veldrid.StartupUtilities": {
+        "type": "Transitive",
+        "resolved": "4.9.0",
+        "contentHash": "45JrS5GajAaoom0HJWtPzYgJlNo8tpXB06mJM4hWxdeBxo3y2OIJIfnnB374KB1d7euodW0XneRzKVhwzZFE5g==",
+        "dependencies": {
+          "Veldrid": "4.9.0",
+          "Veldrid.SDL2": "4.9.0"
+        }
       },
       "Vk": {
         "type": "Transitive",
@@ -1119,18 +1074,14 @@
       "allaganmarket": {
         "type": "Project",
         "dependencies": {
-          "AllaganLib.Data": "[2.0.0, )",
-          "AllaganLib.Interface": "[2.0.0, )",
-          "AllaganLib.Shared": "[2.0.0, )",
-          "AllaganLib.Universalis": "[2.0.0, )",
-          "Autofac": "[9.0.0, )",
-          "Autofac.Extensions.DependencyInjection": "[10.0.0, )",
-          "DalaMock.Host": "[4.0.0, )",
-          "DalaMock.Shared": "[4.0.0, )",
+          "AllaganLib.Data": "[2.0.3, )",
+          "AllaganLib.Interface": "[2.0.5, )",
+          "AllaganLib.Shared": "[2.0.3, )",
+          "AllaganLib.Universalis": "[2.0.3, )",
+          "DalaMock.Host": "[4.0.5, )",
+          "DalaMock.Shared": "[4.0.5, )",
           "DalamudPackager": "[14.0.1, )",
           "Humanizer": "[3.0.1, )",
-          "Microsoft.Extensions.Hosting": "[10.0.1, )",
-          "MongoDB.Bson": "[3.5.2, )",
           "System.Reactive": "[6.1.0, )"
         }
       }
