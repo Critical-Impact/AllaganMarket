@@ -67,7 +67,7 @@ public sealed class RetainerMarketServiceDebuggerPane : IDebugPane, IDisposable
 
         using (var table = ImRaii.Table(
                    "##retainersaleitems",
-                   7,
+                   8,
                    ImGuiTableFlags.RowBg |
                    ImGuiTableFlags.Borders |
                    ImGuiTableFlags.Resizable |
@@ -83,6 +83,7 @@ public sealed class RetainerMarketServiceDebuggerPane : IDebugPane, IDisposable
                 ImGui.TableSetupColumn("HQ");
                 ImGui.TableSetupColumn("Qty");
                 ImGui.TableSetupColumn("Unit Price");
+                ImGui.TableSetupColumn("Not For Sale");
                 ImGui.TableSetupColumn("Total");
                 ImGui.TableSetupColumn("Updated");
 
@@ -118,6 +119,9 @@ public sealed class RetainerMarketServiceDebuggerPane : IDebugPane, IDisposable
 
                         ImGui.TableNextColumn();
                         ImGui.Text(item.UnitPrice.ToString(CultureInfo.InvariantCulture));
+
+                        ImGui.TableNextColumn();
+                        ImGui.Text(item.NotForSale switch { true => "Yes", false => "No", null => "—" });
 
                         ImGui.TableNextColumn();
                         ImGui.Text(item.Total.ToString(CultureInfo.InvariantCulture));

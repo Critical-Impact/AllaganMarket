@@ -387,11 +387,15 @@ public class SaleTrackerService(
             var item = newItems[index];
             var oldItem = this.SaleItems[retainerId][index];
 
-            if (item.IsEmpty() || oldItem.IsEmpty() || !item.Equals(oldItem) || item.MenuIndex != oldItem.MenuIndex)
+            if (item.IsEmpty() || oldItem.IsEmpty() || !item.Equals(oldItem) || item.MenuIndex != oldItem.MenuIndex || item.NotForSale != oldItem.NotForSale)
             {
                 if (!oldItem.IsEmpty() && !item.IsEmpty())
                 {
                     item.ListedAt = oldItem.ListedAt;
+
+                    // Preserve the last known not-for-sale flag when this pass could not read it
+                    // (the RetainerSellList addon was closed), rather than clearing it to unknown.
+                    item.NotForSale ??= oldItem.NotForSale;
 
                     // We don't know the new menu index yet so copy the old index until we do
                     if (item.MenuIndex == 1000)

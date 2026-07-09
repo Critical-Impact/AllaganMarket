@@ -224,6 +224,12 @@ public class RetainerSellListOverlayWindow : OverlayWindow
                     for (var index = 0; index < saleItems.Count; index++)
                     {
                         var saleItem = saleItems[index];
+                        if (!saleItem.IsForSale())
+                        {
+                            // Gear equipped on estate mannequins appears here as "Not for Sale"; ignore it.
+                            continue;
+                        }
+
                         var isUnderCut = this.undercutService.IsItemUndercut(saleItem) ?? false;
                         var needsUpdate = this.undercutService.NeedsUpdate(saleItem, interval);
                         if (!isUnderCut && !needsUpdate && !this.showAllItems)

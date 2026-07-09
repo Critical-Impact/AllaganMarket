@@ -208,10 +208,10 @@ public class RetainerListOverlayWindow : OverlayWindow
                     if (this.saleTrackerService.SaleItems.TryGetValue(retainer.CharacterId, out var value))
                     {
                         isUnderCut = value.Any(c => this.undercutService.IsItemUndercut(c) ?? false);
-                        needsUpdate = value.Any(c => !c.IsEmpty() && this.undercutService.NeedsUpdate(c, interval));
-                        nextUpdate = value.Where(c => !c.IsEmpty()).DefaultIfEmpty()
+                        needsUpdate = value.Any(c => c.IsForSale() && this.undercutService.NeedsUpdate(c, interval));
+                        nextUpdate = value.Where(c => c.IsForSale()).DefaultIfEmpty()
                                          .Min(c => c == null ? null : (DateTime?)this.undercutService.NextUpdateDate(c, interval));
-                        sellingCount = value.Count(c => !c.IsEmpty());
+                        sellingCount = value.Count(c => c.IsForSale());
                     }
 
                     if (!isUnderCut && !needsUpdate && !this.showAllRetainers)
