@@ -106,6 +106,13 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
 
     public uint MenuIndex { get; set; }
 
+    /// <summary>
+    /// Gets or sets whether this item is currently not listed for sale (e.g. gear displayed on an
+    /// estate mannequin, shown in-game as "&lt;Not for Sale&gt;"). Captured from the RetainerSellList
+    /// addon when it is open; null when it could not be determined (fall back to the price heuristic).
+    /// </summary>
+    public bool? NotForSale { get; set; }
+
     public uint Total => this.Quantity * this.UnitPrice;
 
     public static string[] GetHeaders()
@@ -120,13 +127,43 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
             "Unit Price",
             "Undercut By?",
             "Listed At",
-            "Updated At"
+            "Updated At",
+            "Menu Index",
+            "Not For Sale?"
         ];
     }
 
     public bool IsEmpty()
     {
         return this.ItemId == 0;
+    }
+
+    /// <summary>
+    /// Determines whether this slot holds an item that is actually listed for sale.
+    /// Gear equipped on estate mannequins is stored in the retainer's market inventory but is not
+    /// really being sold (the game shows it as "&lt;Not for Sale&gt;" with a mannequin icon).
+    /// <para>
+    /// When the RetainerSellList addon was readable, <see cref="NotForSale"/> holds the game's own
+    /// authoritative flag and is used directly. Otherwise a price heuristic is used: the game reports
+    /// a retainer market price of 1 for such items (verified in-game via
+    /// <c>InventoryManager.GetRetainerMarketPrice</c>), whereas a genuine listing carries its real
+    /// per-unit price, so a price of 0 or 1 is treated as "not for sale".
+    /// </para>
+    /// </summary>
+    /// <returns>True when the slot holds an item that is genuinely listed for sale.</returns>
+    public bool IsForSale()
+    {
+        if (this.IsEmpty())
+        {
+            return false;
+        }
+
+        if (this.NotForSale.HasValue)
+        {
+            return !this.NotForSale.Value;
+        }
+
+        return this.UnitPrice > 1;
     }
 
     public string AsDebugString()
@@ -191,6 +228,11 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
         {
             this.MenuIndex = Convert.ToUInt32(lineData[9]);
         }
+
+        if (lineData.Length > 10 && !string.IsNullOrEmpty(lineData[10]))
+        {
+            this.NotForSale = lineData[10] == "1";
+        }
     }
 
     public string[] ToCsv()
@@ -207,6 +249,7 @@ public class SaleItem : IDebuggable, IEquatable<SaleItem>, ICsv
             this.ListedAt.ToString(CultureInfo.InvariantCulture),
             this.UpdatedAt.ToString(CultureInfo.InvariantCulture),
             this.MenuIndex.ToString(),
+            this.NotForSale switch { true => "1", false => "0", null => string.Empty },
         ];
     }
 

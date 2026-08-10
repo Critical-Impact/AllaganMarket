@@ -172,6 +172,11 @@ public class SaleFilter(
             sales = sales.Where(c => !c.IsEmpty());
         }
 
+        // Gear equipped on estate mannequins is stored in the retainer's market inventory
+        // with no price ("Not for Sale"); it isn't actually being sold, so exclude it while
+        // still honouring the "show empty slots" option above.
+        sales = sales.Where(c => c.IsEmpty() || c.IsForSale());
+
         sales = sales.Where(c => characterMonitorService.IsCharacterKnown(c.RetainerId));
 
         this.needsRefresh = false;

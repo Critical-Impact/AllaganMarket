@@ -355,6 +355,10 @@ public class RetainerMarketService(
 
         retainerMarketCopy = [.. retainerMarketCopy];
 
+        // Only readable while the RetainerSellList addon is open; null means we cannot determine the
+        // not-for-sale state this pass and downstream falls back to the price heuristic.
+        var notForSaleSlots = currentOrder == null ? null : this.AtkOrderService.GetNotForSaleSlots();
+
         var saleItems = new SaleItem?[20];
 
         for (var index = 0; index < 20; index++)
@@ -373,6 +377,11 @@ public class RetainerMarketService(
                     this.RetainerService.RetainerId,
                     this.RetainerService.RetainerWorldId,
                     currentOrder == null ? 1000 : currentOrder.TryGetValue(item.Slot, out var menuIndex) ? (uint)menuIndex : 999);
+                if (notForSaleSlots != null)
+                {
+                    saleItem.NotForSale = notForSaleSlots.Contains(item.Slot);
+                }
+
                 saleItems[index] = saleItem;
             }
         }
