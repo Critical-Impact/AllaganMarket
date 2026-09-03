@@ -38,6 +38,7 @@ public class SaleTrackerService(
     ILogger<SaleTrackerService> logger,
     IDataManager dataManager,
     ICharacterMonitorService characterMonitorService,
+    Configuration configuration,
     MediatorService mediatorService) : DisposableMediatorSubscriberBase(logger, mediatorService), IHostedService
 {
     private readonly ExcelSheet<Item> itemSheet = dataManager.GetExcelSheet<Item>()!;
@@ -74,6 +75,8 @@ public class SaleTrackerService(
     public IDataManager DataManager { get; } = dataManager;
 
     public ICharacterMonitorService CharacterMonitorService { get; } = characterMonitorService;
+
+    public Configuration Configuration { get; } = configuration;
 
     public Dictionary<ulong, SaleItem[]> SaleItems { get; private set; } = [];
 
@@ -406,6 +409,7 @@ public class SaleTrackerService(
         }
 
         this.Logger.LogTrace("A snapshot was created.");
+        this.Configuration.IsDirty = true;
         this.SnapshotCreated?.Invoke();
     }
 
